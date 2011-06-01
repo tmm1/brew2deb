@@ -1,0 +1,50 @@
+From 8ed5bd96c4f43fb77b06143b7c4606102f8e9f80 Mon Sep 17 00:00:00 2001
+From: Ryan Tomayko <ryan@github.com>
+Date: Fri, 10 Dec 2010 05:51:27 -0800
+Subject: [PATCH] receive-pack: Avoid dupe alternate ref output
+
+Maintain a hash/set of SHA1s added to the extra refs list from
+alternates repositories to avoid writing duplicate .have lines. This
+reduces output considerably with many alternates all referencing
+common objects.
+---
+ builtin/receive-pack.c |    9 ++++++++-
+ 1 files changed, 8 insertions(+), 1 deletions(-)
+
+diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
+index 760817d..03ec7d7 100644
+--- a/builtin/receive-pack.c
++++ b/builtin/receive-pack.c
+@@ -10,6 +10,7 @@
+ #include "remote.h"
+ #include "transport.h"
+ #include "string-list.h"
++#include "hash.h"
+ 
+ static const char receive_pack_usage[] = "git receive-pack <git-dir>";
+ 
+@@ -36,6 +37,8 @@ static int auto_gc = 1;
+ static const char *head_name;
+ static int sent_capabilities;
+ 
++static struct hash_table sha1_references = {0, 0, NULL};
++
+ static enum deny_action parse_deny_action(const char *var, const char *value)
+ {
+ 	if (value) {
+@@ -758,7 +761,11 @@ static int add_refs_from_alternate(struct alternate_object_database *e, void *un
+ 	for (extra = transport_get_remote_refs(transport);
+ 	     extra;
+ 	     extra = extra->next) {
+-		add_extra_ref(".have", extra->old_sha1, 0);
++		unsigned int *oid_buffer = (unsigned int *)(&extra->old_sha1);
++		if (!lookup_hash(oid_buffer[0], &sha1_references)) {
++			add_extra_ref(".have", extra->old_sha1, 0);
++			insert_hash(oid_buffer[0], (void *)1, &sha1_references);
++		}
+ 	}
+ 	transport_disconnect(transport);
+ 	free(other);
+-- 
+1.7.0.2
+

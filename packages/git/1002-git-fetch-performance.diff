@@ -1,0 +1,53 @@
+From a0a0135dfd9205be6db6f97543d7e5418106d56d Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Sat, 30 Apr 2011 03:03:08 -0400
+Subject: [PATCH] fetch: avoid repeated commits in mark_complete
+
+We add every local ref to a list so that we can mark them
+and all of their ancestors back to a certain cutoff point.
+However, if some refs point to the same commit, we will end
+up adding them to the list many times.
+
+Furthermore, since commit_lists are stored as linked lists,
+we must do an O(n) traversal of the list in order to find
+the right place to insert each commit. This makes building
+the list O(n^2) in the number of refs.
+
+For normal repositories, this isn't a big deal. We have a
+few hundreds refs at most, and most of them are unique. But
+consider an "alternates" repo that serves as an object
+database for many other similar repos. For reachability, it
+needs to keep a copy of the refs in each child repo. This
+means it may have a large number of refs, many of which
+point to the same commits.
+
+By noting commits we have already added to the list, we can
+shrink the size of "n" in such a repo to the number of
+unique commits, which on the order of what a normal repo
+would contain (it's actually more, since child repos may
+have branches at different states, but in practice it tends
+to be much smaller).
+---
+ builtin/fetch-pack.c |    6 ++++--
+ 1 files changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/builtin/fetch-pack.c b/builtin/fetch-pack.c
+index 85aff02..56c0b4a 100644
+--- a/builtin/fetch-pack.c
++++ b/builtin/fetch-pack.c
+@@ -472,8 +472,10 @@ static int mark_complete(const char *path, const unsigned char *sha1, int flag,
+ 	}
+ 	if (o && o->type == OBJ_COMMIT) {
+ 		struct commit *commit = (struct commit *)o;
+-		commit->object.flags |= COMPLETE;
+-		commit_list_insert_by_date(commit, &complete);
++		if (!(commit->object.flags & COMPLETE)) {
++			commit->object.flags |= COMPLETE;
++			commit_list_insert_by_date(commit, &complete);
++		}
+ 	}
+ 	return 0;
+ }
+-- 
+1.7.4.1
+
