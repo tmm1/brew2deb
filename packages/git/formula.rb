@@ -44,9 +44,9 @@ class DebianFormula < Formula
         '-v', version,
         '-t', 'deb',
         '-s', 'dir',
-        '--description', self.class.description,
         '--url', self.class.homepage || self.class.url,
         '-C', destdir,
+        '--description', self.class.description,
         '.'
         # add maintainer
         # fix description
