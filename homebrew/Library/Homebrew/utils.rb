@@ -123,9 +123,9 @@ def exec_editor *args
 
   editor = ENV['HOMEBREW_EDITOR'] || ENV['EDITOR']
   if editor.nil?
-    editor = if system "/usr/bin/which -s mate"
+    editor = if system "/usr/bin/which mate > /dev/null 2>&1"
       'mate'
-    elsif system "/usr/bin/which -s edit"
+    elsif system "/usr/bin/which edit > /dev/null 2>&1"
       'edit' # BBEdit / TextWrangler
     else
       '/usr/bin/vim' # Default to vim
@@ -298,7 +298,7 @@ module MacOS extend self
     # http://github.com/mxcl/homebrew/issues/#issue/48
 
     %w[port fink].each do |ponk|
-      path = `/usr/bin/which -s #{ponk}`
+      path = `/usr/bin/which #{ponk} > /dev/null 2>&1`
       return ponk unless path.empty?
     end
 

@@ -33,15 +33,23 @@ else
   HOMEBREW_REPOSITORY+"Cellar"
 end
 
-MACOS_FULL_VERSION = `/usr/bin/sw_vers -productVersion`.chomp
-MACOS_VERSION = /(10\.\d+)(\.\d+)?/.match(MACOS_FULL_VERSION).captures.first.to_f
+if RUBY_PLATFORM =~ /-linux$/
+  HOMEBREW_USER_AGENT = "Homebrew #{HOMEBREW_VERSION} (Ruby #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}; Linux)"
+  
+  # Hack?
+  RECOMMENDED_GCC_40 = 0
+  RECOMMENDED_GCC_42 = 0
+  MACOS_VERSION = 10.6  # hack :(
+else
+  MACOS_FULL_VERSION = `/usr/bin/sw_vers -productVersion`.chomp
+  MACOS_VERSION = /(10\.\d+)(\.\d+)?/.match(MACOS_FULL_VERSION).captures.first.to_f
 
-HOMEBREW_USER_AGENT = "Homebrew #{HOMEBREW_VERSION} (Ruby #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}; Mac OS X #{MACOS_FULL_VERSION})"
-
+  HOMEBREW_USER_AGENT = "Homebrew #{HOMEBREW_VERSION} (Ruby #{RUBY_VERSION}-#{RUBY_PATCHLEVEL}; Mac OS X #{MACOS_FULL_VERSION})"
+  RECOMMENDED_GCC_40 = (MACOS_VERSION >= 10.6) ? 5494 : 5493
+  RECOMMENDED_GCC_42 = (MACOS_VERSION >= 10.6) ? 5664 : 5577
+end
 
 RECOMMENDED_LLVM = 2326
-RECOMMENDED_GCC_40 = (MACOS_VERSION >= 10.6) ? 5494 : 5493
-RECOMMENDED_GCC_42 = (MACOS_VERSION >= 10.6) ? 5664 : 5577
 
 require 'fileutils'
 module Homebrew extend self

@@ -71,7 +71,7 @@ begin
 
   # Add example external commands to PATH before checking.
   ENV['PATH'] += ":#{HOMEBREW_REPOSITORY}/Library/Contributions/examples"
-  if system "/usr/bin/which -s brew-#{cmd}"
+  if system "/usr/bin/which brew-#{cmd} > /dev/null 2>&1"
     %w[CACHE CELLAR LIBRARY_PATH PREFIX REPOSITORY].each do |e|
       ENV["HOMEBREW_#{e}"] = Object.const_get "HOMEBREW_#{e}"
     end
