@@ -30,14 +30,6 @@ class DebianFormula < Formula
     'libc6-dev',
     'curl'
 
-  def patches
-    %w[
-      1000-receive-pack-avoid-dup-alternate-ref-output.diff
-      1001-upload-pack-deadlock.diff
-      1002-git-fetch-performance.diff
-    ]
-  end
-
   def package
     # TODO: use FPM::Builder directly here
     tmp = Pathname.new Dir.mktmpdir("homebrew-#{name}-#{version}")
@@ -129,6 +121,14 @@ class Git < DebianFormula
     'subversion', 'libsvn-perl | libsvn-core-perl',
     'unzip',
     'gettext'
+
+  def patches
+    %w[
+      1000-receive-pack-avoid-dup-alternate-ref-output.diff
+      1001-upload-pack-deadlock.diff
+      1002-git-fetch-performance.diff
+    ]
+  end
 
   def build
     make \
