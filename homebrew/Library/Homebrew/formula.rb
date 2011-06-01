@@ -612,23 +612,23 @@ EOF
     raise 'You cannot override Formula.brew' if method == 'brew'
   end
 
+  def self.attr_rw(*attrs)
+    attrs.each do |attr|
+      class_eval %Q{
+        def self.#{attr}(val=nil)
+          val.nil? ? @#{attr} : @#{attr} = val
+        end
+      }
+    end
+  end
+
+  attr_rw :version, :homepage, :specs, :deps, :external_deps
+  attr_rw :keg_only_reason, :fails_with_llvm_reason, :skip_clean_all
+  attr_rw(*CHECKSUM_TYPES)
+
   class << self
     # The methods below define the formula DSL.
     attr_reader :stable, :unstable
-
-    def self.attr_rw(*attrs)
-      attrs.each do |attr|
-        class_eval %Q{
-          def #{attr}(val=nil)
-            val.nil? ? @#{attr} : @#{attr} = val
-          end
-        }
-      end
-    end
-
-    attr_rw :version, :homepage, :specs, :deps, :external_deps
-    attr_rw :keg_only_reason, :fails_with_llvm_reason, :skip_clean_all
-    attr_rw(*CHECKSUM_TYPES)
 
     def head val=nil, specs=nil
       return @head if val.nil?
