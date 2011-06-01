@@ -60,7 +60,7 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
         raise
       end
     else
-      puts "File already downloaded and cached to #{HOMEBREW_CACHE}"
+      puts "File already downloaded"
     end
     return @tarball_path # thus performs checksum verification
   end
