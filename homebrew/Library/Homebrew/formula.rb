@@ -131,7 +131,7 @@ class Formula
 
     CHECKSUM_TYPES.each { |type| set_instance_variable type }
 
-    @downloader=download_strategy.new @spec_to_use.url, name, version, @spec_to_use.specs
+    @downloader=download_strategy.new @spec_to_use.url, name, @spec_to_use.detect_version, @spec_to_use.specs
   end
 
   # if the dir is there, but it's empty we consider it not installed
