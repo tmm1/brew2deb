@@ -45,9 +45,14 @@ class DebianFormula < Formula
         '-t', 'deb',
         '-s', 'dir',
         '--description', self.class.description,
-        '--url', self.class.url,
+        '--url', self.class.homepage || self.class.url,
         '-C', destdir,
         '.'
+        # add maintainer
+        # fix description
+        # add depends list
+        # section
+        # architecture
 
       FileUtils.mv Dir['*.deb'], HOMEBREW_CACHE
     ensure
@@ -121,6 +126,8 @@ class Git < DebianFormula
     make \
       'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
       'NO_TCLTK' => 1,
+      # 'NO_PERL' => 1,
+      # 'NO_PYTHON' => 1,
       'prefix' => prefix,
       'gitexecdir' => '/usr/lib/git-core'
   end
@@ -136,21 +143,22 @@ class Git < DebianFormula
 end
 
 if __FILE__ == $0
+  Object.__send__ :remove_const, :HOMEBREW_CACHE
   HOMEBREW_CACHE = Pathname.new(File.expand_path('../', __FILE__))
 
-  p [:prefix=, HOMEBREW_PREFIX]
-  p [:repo=,   HOMEBREW_REPOSITORY]
-  p [:cache=,  HOMEBREW_CACHE]
-  p [:cellar=, HOMEBREW_CELLAR]
+  # p [:prefix=, HOMEBREW_PREFIX]
+  # p [:repo=,   HOMEBREW_REPOSITORY]
+  # p [:cache=,  HOMEBREW_CACHE]
+  # p [:cellar=, HOMEBREW_CELLAR]
 
-  p Git.homepage
-  p Git.build_depends
+  # p Git.homepage
+  # p Git.build_depends
 
 
   f = Git.new
-  p [Git.version, f.version]
-  p f
-  p f.path
+  # p [Git.version, f.version]
+  # p f
+  # p f.path
 
   # Check for build deps.
   system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
@@ -160,7 +168,6 @@ if __FILE__ == $0
   end
 
   f.brew do
-    p Dir.pwd
     f.build
     f.install
     f.package
