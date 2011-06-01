@@ -568,7 +568,7 @@ EOF
           p[:curl_args] = [url, '-o', out_fn]
         else
           # it's a file on the local filesystem
-          p[:filename] = url
+          p[:filename] = HOMEBREW_CACHE+url
         end
 
         p[:args] = ["-#{arg}", '-i', p[:filename]]
