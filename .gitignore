@@ -1,3 +1,5 @@
 homebrew/Library/Formula
 homebrew/Library/Aliases
 homebrew/Library/Contributions
+packages/*/src
+packages/*/pkg
