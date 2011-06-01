@@ -76,6 +76,8 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
       File.open(@tarball_path) { |f| magic_bytes = f.read(4) }
     end
 
+    ohai "Extracing source"
+
     # magic numbers stolen from /usr/share/file/magic/
     case magic_bytes
     when /^PK\003\004/ # .zip archive
