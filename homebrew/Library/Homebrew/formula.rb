@@ -98,7 +98,7 @@ class Formula
   attr_reader :name, :path, :url, :version, :homepage, :specs, :downloader
 
   # Homebrew determines the name
-  def initialize name='__UNKNOWN__', path=nil
+  def initialize name=self.class.name||'__UNKNOWN__', path=nil
     set_instance_variable 'homepage'
     set_instance_variable 'url'
     set_instance_variable 'head'
