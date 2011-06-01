@@ -105,7 +105,7 @@ class BuildError < Homebrew::InstallationError
     @env = ENV.to_hash
     @exit_status = es.exitstatus rescue 1
     args = args.map{ |arg| arg.to_s.gsub " ", "\\ " }.join(" ")
-    super formula, "Failed executing: #{command} #{args}"
+    super formula, "Failed executing: #{command} #{args} returned #{es.inspect}"
   end
 
   def was_running_configure?
