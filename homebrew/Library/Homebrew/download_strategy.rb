@@ -106,7 +106,7 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
 
 private
   def chdir
-    entries=Dir['*']
+    entries=Dir['*'].select{ |dir| File.directory?(dir) }
     case entries.length
       when 0 then raise "Empty archive"
       when 1 then Dir.chdir entries.first rescue nil

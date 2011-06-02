@@ -8,7 +8,7 @@ class Tty
     def yellow; underline 33 ; end
     def reset; escape 0; end
     def em; underline 39; end
-    
+
   private
     def color n
       escape "0;#{n}"
@@ -81,7 +81,7 @@ end
 def safe_system cmd, *args
   unless Homebrew.system cmd, *args
     args = args.map{ |arg| arg.to_s.gsub " ", "\\ " } * " "
-    raise "Failure while executing: #{cmd} #{args}"
+    raise "Failure while executing: #{cmd} #{args} (got #{$?.inspect} in #{Dir.pwd})"
   end
 end
 

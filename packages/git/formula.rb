@@ -20,9 +20,10 @@ end
 
 class DebianFormula < Formula
   attr_rw :name, :description
+  attr_rw :maintainer, :section, :arch
   attr_rw :pre_install, :post_install, :pre_uninstall, :post_uninstall
 
-  attr_rw_list :requires, :depends, :build_depends
+  attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
 
   build_depends \
@@ -30,34 +31,47 @@ class DebianFormula < Formula
     'libc6-dev',
     'curl'
 
+  def self.package!
+    f = new
+
+    # Check for build deps.
+    system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
+    if $? != 0
+      f.send :onoe, 'Missing build dependencies.'
+      exit(1)
+    end
+
+    f.brew do
+      f.send :ohai, 'Compiling source'
+      f.build
+
+      f.send :ohai, 'Installing binaries'
+      f.install
+
+      f.send :ohai, 'Packaging into a .deb'
+      f.package
+    end
+  end
+
   def package
-    # TODO: use FPM::Builder directly here
-    tmp = Pathname.new Dir.mktmpdir("homebrew-#{name}-#{version}")
-    raise "Couldn't create build sandbox" if not tmp.directory?
-
-    begin
-      wd=Dir.pwd
-      Dir.chdir tmp
-
-      sh 'fpm',
+    Dir.chdir HOMEBREW_WORKDIR do
+      # TODO: use FPM::Builder directly here
+      safe_system 'fpm',
+        # maintainer
+        # section
+        # architecture
+        # depends
+        # fix description spacing
+        # conflicts/replaces
         '-n', name,
         '-v', version,
         '-t', 'deb',
         '-s', 'dir',
         '--url', self.class.homepage || self.class.url,
+        '--depends', self.class.depends.join(', '),
         '-C', destdir,
         '--description', self.class.description,
         '.'
-        # add maintainer
-        # fix description
-        # add depends list
-        # section
-        # architecture
-
-      FileUtils.mv Dir['*.deb'], HOMEBREW_CACHE
-    ensure
-      Dir.chdir wd
-      tmp.rmtree
     end
   end
 
@@ -72,7 +86,7 @@ class DebianFormula < Formula
     args += env.map{ |k,v| "#{k}=#{v}" }
     args.map!{ |a| a.to_s }
 
-    sh 'make', *args
+    safe_system 'make', *args
   end
 
   def skip_clean_all?
@@ -80,13 +94,13 @@ class DebianFormula < Formula
   end
 
   def mksrcdir
-    FileUtils.mkdir_p('src')
-    tmp = Pathname.new File.expand_path('src')
-    raise "Couldn't create build sandbox" if not tmp.directory?
+    srcdir = HOMEBREW_WORKDIR+'src'
+    FileUtils.mkdir_p(srcdir)
+    raise "Couldn't create build sandbox" if not srcdir.directory?
 
     begin
       wd=Dir.pwd
-      Dir.chdir tmp
+      Dir.chdir srcdir
       yield
     ensure
       Dir.chdir wd
@@ -99,7 +113,7 @@ class DebianFormula < Formula
   end
 
   def destdir
-    HOMEBREW_CACHE+'pkg'
+    HOMEBREW_WORKDIR+'pkg'
   end
 end
 
@@ -108,6 +122,7 @@ class Git < DebianFormula
   md5 '4b2df3f916061439ae105d7a27637925'
   homepage 'http://git-scm.com'
 
+  section 'vcs'
   name 'git'
   version '1.7.4.2~github1'
   description <<-DESC
@@ -122,64 +137,48 @@ class Git < DebianFormula
     'unzip',
     'gettext'
 
+  depends \
+    'perl-modules, liberror-perl',
+    'libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl'
+
   def patches
-    %w[
-      1000-receive-pack-avoid-dup-alternate-ref-output.diff
-      1001-upload-pack-deadlock.diff
-      1002-git-fetch-performance.diff
+    [
+      'patches/1000-receive-pack-avoid-dup-alternate-ref-output.diff',
+      'patches/1001-upload-pack-deadlock.diff',
+      'patches/1002-git-fetch-performance.diff'
+      # 'patches/1003-patch-id-eof-fix.diff' # in 1.7.4.2 already
     ]
   end
 
   def build
-    make \
-      'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
-      'NO_TCLTK' => 1,
-      # 'NO_PERL' => 1,
-      # 'NO_PYTHON' => 1,
-      'prefix' => prefix,
-      'gitexecdir' => '/usr/lib/git-core'
+    make(vars)
   end
 
   def install
-    make :install,
-      'DESTDIR' => destdir,
-      'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
-      'NO_TCLTK' => 1,
+    make(:install, vars.merge('DESTDIR' => destdir))
+  end
+
+  private
+
+  def vars
+    {
       'prefix' => prefix,
-      'gitexecdir' => '/usr/lib/git-core'
+      'gitexecdir' => '/usr/lib/git-core',
+      'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
+      # 'NO_PERL' => 1,
+      # 'NO_PYTHON' => 1,
+      'NO_TCLTK' => 1
+    }
   end
 end
 
 if __FILE__ == $0
   Object.__send__ :remove_const, :HOMEBREW_CACHE
-  HOMEBREW_CACHE = Pathname.new(File.expand_path('../', __FILE__))
+  HOMEBREW_WORKDIR = Pathname.new(File.expand_path('../', __FILE__))
+  HOMEBREW_CACHE = HOMEBREW_WORKDIR+'src'
+  FileUtils.mkdir_p(HOMEBREW_CACHE)
 
-  # p [:prefix=, HOMEBREW_PREFIX]
-  # p [:repo=,   HOMEBREW_REPOSITORY]
-  # p [:cache=,  HOMEBREW_CACHE]
-  # p [:cellar=, HOMEBREW_CELLAR]
-
-  # p Git.homepage
-  # p Git.build_depends
-
-
-  f = Git.new
-  # p [Git.version, f.version]
-  # p f
-  # p f.path
-
-  # Check for build deps.
-  system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
-  if $? != 0
-    f.send :onoe, 'Missing build dependencies.'
-    exit(1)
-  end
-
-  f.brew do
-    f.build
-    f.install
-    f.package
-  end
+  Git.package!
 end
 
 __END__
