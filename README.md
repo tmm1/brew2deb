@@ -9,7 +9,18 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 
 ```
 $ cd packages/git
+$ tree
+.
+├── formula.rb
+└── patches
+    ├── git-fetch-performance.diff
+    ├── patch-id-eof-fix.diff
+    ├── post-upload-pack-hook.diff
+    ├── remove-duplicate-dot-have-lines.diff
+    └── upload-pack-deadlock.diff
+```
 
+```
 $ ../../bin/brew2deb
 ==> Downloading http://kernel.org/pub/software/scm/git/git-1.7.5.4.tar.bz2
 ==> Extracing source
@@ -50,7 +61,9 @@ install -d -m 755 '/home/tmm1/brew2deb/packages/git/install/usr/lib/git-core'
     ...
 ==> Packaging into a .deb
 Created /home/tmm1/brew2deb/packages/git/pkg/git_1:1.7.5.4-1+github1_amd64.deb
+```
 
+```
 $ dpkg --info pkg/git_1\:1.7.5.4-1+github1_amd64.deb
  Package: git
  Version: 1:1.7.5.4-1+github1
@@ -59,6 +72,7 @@ $ dpkg --info pkg/git_1\:1.7.5.4-1+github1_amd64.deb
  Depends: perl-modules, liberror-perl, libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl
  Provides: git-core, git-svn
  Replaces: git-core, git-svn
+ Conflicts: git-core, git-svn
  Standards-Version: 3.9.1
  Section: vcs
  Priority: extra
