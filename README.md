@@ -10,7 +10,6 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 ```
 $ cd packages/git
 $ tree
-.
 ├── formula.rb
 └── patches
     ├── git-fetch-performance.diff
@@ -64,7 +63,7 @@ Created /home/tmm1/brew2deb/packages/git/pkg/git_1:1.7.5.4-1+github1_amd64.deb
 ```
 
 ```
-$ dpkg --info pkg/git_1\:1.7.5.4-1+github1_amd64.deb
+$ dpkg --info pkg/git_1:1.7.5.4-1+github1_amd64.deb
  Package: git
  Version: 1:1.7.5.4-1+github1
  Architecture: amd64
