@@ -107,7 +107,7 @@ class DebianFormula < Formula
 
       opts << '.'
 
-      safe_system File.expand_path('../../../fpm/bin/fpm', __FILE__), *opts
+      safe_system File.expand_path('../../fpm/bin/fpm', __FILE__), *opts
     end
   end
 
