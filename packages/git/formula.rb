@@ -1,6 +1,3 @@
-$:.unshift File.expand_path('../../../lib', __FILE__)
-require 'debian_formula'
-
 class Git < DebianFormula
   url 'http://kernel.org/pub/software/scm/git/git-1.7.5.4.tar.bz2'
   md5 '4985b774db84d3bbcc2b8d90952552a3'
@@ -59,13 +56,4 @@ class Git < DebianFormula
       'NO_TCLTK' => 1
     }
   end
-end
-
-if __FILE__ == $0
-  Object.__send__ :remove_const, :HOMEBREW_CACHE
-  HOMEBREW_WORKDIR = Pathname.new(File.expand_path('../', __FILE__))
-  HOMEBREW_CACHE = HOMEBREW_WORKDIR+'cache'
-  FileUtils.mkdir_p(HOMEBREW_CACHE)
-
-  Git.package!
 end

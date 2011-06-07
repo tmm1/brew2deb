@@ -155,3 +155,22 @@ class DebianFormula < Formula
     HOMEBREW_WORKDIR+'install'
   end
 end
+
+class DebianSourceFormula < DebianFormula
+  def build
+    ENV['DEBEMAIL'] = maintainer
+    safe_system 'dch', '-v', version, 'brew2deb package'
+    safe_system 'dpkg-buildpackage', '-rfakeroot'
+  end
+
+  def install
+  end
+
+  def package
+    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
+    Dir[HOMEBREW_WORKDIR+'src'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
+      FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
+    end
+  end
+end
+
