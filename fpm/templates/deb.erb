@@ -1,0 +1,21 @@
+Package: <%= name %>
+Version: <%= "#{epoch}:" if epoch %><%= version %><%= iteration && '-'+iteration.to_s %>
+Architecture: <%= architecture %>
+Maintainer: <%= maintainer or "<unknown>" %>
+<% if !dependencies.empty? %>
+<%   properdeps = dependencies.collect { |d| fix_dependency(d) }.flatten %>
+Depends: <%= properdeps.flatten.join(", ") %>
+<% end %>
+<% if !provides.empty? %>
+Provides: <%= provides.join(", ") %>
+<% end %>
+<% if !replaces.empty? %>
+<%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten %>
+Replaces: <%= properrepl.flatten.join(", ") %>
+<% end %>
+Standards-Version: 3.9.1
+Section: <%= category or "unknown" %> 
+Priority: extra
+Homepage: <%= url or "http://nourlgiven.example.com/" %>
+Description: <%= description or "no description given" %>
+

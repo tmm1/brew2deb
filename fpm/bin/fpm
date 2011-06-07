@@ -1,0 +1,11 @@
+#!/usr/bin/env ruby
+#
+
+require "rubygems"
+$: << File.join(File.dirname(__FILE__), "..", "lib")
+require "fpm"
+require "fpm/program"
+
+program = FPM::Program.new
+ret = program.run(ARGV)
+exit(ret.nil? ? 0 : ret)
