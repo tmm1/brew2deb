@@ -92,7 +92,7 @@ class DebianFormula < Formula
         '--description', self.class.description.ui.strip
       ]
 
-      %w[ depends provides replaces ].each do |type|
+      %w[ depends provides replaces conflicts ].each do |type|
         if self.class.send(type).any?
           self.class.send(type).each do |dep|
             opts += ["--#{type}", dep]
