@@ -56,11 +56,10 @@ class DebianFormula < Formula
   def package
     Dir.chdir HOMEBREW_WORKDIR do
       # TODO: use FPM::Builder directly here
-      safe_system 'fpm',
+      opts = [
         # maintainer
-        # section
+        # section (category)
         # architecture
-        # depends
         # fix description spacing
         # conflicts/replaces
         '-n', name,
@@ -68,10 +67,21 @@ class DebianFormula < Formula
         '-t', 'deb',
         '-s', 'dir',
         '--url', self.class.homepage || self.class.url,
-        '--depends', self.class.depends.join(', '),
         '-C', destdir,
-        '--description', self.class.description,
-        '.'
+        '--description', self.class.description
+      ]
+
+      %w[ depends provides replaces ].each do |type|
+        if self.class.send(type).any?
+          self.class.send(type).each do |dep|
+            opts += ["--#{type}", dep]
+          end
+        end
+      end
+
+      opts << '.'
+
+      safe_system File.expand_path('../../../fpm/bin/fpm', __FILE__), *opts
     end
   end
 
@@ -180,26 +190,3 @@ if __FILE__ == $0
 
   Git.package!
 end
-
-__END__
-
-class REE < DebianFormula
-  homepage 'http://rubyenterpriseedition.com/'
-  url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2011.03.tar.gz'
-  md5 '038604ce25349e54363c5df9cd535ec8'
-
-  name 'ruby-enterprise'
-  description <<-DESC
-    Ruby Enterprise Edition.
-  DESC
-
-  def build
-    sh "./configure --prefix=#{prefix}"
-    sh "make"
-  end
-
-  def install
-    sh "make install DESTDIR=#{destdir}"
-  end
-end
-
