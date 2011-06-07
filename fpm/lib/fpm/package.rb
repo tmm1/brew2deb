@@ -48,6 +48,10 @@ class FPM::Package
   # (Not all packages support this)
   attr_accessor :provides
 
+  # Array of things this package conflicts with.
+  # (Not all packages support this)
+  attr_accessor :conflicts
+
   # Array of things this package replaces.
   # (Not all packages support this)
   attr_accessor :replaces
@@ -103,6 +107,7 @@ class FPM::Package
     @description = source[:description] || "no description given"
     @provides = source[:provides] || []
     @replaces = source[:replaces] || []
+    @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
   end # def initialize
 

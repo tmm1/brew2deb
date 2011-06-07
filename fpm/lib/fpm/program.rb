@@ -14,6 +14,7 @@ class FPM::Program
     @settings.exclude = []  # Paths to exclude in packaging
     @settings.provides = []
     @settings.replaces = []
+    @settings.conflicts = []
     @settings.source = {}   # source settings
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
@@ -121,6 +122,10 @@ class FPM::Program
     opts.on("--provides PROVIDES") do |thing|
       @settings.provides << thing
     end # --provides
+
+    opts.on("--conflicts CONFLICTS") do |thing|
+      @settings.conflicts << thing
+    end # --conflicts
 
     opts.on("--replaces REPLACES") do |thing|
       @settings.replaces << thing

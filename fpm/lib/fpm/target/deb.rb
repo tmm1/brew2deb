@@ -47,7 +47,7 @@ class FPM::Target::Deb < FPM::Package
         else raise "Unsupported script name '#{name}' (path: #{path})"
       end # case name
     end # self.scripts.each
-    
+
     # Make the control
     system("tar -zcf control.tar.gz #{control_files.join(" ")}")
 

@@ -6,11 +6,14 @@ Maintainer: <%= maintainer or "<unknown>" %>
 <%   properdeps = dependencies.collect { |d| fix_dependency(d); d }.flatten %>
 Depends: <%= properdeps.flatten.join(", ") %>
 <% end %>
+<% if !conflicts.empty? %>
+Conflicts: <%= conflicts.join(", ") %>
+<% end %>
 <% if !provides.empty? %>
 Provides: <%= provides.join(", ") %>
 <% end %>
 <% if !replaces.empty? %>
-<%   properrepl = replaces.collect { |d| fix_dependency(d) }.flatten %>
+<%   properrepl = replaces.collect { |d| fix_dependency(d); d }.flatten %>
 Replaces: <%= properrepl.flatten.join(", ") %>
 <% end %>
 Standards-Version: 3.9.1
