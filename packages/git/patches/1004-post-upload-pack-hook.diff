@@ -1,4 +1,6 @@
+From 35985e2847ebf23c59db60d69b060d3a50ba88ed Mon Sep 17 00:00:00 2001
 From: Tom Preston-Werner <tom@mojombo.com>
+Date: Tue, 18 Aug 2009 00:04:53 -0700
 Subject: [PATCH] upload-pack: add a trigger for post-upload-pack hook
 
 A post-upload-pack hook is desirable for Git hosts that need to
@@ -10,7 +12,6 @@ argument, depending on whether a full pack file was sent to the
 client or not.
 
 Signed-off-by: Tom Preston-Werner <tom@mojombo.com>
-Signed-off-by: Jeff King <peff@peff.net>
 ---
  upload-pack.c |    9 +++++++++
  1 files changed, 9 insertions(+), 0 deletions(-)
@@ -20,28 +21,28 @@ index ce5cbbe..851558f 100644
 --- a/upload-pack.c
 +++ b/upload-pack.c
 @@ -144,6 +144,13 @@ static int do_rev_list(int in, int out, void *user_data)
-       return 0;
+ 	return 0;
  }
-
+ 
 +static void run_post_upload_pack_hook(int create_full_pack)
 +{
-+       const char *fetch_type;
-+       fetch_type = (create_full_pack) ? "clone" : "fetch";
-+       run_hook(NULL, "post-upload-pack", fetch_type, NULL);
++	const char *fetch_type;
++	fetch_type = (create_full_pack) ? "clone" : "fetch";
++	run_hook(NULL, "post-upload-pack", fetch_type, NULL);
 +}
 +
  static void create_pack_file(void)
  {
-       struct async rev_list;
+ 	struct async rev_list;
 @@ -319,6 +326,8 @@ static void create_pack_file(void)
-       }
-       if (use_sideband)
-               packet_flush(1);
+ 	}
+ 	if (use_sideband)
+ 		packet_flush(1);
 +
-+       run_post_upload_pack_hook(create_full_pack);
-       return;
-
- fail:
---
-1.7.6.rc0.35.gc40cb
++	run_post_upload_pack_hook(create_full_pack);
+ 	return;
+ 
+  fail:
+-- 
+1.7.4.1
 

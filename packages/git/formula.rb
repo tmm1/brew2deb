@@ -46,6 +46,7 @@ class DebianFormula < Formula
       f.build
 
       f.send :ohai, 'Installing binaries'
+      FileUtils.rm_rf(f.send(:destdir))
       f.install
 
       f.send :ohai, 'Packaging into a .deb'
@@ -128,13 +129,13 @@ class DebianFormula < Formula
 end
 
 class Git < DebianFormula
-  url 'http://kernel.org/pub/software/scm/git/git-1.7.4.2.tar.bz2'
-  md5 '4b2df3f916061439ae105d7a27637925'
+  url 'http://kernel.org/pub/software/scm/git/git-1.7.5.4.tar.bz2'
+  md5 '4985b774db84d3bbcc2b8d90952552a3'
   homepage 'http://git-scm.com'
 
   section 'vcs'
   name 'git'
-  version '1.7.4.2~github1'
+  version '1.7.5.4~github1'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -151,16 +152,17 @@ class Git < DebianFormula
     'perl-modules, liberror-perl',
     'libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl'
 
-  provides 'git-core'
-  replaces 'git-core'
+  provides  'git-core'
+  replaces  'git-core'
+  conflicts 'git-core'
 
   def patches
     [
+      'patches/1004-post-upload-pack-hook.diff',
       'patches/1000-receive-pack-avoid-dup-alternate-ref-output.diff',
-      'patches/1001-upload-pack-deadlock.diff',
+      # 'patches/1001-upload-pack-deadlock.diff', # in 1.7.5.1
       'patches/1002-git-fetch-performance.diff',
-      # 'patches/1003-patch-id-eof-fix.diff', # in 1.7.4.2 already
-      'patches/1004-post-upload-pack-hook.diff'
+      # 'patches/1003-patch-id-eof-fix.diff', # in 1.7.4.2
     ]
   end
 
