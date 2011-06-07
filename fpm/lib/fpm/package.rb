@@ -75,7 +75,7 @@ class FPM::Package
     @dependencies = source[:dependencies] || []
     # Iteration can be nil. If nil, the fpm package implementation is expected
     # to handle any default value that should be instead.
-    @iteration = source[:iteration] 
+    @iteration = source[:iteration]
     @url = source[:url] || "http://nourlgiven.example.com/no/url/given"
     @category = source[:category] || "default"
     @license = source[:license] || "unknown"

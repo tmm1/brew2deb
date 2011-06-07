@@ -18,7 +18,7 @@ class FPM::Program
     @settings.source = {}   # source settings
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
-    @settings.scripts ||= {} 
+    @settings.scripts ||= {}
   end # def initialize
 
   def run(args)
@@ -118,6 +118,10 @@ class FPM::Program
     opts.on("-d DEPENDENCY", "--depends DEPENDENCY") do |dep|
       @settings.dependencies << dep
     end # --depends
+
+    opts.on("--category SECTION_OR_GROUP") do |thing|
+      @settings.category = thing
+    end # --category
 
     opts.on("--provides PROVIDES") do |thing|
       @settings.provides << thing
