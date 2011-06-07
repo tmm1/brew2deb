@@ -106,10 +106,13 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
 
 private
   def chdir
+    # Look for directories that match @tarball_path.basename
     entries=Dir['*'].select{ |dir| File.directory?(dir) }
     case entries.length
       when 0 then raise "Empty archive"
       when 1 then Dir.chdir entries.first rescue nil
+      else
+        raise "Too many source directories"
     end
   end
 
