@@ -151,12 +151,16 @@ class Git < DebianFormula
     'perl-modules, liberror-perl',
     'libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl'
 
+  provides 'git-core'
+  replaces 'git-core'
+
   def patches
     [
       'patches/1000-receive-pack-avoid-dup-alternate-ref-output.diff',
       'patches/1001-upload-pack-deadlock.diff',
-      'patches/1002-git-fetch-performance.diff'
-      # 'patches/1003-patch-id-eof-fix.diff' # in 1.7.4.2 already
+      'patches/1002-git-fetch-performance.diff',
+      # 'patches/1003-patch-id-eof-fix.diff', # in 1.7.4.2 already
+      'patches/1004-post-upload-pack-hook.diff'
     ]
   end
 
