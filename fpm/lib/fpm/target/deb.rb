@@ -19,7 +19,7 @@ class FPM::Target::Deb < FPM::Package
       # Debian calls x86_64 "amd64"
       @architecture = "amd64"
     end
-    
+
     return @architecture
   end # def architecture
 
