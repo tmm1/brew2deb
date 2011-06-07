@@ -22,9 +22,9 @@ class Git < DebianFormula
     'perl-modules, liberror-perl',
     'libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl'
 
-  provides  'git-core'
-  replaces  'git-core'
-  conflicts 'git-core'
+  provides  'git-core', 'git-svn'
+  replaces  'git-core', 'git-svn'
+  conflicts 'git-core', 'git-svn'
 
   def patches
     [
