@@ -71,6 +71,8 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
     elsif @tarball_path.extname == '.pkg'
       # Use more than 4 characters to not clash with magicbytes
       magic_bytes = "____pkg"
+    elsif @tarball_path.extname == '.dsc'
+      magic_bytes = "____dsc"
     else
       # get the first four bytes
       File.open(@tarball_path) { |f| magic_bytes = f.read(4) }
@@ -89,6 +91,14 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
       chdir
     when '____pkg'
       safe_system '/usr/sbin/pkgutil', '--expand', @tarball_path, File.basename(@url)
+      chdir
+    when '____dsc'
+      dsc = File.read(@tarball_path)
+      files = dsc.scan(/[\d\w\.-]+\.gz/).uniq
+      files.each do |f|
+        CurlDownloadStrategy.new(File.dirname(@url)+'/'+f, '', '', nil).fetch
+      end
+      safe_system 'dpkg-source', '-x', @tarball_path
       chdir
     when 'Rar!'
       quiet_safe_system 'unrar', 'x', {:quiet_flag => '-inul'}, @tarball_path

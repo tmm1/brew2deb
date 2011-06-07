@@ -64,7 +64,7 @@ end
 if __FILE__ == $0
   Object.__send__ :remove_const, :HOMEBREW_CACHE
   HOMEBREW_WORKDIR = Pathname.new(File.expand_path('../', __FILE__))
-  HOMEBREW_CACHE = HOMEBREW_WORKDIR+'src'
+  HOMEBREW_CACHE = HOMEBREW_WORKDIR+'cache'
   FileUtils.mkdir_p(HOMEBREW_CACHE)
 
   Git.package!
