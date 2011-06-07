@@ -76,13 +76,8 @@ class DebianFormula < Formula
   end
 
   def package
-    maintainer = self.class.maintainer || begin
-      username = `git config --get user.name`.strip
-      useremail = `git config --get user.email`.strip
-      "#{username} <#{useremail}>"
-    end
-
-    Dir.chdir HOMEBREW_WORKDIR do
+    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
+    Dir.chdir HOMEBREW_WORKDIR+'pkg' do
       # TODO: use FPM::Builder directly here
       opts = [
         # architecture
@@ -144,11 +139,19 @@ class DebianFormula < Formula
   end
   alias :mktemp :mksrcdir
 
+  def maintainer
+    @maintainer ||= self.class.maintainer || begin
+      username = `git config --get user.name`.strip
+      useremail = `git config --get user.email`.strip
+      "#{username} <#{useremail}>"
+    end
+  end
+
   def prefix
     '/usr'
   end
 
   def destdir
-    HOMEBREW_WORKDIR+'pkg'
+    HOMEBREW_WORKDIR+'install'
   end
 end

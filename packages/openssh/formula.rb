@@ -11,6 +11,10 @@ class DebianSourceFormula < DebianFormula
   end
 
   def package
+    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
+    Dir[HOMEBREW_WORKDIR+'src'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
+      FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
+    end
   end
 end
 
@@ -20,7 +24,11 @@ class OpenSSH < DebianSourceFormula
   version '1:5.1p1-6~github1'
 
   def patches
-    'mysql_patch_5.2-p1-1.patch'
+    [
+      'mysql_patch_5.2-p1-1.patch',
+      'no_make_tests.patch',
+      # add libmysqlclient build and runtime deps
+    ]
   end
 end
 
