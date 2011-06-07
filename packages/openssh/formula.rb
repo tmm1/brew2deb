@@ -3,7 +3,8 @@ require 'debian_formula'
 
 class DebianSourceFormula < DebianFormula
   def build
-    safe_system 'dch', '-v', version
+    ENV['DEBEMAIL'] = maintainer
+    safe_system 'dch', '-v', version, 'brew2deb package'
     safe_system 'dpkg-buildpackage', '-rfakeroot'
   end
 
@@ -21,7 +22,7 @@ end
 class OpenSSH < DebianSourceFormula
   url 'http://ftp.de.debian.org/debian/pool/main/o/openssh/openssh_5.1p1-5.dsc'
   md5 '338282d6bc34e9ea227862557a042818'
-  version '1:5.1p1-6~github1'
+  version '1:5.1p1-5github3'
 
   def patches
     [
