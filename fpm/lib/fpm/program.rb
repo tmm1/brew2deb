@@ -38,7 +38,7 @@ class FPM::Program
 
     if !ok
       $stderr.puts "There were errors; see above."
-      $stderr.puts 
+      $stderr.puts
       $stderr.puts opts.help
       return 1
     end
@@ -57,7 +57,7 @@ class FPM::Program
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
     FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
                               @settings)
-    
+
     # Process fpmrc first
     fpmrc(opts)
 
@@ -71,7 +71,7 @@ class FPM::Program
     return if !ENV.include?("HOME")
     rcpath = File.expand_path("~/.fpmrc")
     return if !File.exists?(rcpath)
-    
+
     # fpmrc exists, read it as flags, one per line.
     File.new(rcpath, "r").each do |line|
       flag = line.chomp

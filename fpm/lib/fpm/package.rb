@@ -2,7 +2,7 @@ require "fpm/namespace"
 require "socket" # for Socket.gethostname
 require "logger"
 
-class FPM::Package 
+class FPM::Package
   # The name of this package
   attr_accessor :name
 
@@ -17,7 +17,7 @@ class FPM::Package
   # The iteration of this package.
   #   Debian calls this 'release' and is the last '-NUMBER' in the version
   #   RedHat has this as 'Release' in the .spec file
-  #   FreeBSD calls this 'PORTREVISION' 
+  #   FreeBSD calls this 'PORTREVISION'
   # If left unpicked, it defaults to 1.
   attr_accessor :iteration
 
