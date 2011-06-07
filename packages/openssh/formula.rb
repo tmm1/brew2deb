@@ -26,8 +26,7 @@ class OpenSSH < DebianSourceFormula
   def patches
     [
       'mysql_patch_5.2-p1-1.patch',
-      'no_make_tests.patch',
-      # add libmysqlclient build and runtime deps
+      'enable_mysql_keys.patch',
     ]
   end
 end
