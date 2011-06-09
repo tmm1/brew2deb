@@ -59,11 +59,11 @@ install -d -m 755 '/home/tmm1/brew2deb/packages/git/install/usr/bin'
 install -d -m 755 '/home/tmm1/brew2deb/packages/git/install/usr/lib/git-core'
     ...
 ==> Packaging into a .deb
-Created /home/tmm1/brew2deb/packages/git/pkg/git_1:1.7.5.4-1+github1_amd64.deb
+Created /home/tmm1/brew2deb/packages/git/pkg/git_1.7.5.4-1+github1_amd64.deb
 ```
 
 ```
-$ dpkg --info pkg/git_1:1.7.5.4-1+github1_amd64.deb
+$ dpkg --info pkg/git_1.7.5.4-1+github1_amd64.deb
  Package: git
  Version: 1:1.7.5.4-1+github1
  Architecture: amd64
