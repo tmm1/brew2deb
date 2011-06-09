@@ -33,15 +33,17 @@ class Pathname
     raise "#{src} does not exist" unless File.symlink? src or File.exist? src
 
     mkpath
-    if File.symlink? src
-      # we use the BSD mv command because FileUtils copies the target and
-      # not the link! I'm beginning to wish I'd used Python quite honestly!
-      raise unless Kernel.system 'mv', src, dst
-    else
-      # we mv when possible as it is faster and you should only be using
-      # this function when installing from the temporary build directory
-      FileUtils.mv src, dst
-    end
+    FileUtils.cp src, dst, :preserve => true
+
+    # if File.symlink? src
+    #   # we use the BSD mv command because FileUtils copies the target and
+    #   # not the link! I'm beginning to wish I'd used Python quite honestly!
+    #   raise unless Kernel.system 'mv', src, dst
+    # else
+    #   # we mv when possible as it is faster and you should only be using
+    #   # this function when installing from the temporary build directory
+    #   FileUtils.mv src, dst
+    # end
 
     return return_value
   end
