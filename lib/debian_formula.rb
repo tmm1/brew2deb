@@ -47,6 +47,8 @@ class DebianFormula < Formula
   attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
 
+  attr_writer :installing
+
   build_depends \
     'build-essential',
     'libc6-dev',
@@ -64,11 +66,17 @@ class DebianFormula < Formula
 
     f.brew do
       f.send :ohai, 'Compiling source'
+      f.installing = false
       f.build
 
-      f.send :ohai, 'Installing binaries'
-      FileUtils.rm_rf(f.send(:destdir))
-      f.install
+      begin
+        f.send :ohai, 'Installing binaries'
+        f.installing = true
+        FileUtils.rm_rf(f.send(:destdir))
+        f.install
+      ensure
+        f.installing = false
+      end
 
       f.send :ohai, 'Packaging into a .deb'
       f.package
@@ -150,8 +158,24 @@ class DebianFormula < Formula
     end
   end
 
+  def workdir
+    HOMEBREW_WORKDIR
+  end
+
   def prefix
-    '/usr'
+    current_pathname_for('usr')
+  end
+
+  def etc
+    current_pathname_for('etc')
+  end
+
+  def var
+    current_pathname_for('var')
+  end
+
+  def current_pathname_for(dir)
+    @installing ? destdir + dir : Pathname.new("/#{dir}")
   end
 
   def destdir
