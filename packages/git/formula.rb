@@ -48,7 +48,7 @@ class Git < DebianFormula
 
   def vars
     {
-      'prefix' => prefix,
+      'prefix' => '/usr',
       'gitexecdir' => '/usr/lib/git-core',
       'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
       # 'NO_PERL' => 1,
