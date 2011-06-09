@@ -60,7 +60,8 @@ class FPM::Target::Deb < FPM::Package
 
   def default_output
     v = version
-    v = "#{epoch}:#{v}" if epoch
+    # v = "#{epoch}:#{v}" if epoch
+    v = v.gsub(/^\d+:/, '')
     if iteration
       "#{name}_#{v}-#{iteration}_#{architecture}.#{type}"
     else

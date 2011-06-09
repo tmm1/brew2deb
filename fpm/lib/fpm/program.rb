@@ -102,7 +102,7 @@ class FPM::Program
 
     opts.on("-v VERSION", "--version VERSION",
             "version to give the package") do |version|
-      @settings.version = version 
+      @settings.version = version
     end # --version
 
     opts.on("--iteration ITERATION",
