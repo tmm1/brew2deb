@@ -89,8 +89,11 @@ class DebianFormula < Formula
         '-C', destdir,
         '--maintainer', maintainer,
         '--category', self.class.section,
-        '--description', self.class.description.ui.strip
       ]
+
+      opts += [
+        '--description', self.class.description.ui.strip
+      ] if self.class.description
 
       %w[ depends provides replaces conflicts ].each do |type|
         if self.class.send(type).any?
