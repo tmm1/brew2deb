@@ -1,0 +1,531 @@
+From 114a6a889f5d21c26800c395a97cdd400073a9e8 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Thu, 19 May 2011 17:33:17 -0400
+Subject: [PATCH 1/3] refactor refs_from_alternate_cb to allow passing extra
+ data
+
+The foreach_alt_odb function triggers a callback for each
+alternate object db we have, with room for a single void
+pointer as data. Currently, we always call refs_from_alternate_cb
+as the callback function, and then pass another callback (to
+receive each ref individually) as the void pointer.
+
+This has two problems:
+
+  1. C technically forbids stuffing a function pointer into
+     a "void *". In practice, this probably doesn't matter
+     on any architectures git runs on, but it never hurts to
+     follow the letter of the law.
+
+  2. There is no room for an extra data pointer. Indeed, the
+     alternate_ref_fn that refs_from_alternate_cb calls
+     takes a void* for data, but we always pass it NULL.
+
+Instead, let's properly stuff our function pointer into a
+data struct, which also leaves room for an extra
+caller-supplied data pointer. And to keep things simple for
+existing callers, let's make a for_each_alternate_ref
+function that takes care of creating the extra struct.
+
+Signed-off-by: Jeff King <peff@peff.net>
+Signed-off-by: Junio C Hamano <gitster@pobox.com>
+---
+ builtin/fetch-pack.c   |    2 +-
+ builtin/receive-pack.c |    2 +-
+ transport.c            |   20 +++++++++++++++++---
+ transport.h            |    2 +-
+ 4 files changed, 20 insertions(+), 6 deletions(-)
+
+diff --git a/builtin/fetch-pack.c b/builtin/fetch-pack.c
+index 85aff02..60a17c7 100644
+--- a/builtin/fetch-pack.c
++++ b/builtin/fetch-pack.c
+@@ -226,7 +226,7 @@ static void insert_one_alternate_ref(const struct ref *ref, void *unused)
+ 
+ static void insert_alternate_refs(void)
+ {
+-	foreach_alt_odb(refs_from_alternate_cb, insert_one_alternate_ref);
++	for_each_alternate_ref(insert_one_alternate_ref, NULL);
+ }
+ 
+ #define INITIAL_FLUSH 16
+diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
+index e1ba4dc..6bb1281 100644
+--- a/builtin/receive-pack.c
++++ b/builtin/receive-pack.c
+@@ -738,7 +738,7 @@ static void add_one_alternate_ref(const struct ref *ref, void *unused)
+ 
+ static void add_alternate_refs(void)
+ {
+-	foreach_alt_odb(refs_from_alternate_cb, add_one_alternate_ref);
++	for_each_alternate_ref(add_one_alternate_ref, NULL);
+ }
+ 
+ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
+diff --git a/transport.c b/transport.c
+index a02f79a..1a3998e 100644
+--- a/transport.c
++++ b/transport.c
+@@ -1190,14 +1190,20 @@ literal_copy:
+ 	return xstrdup(url);
+ }
+ 
+-int refs_from_alternate_cb(struct alternate_object_database *e, void *cb)
++struct alternate_refs_data {
++	alternate_ref_fn *fn;
++	void *data;
++};
++
++static int refs_from_alternate_cb(struct alternate_object_database *e,
++				  void *data)
+ {
+ 	char *other;
+ 	size_t len;
+ 	struct remote *remote;
+ 	struct transport *transport;
+ 	const struct ref *extra;
+-	alternate_ref_fn *ref_fn = cb;
++	struct alternate_refs_data *cb = data;
+ 
+ 	e->name[-1] = '\0';
+ 	other = xstrdup(real_path(e->base));
+@@ -1218,8 +1224,16 @@ int refs_from_alternate_cb(struct alternate_object_database *e, void *cb)
+ 	for (extra = transport_get_remote_refs(transport);
+ 	     extra;
+ 	     extra = extra->next)
+-		ref_fn(extra, NULL);
++		cb->fn(extra, cb->data);
+ 	transport_disconnect(transport);
+ 	free(other);
+ 	return 0;
+ }
++
++void for_each_alternate_ref(alternate_ref_fn fn, void *data)
++{
++	struct alternate_refs_data cb;
++	cb.fn = fn;
++	cb.data = data;
++	foreach_alt_odb(refs_from_alternate_cb, &cb);
++}
+diff --git a/transport.h b/transport.h
+index efb1968..161d724 100644
+--- a/transport.h
++++ b/transport.h
+@@ -167,6 +167,6 @@ void transport_print_push_status(const char *dest, struct ref *refs,
+ 		  int verbose, int porcelain, int *nonfastforward);
+ 
+ typedef void alternate_ref_fn(const struct ref *, void *);
+-extern int refs_from_alternate_cb(struct alternate_object_database *e, void *cb);
++extern void for_each_alternate_ref(alternate_ref_fn, void *);
+ 
+ #endif
+-- 
+1.7.5.4
+
+
+From 902bb3645160cae72fe43b5f7f5289968ac01617 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Thu, 19 May 2011 17:34:33 -0400
+Subject: [PATCH 2/3] bisect: refactor sha1_array into a generic sha1 list
+
+This is a generally useful abstraction, so let's let others
+make use of it.  The refactoring is more or less a straight
+copy; however, functions and struct members have had their
+names changed to match string_list, which is the most
+similar data structure.
+
+Signed-off-by: Jeff King <peff@peff.net>
+Signed-off-by: Junio C Hamano <gitster@pobox.com>
+---
+ Makefile     |    2 +
+ bisect.c     |   70 ++++++++++++---------------------------------------------
+ sha1-array.c |   43 +++++++++++++++++++++++++++++++++++
+ sha1-array.h |   18 +++++++++++++++
+ 4 files changed, 78 insertions(+), 55 deletions(-)
+ create mode 100644 sha1-array.c
+ create mode 100644 sha1-array.h
+
+diff --git a/Makefile b/Makefile
+index d0c577b..5980634 100644
+--- a/Makefile
++++ b/Makefile
+@@ -547,6 +547,7 @@ LIB_H += rerere.h
+ LIB_H += resolve-undo.h
+ LIB_H += revision.h
+ LIB_H += run-command.h
++LIB_H += sha1-array.h
+ LIB_H += sha1-lookup.h
+ LIB_H += sideband.h
+ LIB_H += sigchain.h
+@@ -649,6 +650,7 @@ LIB_OBJS += revision.o
+ LIB_OBJS += run-command.o
+ LIB_OBJS += server-info.o
+ LIB_OBJS += setup.o
++LIB_OBJS += sha1-array.o
+ LIB_OBJS += sha1-lookup.o
+ LIB_OBJS += sha1_file.o
+ LIB_OBJS += sha1_name.o
+diff --git a/bisect.c b/bisect.c
+index 060c042..dd7e8ed 100644
+--- a/bisect.c
++++ b/bisect.c
+@@ -9,13 +9,7 @@
+ #include "run-command.h"
+ #include "log-tree.h"
+ #include "bisect.h"
+-
+-struct sha1_array {
+-	unsigned char (*sha1)[20];
+-	int sha1_nr;
+-	int sha1_alloc;
+-	int sorted;
+-};
++#include "sha1-array.h"
+ 
+ static struct sha1_array good_revs;
+ static struct sha1_array skipped_revs;
+@@ -425,22 +419,15 @@ static void argv_array_push_sha1(struct argv_array *array,
+ 	argv_array_push(array, strbuf_detach(&buf, NULL));
+ }
+ 
+-static void sha1_array_push(struct sha1_array *array,
+-			    const unsigned char *sha1)
+-{
+-	ALLOC_GROW(array->sha1, array->sha1_nr + 1, array->sha1_alloc);
+-	hashcpy(array->sha1[array->sha1_nr++], sha1);
+-}
+-
+ static int register_ref(const char *refname, const unsigned char *sha1,
+ 			int flags, void *cb_data)
+ {
+ 	if (!strcmp(refname, "bad")) {
+ 		current_bad_sha1 = sha1;
+ 	} else if (!prefixcmp(refname, "good-")) {
+-		sha1_array_push(&good_revs, sha1);
++		sha1_array_append(&good_revs, sha1);
+ 	} else if (!prefixcmp(refname, "skip-")) {
+-		sha1_array_push(&skipped_revs, sha1);
++		sha1_array_append(&skipped_revs, sha1);
+ 	}
+ 
+ 	return 0;
+@@ -477,41 +464,14 @@ static void read_bisect_paths(struct argv_array *array)
+ 	fclose(fp);
+ }
+ 
+-static int array_cmp(const void *a, const void *b)
+-{
+-	return hashcmp(a, b);
+-}
+-
+-static void sort_sha1_array(struct sha1_array *array)
+-{
+-	qsort(array->sha1, array->sha1_nr, sizeof(*array->sha1), array_cmp);
+-
+-	array->sorted = 1;
+-}
+-
+-static const unsigned char *sha1_access(size_t index, void *table)
+-{
+-	unsigned char (*array)[20] = table;
+-	return array[index];
+-}
+-
+-static int lookup_sha1_array(struct sha1_array *array,
+-			     const unsigned char *sha1)
+-{
+-	if (!array->sorted)
+-		sort_sha1_array(array);
+-
+-	return sha1_pos(sha1, array->sha1, array->sha1_nr, sha1_access);
+-}
+-
+ static char *join_sha1_array_hex(struct sha1_array *array, char delim)
+ {
+ 	struct strbuf joined_hexs = STRBUF_INIT;
+ 	int i;
+ 
+-	for (i = 0; i < array->sha1_nr; i++) {
++	for (i = 0; i < array->nr; i++) {
+ 		strbuf_addstr(&joined_hexs, sha1_to_hex(array->sha1[i]));
+-		if (i + 1 < array->sha1_nr)
++		if (i + 1 < array->nr)
+ 			strbuf_addch(&joined_hexs, delim);
+ 	}
+ 
+@@ -546,13 +506,13 @@ struct commit_list *filter_skipped(struct commit_list *list,
+ 	if (count)
+ 		*count = 0;
+ 
+-	if (!skipped_revs.sha1_nr)
++	if (!skipped_revs.nr)
+ 		return list;
+ 
+ 	while (list) {
+ 		struct commit_list *next = list->next;
+ 		list->next = NULL;
+-		if (0 <= lookup_sha1_array(&skipped_revs,
++		if (0 <= sha1_array_lookup(&skipped_revs,
+ 					   list->item->object.sha1)) {
+ 			if (skipped_first && !*skipped_first)
+ 				*skipped_first = 1;
+@@ -647,7 +607,7 @@ static struct commit_list *managed_skipped(struct commit_list *list,
+ 
+ 	*tried = NULL;
+ 
+-	if (!skipped_revs.sha1_nr)
++	if (!skipped_revs.nr)
+ 		return list;
+ 
+ 	list = filter_skipped(list, tried, 0, &count, &skipped_first);
+@@ -672,7 +632,7 @@ static void bisect_rev_setup(struct rev_info *revs, const char *prefix,
+ 	/* rev_argv.argv[0] will be ignored by setup_revisions */
+ 	argv_array_push(&rev_argv, xstrdup("bisect_rev_setup"));
+ 	argv_array_push_sha1(&rev_argv, current_bad_sha1, bad_format);
+-	for (i = 0; i < good_revs.sha1_nr; i++)
++	for (i = 0; i < good_revs.nr; i++)
+ 		argv_array_push_sha1(&rev_argv, good_revs.sha1[i],
+ 				     good_format);
+ 	argv_array_push(&rev_argv, xstrdup("--"));
+@@ -772,12 +732,12 @@ static struct commit *get_commit_reference(const unsigned char *sha1)
+ 
+ static struct commit **get_bad_and_good_commits(int *rev_nr)
+ {
+-	int len = 1 + good_revs.sha1_nr;
++	int len = 1 + good_revs.nr;
+ 	struct commit **rev = xmalloc(len * sizeof(*rev));
+ 	int i, n = 0;
+ 
+ 	rev[n++] = get_commit_reference(current_bad_sha1);
+-	for (i = 0; i < good_revs.sha1_nr; i++)
++	for (i = 0; i < good_revs.nr; i++)
+ 		rev[n++] = get_commit_reference(good_revs.sha1[i]);
+ 	*rev_nr = n;
+ 
+@@ -840,9 +800,9 @@ static void check_merge_bases(void)
+ 		const unsigned char *mb = result->item->object.sha1;
+ 		if (!hashcmp(mb, current_bad_sha1)) {
+ 			handle_bad_merge_base();
+-		} else if (0 <= lookup_sha1_array(&good_revs, mb)) {
++		} else if (0 <= sha1_array_lookup(&good_revs, mb)) {
+ 			continue;
+-		} else if (0 <= lookup_sha1_array(&skipped_revs, mb)) {
++		} else if (0 <= sha1_array_lookup(&skipped_revs, mb)) {
+ 			handle_skipped_merge_base(mb);
+ 		} else {
+ 			printf("Bisecting: a merge base must be tested\n");
+@@ -903,7 +863,7 @@ static void check_good_are_ancestors_of_bad(const char *prefix)
+ 		return;
+ 
+ 	/* Bisecting with no good rev is ok. */
+-	if (good_revs.sha1_nr == 0)
++	if (good_revs.nr == 0)
+ 		return;
+ 
+ 	/* Check if all good revs are ancestor of the bad rev. */
+@@ -968,7 +928,7 @@ int bisect_next_all(const char *prefix)
+ 	bisect_common(&revs);
+ 
+ 	revs.commits = find_bisection(revs.commits, &reaches, &all,
+-				       !!skipped_revs.sha1_nr);
++				       !!skipped_revs.nr);
+ 	revs.commits = managed_skipped(revs.commits, &tried);
+ 
+ 	if (!revs.commits) {
+diff --git a/sha1-array.c b/sha1-array.c
+new file mode 100644
+index 0000000..5b75a5a
+--- /dev/null
++++ b/sha1-array.c
+@@ -0,0 +1,43 @@
++#include "cache.h"
++#include "sha1-array.h"
++#include "sha1-lookup.h"
++
++void sha1_array_append(struct sha1_array *array, const unsigned char *sha1)
++{
++	ALLOC_GROW(array->sha1, array->nr + 1, array->alloc);
++	hashcpy(array->sha1[array->nr++], sha1);
++	array->sorted = 0;
++}
++
++static int void_hashcmp(const void *a, const void *b)
++{
++	return hashcmp(a, b);
++}
++
++void sha1_array_sort(struct sha1_array *array)
++{
++	qsort(array->sha1, array->nr, sizeof(*array->sha1), void_hashcmp);
++	array->sorted = 1;
++}
++
++static const unsigned char *sha1_access(size_t index, void *table)
++{
++	unsigned char (*array)[20] = table;
++	return array[index];
++}
++
++int sha1_array_lookup(struct sha1_array *array, const unsigned char *sha1)
++{
++	if (!array->sorted)
++		sha1_array_sort(array);
++	return sha1_pos(sha1, array->sha1, array->nr, sha1_access);
++}
++
++void sha1_array_clear(struct sha1_array *array)
++{
++	free(array->sha1);
++	array->sha1 = NULL;
++	array->nr = 0;
++	array->alloc = 0;
++	array->sorted = 0;
++}
+diff --git a/sha1-array.h b/sha1-array.h
+new file mode 100644
+index 0000000..15d3b6b
+--- /dev/null
++++ b/sha1-array.h
+@@ -0,0 +1,18 @@
++#ifndef SHA1_ARRAY_H
++#define SHA1_ARRAY_H
++
++struct sha1_array {
++	unsigned char (*sha1)[20];
++	int nr;
++	int alloc;
++	int sorted;
++};
++
++#define SHA1_ARRAY_INIT { NULL, 0, 0, 0 }
++
++void sha1_array_append(struct sha1_array *array, const unsigned char *sha1);
++void sha1_array_sort(struct sha1_array *array);
++int sha1_array_lookup(struct sha1_array *array, const unsigned char *sha1);
++void sha1_array_clear(struct sha1_array *array);
++
++#endif /* SHA1_ARRAY_H */
+-- 
+1.7.5.4
+
+
+From cff38a5e11217dc997c1ffae8d0856023e05554a Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Thu, 19 May 2011 17:34:46 -0400
+Subject: [PATCH 3/3] receive-pack: eliminate duplicate .have refs
+
+When receiving a push, we advertise ref tips from any
+alternate repositories, in case that helps the client send a
+smaller pack. Since these refs don't actually exist in the
+destination repository, we don't transmit the real ref
+names, but instead use the pseudo-ref ".have".
+
+If your alternate has a large number of duplicate refs (for
+example, because it is aggregating objects from many related
+repositories, some of which will have the same tags and
+branch tips), then we will send each ".have $sha1" line
+multiple times. This is a pointless waste of bandwidth, as
+we are simply repeating the same fact to the client over and
+over.
+
+This patch eliminates duplicate .have refs early on. It does
+so efficiently by sorting the complete list and skipping
+duplicates. This has the side effect of re-ordering the
+.have lines by ascending sha1; this isn't a problem, though,
+as the original order was meaningless.
+
+There is a similar .have system in fetch-pack, but it
+does not suffer from the same problem. For each alternate
+ref we consider in fetch-pack, we actually open the object
+and mark it with the SEEN flag, so duplicates are
+automatically culled.
+
+Signed-off-by: Jeff King <peff@peff.net>
+Signed-off-by: Junio C Hamano <gitster@pobox.com>
+---
+ builtin/receive-pack.c |   16 +++++++++++++---
+ sha1-array.c           |   16 ++++++++++++++++
+ sha1-array.h           |    6 ++++++
+ 3 files changed, 35 insertions(+), 3 deletions(-)
+
+diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
+index 6bb1281..e1a687a 100644
+--- a/builtin/receive-pack.c
++++ b/builtin/receive-pack.c
+@@ -10,6 +10,7 @@
+ #include "remote.h"
+ #include "transport.h"
+ #include "string-list.h"
++#include "sha1-array.h"
+ 
+ static const char receive_pack_usage[] = "git receive-pack <git-dir>";
+ 
+@@ -731,14 +732,23 @@ static int delete_only(struct command *commands)
+ 	return 1;
+ }
+ 
+-static void add_one_alternate_ref(const struct ref *ref, void *unused)
++static void add_one_alternate_sha1(const unsigned char sha1[20], void *unused)
+ {
+-	add_extra_ref(".have", ref->old_sha1, 0);
++	add_extra_ref(".have", sha1, 0);
++}
++
++static void collect_one_alternate_ref(const struct ref *ref, void *data)
++{
++	struct sha1_array *sa = data;
++	sha1_array_append(sa, ref->old_sha1);
+ }
+ 
+ static void add_alternate_refs(void)
+ {
+-	for_each_alternate_ref(add_one_alternate_ref, NULL);
++	struct sha1_array sa = SHA1_ARRAY_INIT;
++	for_each_alternate_ref(collect_one_alternate_ref, &sa);
++	sha1_array_for_each_unique(&sa, add_one_alternate_sha1, NULL);
++	sha1_array_clear(&sa);
+ }
+ 
+ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
+diff --git a/sha1-array.c b/sha1-array.c
+index 5b75a5a..b2f47f9 100644
+--- a/sha1-array.c
++++ b/sha1-array.c
+@@ -41,3 +41,19 @@ void sha1_array_clear(struct sha1_array *array)
+ 	array->alloc = 0;
+ 	array->sorted = 0;
+ }
++
++void sha1_array_for_each_unique(struct sha1_array *array,
++				for_each_sha1_fn fn,
++				void *data)
++{
++	int i;
++
++	if (!array->sorted)
++		sha1_array_sort(array);
++
++	for (i = 0; i < array->nr; i++) {
++		if (i > 0 && !hashcmp(array->sha1[i], array->sha1[i-1]))
++			continue;
++		fn(array->sha1[i], data);
++	}
++}
+diff --git a/sha1-array.h b/sha1-array.h
+index 15d3b6b..4499b5d 100644
+--- a/sha1-array.h
++++ b/sha1-array.h
+@@ -15,4 +15,10 @@ void sha1_array_sort(struct sha1_array *array);
+ int sha1_array_lookup(struct sha1_array *array, const unsigned char *sha1);
+ void sha1_array_clear(struct sha1_array *array);
+ 
++typedef void (*for_each_sha1_fn)(const unsigned char sha1[20],
++				 void *data);
++void sha1_array_for_each_unique(struct sha1_array *array,
++				for_each_sha1_fn fn,
++				void *data);
++
+ #endif /* SHA1_ARRAY_H */
+-- 
+1.7.5.4
+

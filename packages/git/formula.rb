@@ -28,12 +28,12 @@ class Git < DebianFormula
 
   def patches
     [
-      'patches/post-upload-pack-hook.diff',
-      'patches/remove-duplicate-dot-have-lines.diff',
-      'patches/git-fetch-performance.diff',
-      'patches/receive-pack-fsck-object-warnings-non-fatal.diff',
-      # 'patches/patch-id-eof-fix.diff',     # in 1.7.4.2
-      # 'patches/upload-pack-deadlock.diff', # in 1.7.5.1
+      'patches/post-upload-pack-hook.patch',
+      'patches/remove-duplicate-dot-have-lines.patch',
+      'patches/git-fetch-performance.patch',
+      'patches/receive-pack-fsck-object-warnings-non-fatal.patch',
+      # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
+      # 'patches/upload-pack-deadlock.patch', # in 1.7.5.1
     ]
   end
 
