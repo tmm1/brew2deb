@@ -135,20 +135,20 @@ class DebianFormula < Formula
     true
   end
 
-  def mksrcdir
-    srcdir = HOMEBREW_WORKDIR+'src'
-    FileUtils.mkdir_p(srcdir)
-    raise "Couldn't create build sandbox" if not srcdir.directory?
+  def mkbuilddir
+    builddir = HOMEBREW_WORKDIR+'tmp-build'
+    FileUtils.mkdir_p(builddir)
+    raise "Couldn't create build sandbox" if not builddir.directory?
 
     begin
       wd=Dir.pwd
-      Dir.chdir srcdir
+      Dir.chdir builddir
       yield
     ensure
       Dir.chdir wd
     end
   end
-  alias :mktemp :mksrcdir
+  alias :mktemp :mkbuilddir
 
   def maintainer
     @maintainer ||= self.class.maintainer || begin
@@ -179,7 +179,7 @@ class DebianFormula < Formula
   end
 
   def destdir
-    HOMEBREW_WORKDIR+'install'
+    HOMEBREW_WORKDIR+'tmp-install'
   end
 end
 
@@ -195,7 +195,7 @@ class DebianSourceFormula < DebianFormula
 
   def package
     FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
-    Dir[HOMEBREW_WORKDIR+'src'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
+    Dir[HOMEBREW_WORKDIR+'tmp-build'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
       FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
     end
   end

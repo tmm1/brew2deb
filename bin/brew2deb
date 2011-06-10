@@ -11,7 +11,7 @@ require 'debian_formula'
 
 Object.__send__ :remove_const, :HOMEBREW_CACHE
 HOMEBREW_WORKDIR = Pathname.new(Dir.pwd)
-HOMEBREW_CACHE = HOMEBREW_WORKDIR+'cache'
+HOMEBREW_CACHE = HOMEBREW_WORKDIR+'src'
 FileUtils.mkdir_p(HOMEBREW_CACHE)
 
 require './formula'
