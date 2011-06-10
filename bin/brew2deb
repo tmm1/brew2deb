@@ -1,9 +1,15 @@
 #!/usr/bin/env ruby
 require 'optparse'
+require 'fileutils'
 
 unless File.exists?('formula.rb')
   STDERR.puts '*** No formula.rb found in the working directory'
   exit(1)
+end
+
+if ARGV.include? 'clean'
+  FileUtils.rm_rf %w[ tmp-build tmp-install ], :verbose => true
+  exit
 end
 
 $:.unshift File.expand_path('../../lib', __FILE__)
