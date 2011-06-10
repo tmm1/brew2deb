@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github1'
+  version '1:1.7.5.4-1+github2'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -31,6 +31,7 @@ class Git < DebianFormula
       'patches/post-upload-pack-hook.diff',
       'patches/remove-duplicate-dot-have-lines.diff',
       'patches/git-fetch-performance.diff',
+      'patches/receive-pack-fsck-object-warnings-non-fatal.diff',
       # 'patches/patch-id-eof-fix.diff',     # in 1.7.4.2
       # 'patches/upload-pack-deadlock.diff', # in 1.7.5.1
     ]
