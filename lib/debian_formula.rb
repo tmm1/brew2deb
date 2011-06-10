@@ -47,12 +47,28 @@ class DebianFormula < Formula
   attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
 
+  attr_accessor :skip_build
   attr_writer :installing
 
   build_depends \
     'build-essential',
     'libc6-dev',
     'curl'
+
+  def stage
+    if skip_build
+      Dir.chdir(HOMEBREW_WORKDIR+'tmp-build') do
+        @downloader.send :chdir
+        yield
+      end
+    else
+      super
+    end
+  end
+
+  def patch
+    skip_build ? nil : super
+  end
 
   def self.package!
     f = new
@@ -64,10 +80,17 @@ class DebianFormula < Formula
       exit(1)
     end
 
+    if File.exists?(HOMEBREW_WORKDIR+'tmp-build')
+      f.skip_build = true
+      f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
+    end
+
     f.brew do
-      f.send :ohai, 'Compiling source'
-      f.installing = false
-      f.build
+      unless f.skip_build
+        f.send :ohai, 'Compiling source'
+        f.installing = false
+        f.build
+      end
 
       begin
         f.send :ohai, 'Installing binaries'
