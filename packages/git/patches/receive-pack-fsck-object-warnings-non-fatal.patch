@@ -1,10 +1,11 @@
-From 627641f227ef9215c2cda148eecba92c4525b3bf Mon Sep 17 00:00:00 2001
+From 6e19a41032942f2cbe60bef41fa6e67027a55a2a Mon Sep 17 00:00:00 2001
 From: Ryan Tomayko <rtomayko@gmail.com>
 Date: Thu, 9 Jun 2011 19:05:29 -0700
-Subject: [PATCH 1/2] receive-pack fsck object warnings are non-fatal
+Subject: [PATCH] receive-pack fsck object warnings are non-fatal
 
 Makes git-unpack-objects --strict, and git-index-pack --strict treat
-fsck_object() warnings as non-fatal. Currently, warnings cause git-receive-pack
+fsck_object() warnings as non-fatal and omits writing them to stderr
+as error messages completely. Currently, warnings cause git-receive-pack
 to reject pushes when receive.fsckObjects is set.
 
 All existing warnings come from fsck_tree(). They are:
@@ -20,43 +21,13 @@ individual fsck_XXX functions to report errors and warnings. It always returns
 git-unpack-objects and git-index-pack to implement the --strict checks. The
 git-fsck builtin defines its own error callback and returns 0 for warnings.
 This change modifies the default callback to use the same behavior as the
-git-fsck command.
+git-fsck command and also omits the error message output.
 ---
- fsck.c |    3 ++-
- 1 files changed, 2 insertions(+), 1 deletions(-)
+ fsck.c |    3 +++
+ 1 files changed, 3 insertions(+), 0 deletions(-)
 
 diff --git a/fsck.c b/fsck.c
-index 60bd4bb..97502ce 100644
---- a/fsck.c
-+++ b/fsck.c
-@@ -357,5 +357,6 @@ int fsck_error_function(struct object *obj, int type, const char *fmt, ...)
- 
- 	error("%s", sb.buf);
- 	strbuf_release(&sb);
--	return 1;
-+
-+	return (type == FSCK_WARN) ? 0 : 1;
- }
--- 
-1.7.5.4
-
-
-From a5c8d704867f1e658820363ef51506ba864d14b9 Mon Sep 17 00:00:00 2001
-From: Ryan Tomayko <rtomayko@gmail.com>
-Date: Fri, 10 Jun 2011 03:25:29 -0700
-Subject: [PATCH 2/2] omit fsck object warning output completely
-
-The zero-padded file modes warnings are prevalent enough that this
-is going to be a major source of confusion. Omit any fsck warning
-from git-receive-pack in addition to making it non-fatal. These
-warnings will still come through from git-fsck, which defines its
-own fsck_error_function callback.
----
- fsck.c |    6 ++++--
- 1 files changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/fsck.c b/fsck.c
-index 97502ce..7a3313f 100644
+index 60bd4bb..7a3313f 100644
 --- a/fsck.c
 +++ b/fsck.c
 @@ -346,6 +346,9 @@ int fsck_object(struct object *obj, int strict, fsck_error error_func)
@@ -69,14 +40,6 @@ index 97502ce..7a3313f 100644
  	va_list ap;
  	struct strbuf sb = STRBUF_INIT;
  
-@@ -357,6 +360,5 @@ int fsck_error_function(struct object *obj, int type, const char *fmt, ...)
- 
- 	error("%s", sb.buf);
- 	strbuf_release(&sb);
--
--	return (type == FSCK_WARN) ? 0 : 1;
-+	return 1;
- }
 -- 
 1.7.5.4
 
