@@ -58,7 +58,7 @@ class DebianFormula < Formula
   def stage
     if skip_build
       Dir.chdir(HOMEBREW_WORKDIR+'tmp-build') do
-        @downloader.send :chdir
+        @downloader.send :chdir if @downloader.respond_to? :chdir
         yield
       end
     else
@@ -95,7 +95,9 @@ class DebianFormula < Formula
       begin
         f.send :ohai, 'Installing binaries'
         f.installing = true
-        FileUtils.rm_rf(f.send(:destdir))
+        dir = f.send(:destdir)
+        FileUtils.rm_rf(dir)
+        FileUtils.mkdir_p(dir)
         f.install
       ensure
         f.installing = false
@@ -113,7 +115,7 @@ class DebianFormula < Formula
       opts = [
         # architecture
         '-n', name,
-        '-v', version,
+        '-v', self.class.version,
         '-t', 'deb',
         '-s', 'dir',
         '--url', self.class.homepage || self.class.url,
@@ -158,8 +160,11 @@ class DebianFormula < Formula
     true
   end
 
+  def builddir
+    HOMEBREW_WORKDIR+'tmp-build'
+  end
+
   def mkbuilddir
-    builddir = HOMEBREW_WORKDIR+'tmp-build'
     FileUtils.mkdir_p(builddir)
     raise "Couldn't create build sandbox" if not builddir.directory?
 
@@ -172,6 +177,10 @@ class DebianFormula < Formula
     end
   end
   alias :mktemp :mkbuilddir
+
+  def chdir(dir, &blk)
+    Dir.chdir(dir, &blk)
+  end
 
   def maintainer
     @maintainer ||= self.class.maintainer || begin
