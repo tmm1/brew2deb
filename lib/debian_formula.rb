@@ -213,6 +213,21 @@ class DebianFormula < Formula
   def destdir
     HOMEBREW_WORKDIR+'tmp-install'
   end
+
+  def configure(opts = {})
+    sh "./configure", *opts.map{ |k,v| "--#{k}=#{v}" }
+  end
+
+  public
+
+  def build
+    configure :prefix => prefix
+    make
+  end
+
+  def install
+    make :install, 'DESTDIR' => destdir
+  end
 end
 
 class DebianSourceFormula < DebianFormula

@@ -10,13 +10,4 @@ class Htop < DebianFormula
 
   build_depends 'libncurses-dev'
   depends 'libncurses5'
-
-  def build
-    sh './configure', "--prefix=#{prefix}"
-    make
-  end
-
-  def install
-    make :install, 'DESTDIR' => destdir
-  end
 end
