@@ -99,13 +99,15 @@ class BuildError < Homebrew::InstallationError
   attr :exit_status
   attr :command
   attr :env
+  attr :dir
 
-  def initialize formula, cmd, args, es
+  def initialize formula, cmd, args, es, dir=nil
     @command = cmd
     @env = ENV.to_hash
     @exit_status = es.exitstatus rescue 1
+    @dir = dir
     args = args.map{ |arg| arg.to_s.gsub " ", "\\ " }.join(" ")
-    super formula, "Failed executing: #{command} #{args} returned #{es.inspect}"
+    super formula, "Failed executing: #{command} #{args} returned #{es.inspect} (in #{dir})"
   end
 
   def was_running_configure?

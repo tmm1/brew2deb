@@ -33,9 +33,11 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
 
   def initialize url, name, version, specs
     super
-    @unique_token="#{name}-#{version}" unless name.to_s.empty? or name == '__UNKNOWN__'
-    if @unique_token
+    #@unique_token="#{name}-#{version}" unless name.to_s.empty? or name == '__UNKNOWN__'
+    if false and @unique_token
       @tarball_path=HOMEBREW_CACHE+(@unique_token+ext)
+    elsif @spec == :as
+      @tarball_path=HOMEBREW_CACHE+@ref
     else
       @tarball_path=HOMEBREW_CACHE+File.basename(@url)
     end
@@ -116,13 +118,19 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
 
 private
   def chdir
-    # Look for directories that match @tarball_path.basename
     entries=Dir['*'].select{ |dir| File.directory?(dir) }
     case entries.length
       when 0 then raise "Empty archive"
-      when 1 then Dir.chdir entries.first rescue nil
+      when 1 then Dir.chdir entries.first
       else
-        raise "Too many source directories"
+        # Look for directories that match @tarball_path.basename
+        %w[ tar tar.gz zip tar.bz2 ].find do |ext|
+          dir = @tarball_path.basename(".#{ext}")
+          if File.exists?(dir)
+            Dir.chdir(dir)
+            true
+          end
+        end or raise "Could not find source directory"
     end
   end
 
@@ -312,7 +320,9 @@ class GitDownloadStrategy < AbstractDownloadStrategy
   end
 
   def stage
-    dst = Dir.getwd
+    dst = File.join(Dir.getwd, @clone.basename)
+    FileUtils.mkdir_p(dst)
+
     Dir.chdir @clone do
       if @spec and @ref
         ohai "Checking out #{@spec} #{@ref}"
@@ -321,6 +331,8 @@ class GitDownloadStrategy < AbstractDownloadStrategy
           nostdout { quiet_safe_system 'git', 'checkout', "origin/#{@ref}" }
         when :tag
           nostdout { quiet_safe_system 'git', 'checkout', @ref }
+        when :sha
+          nostdout { quiet_safe_system 'git', 'reset', '--hard', @ref }
         end
       end
       # http://stackoverflow.com/questions/160608/how-to-do-a-git-export-like-svn-export
@@ -333,6 +345,12 @@ class GitDownloadStrategy < AbstractDownloadStrategy
         safe_system 'git', 'submodule', '--quiet', 'foreach', '--recursive', sub_cmd
       end
     end
+
+    Dir.chdir dst
+  end
+
+  def chdir
+    Dir.chdir HOMEBREW_WORKDIR+'tmp-build'+@clone.basename
   end
 end
 

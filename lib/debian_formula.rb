@@ -53,12 +53,13 @@ class DebianFormula < Formula
   build_depends \
     'build-essential',
     'libc6-dev',
+    'patch',
     'curl'
 
   def stage
     if skip_build
       Dir.chdir(HOMEBREW_WORKDIR+'tmp-build') do
-        @downloader.send :chdir if @downloader.respond_to? :chdir
+        @downloader.send :chdir
         yield
       end
     else
@@ -80,7 +81,8 @@ class DebianFormula < Formula
       exit(1)
     end
 
-    if File.exists?(HOMEBREW_WORKDIR+'tmp-build')
+    built_file = HOMEBREW_WORKDIR + "tmp-build/.built-#{f.name}"
+    if File.exists?(built_file)
       f.skip_build = true
       f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
     end
@@ -91,6 +93,8 @@ class DebianFormula < Formula
         f.installing = false
         f.build
       end
+
+      FileUtils.touch(built_file)
 
       begin
         f.send :ohai, 'Installing binaries'
@@ -215,7 +219,14 @@ class DebianFormula < Formula
   end
 
   def configure(opts = {})
-    sh "./configure", *opts.map{ |k,v| "--#{k}=#{v}" }
+    sh "./configure", *opts.map{ |k,v|
+      option = k.to_s.gsub('_','-')
+      if v == true
+        "--#{option}"
+      else
+        "--#{option}=#{v}"
+      end
+    }
   end
 
   public

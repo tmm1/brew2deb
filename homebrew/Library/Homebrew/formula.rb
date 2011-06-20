@@ -467,7 +467,7 @@ protected
       end
     end
   rescue
-    raise BuildError.new(self, cmd, args, $?)
+    raise BuildError.new(self, cmd, args, $?, Dir.pwd)
   end
 
 private
