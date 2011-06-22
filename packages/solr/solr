@@ -21,4 +21,4 @@ JAVA_OPTS="
   -Xmx1024m
 "
 
-echo java $JAVA_OPTS -Dsolr.solr.home=$SOLR_HOME "$@" -jar /usr/share/solr/jetty/start.jar /usr/share/solr/jetty/etc/jetty.xml
+java $JAVA_OPTS -Dsolr.solr.home=$SOLR_HOME "$@" -jar /usr/share/solr/jetty/start.jar /usr/share/solr/jetty/etc/jetty.xml
