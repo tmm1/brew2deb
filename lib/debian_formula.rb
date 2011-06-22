@@ -81,7 +81,7 @@ class DebianFormula < Formula
       exit(1)
     end
 
-    built_file = HOMEBREW_WORKDIR + "tmp-build/.built-#{f.name}"
+    built_file = HOMEBREW_WORKDIR + "tmp-build/.built-#{f.name}-#{f.version.gsub(/[^\w]/,'_')}"
     if File.exists?(built_file)
       f.skip_build = true
       f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
