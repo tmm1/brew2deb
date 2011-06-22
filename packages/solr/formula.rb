@@ -4,7 +4,7 @@ class Solr < DebianFormula
   md5 '0849a7242f6f861e3a8d5592bd9580c5'
 
   name 'solr'
-  version '3.2.0'
+  version '3.2.0+github1'
   section 'database'
   description 'Enterprise search platform'
 
@@ -34,6 +34,8 @@ class Solr < DebianFormula
     lucene_home = share+'lucene'
     (lucene_home+'lib').install Dir['war/WEB-INF/lib/lucene-*.jar']
 
-    bin.install Dir[workdir+'solr_*']
+    bin.install Dir[workdir+'solr*']
+
+    (var+'log/solr').mkpath
   end
 end
