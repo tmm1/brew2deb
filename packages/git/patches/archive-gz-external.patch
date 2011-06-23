@@ -1,0 +1,1341 @@
+From 9fb212080ba41c96c74757a28ca0e4b3473393be Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Wed, 15 Jun 2011 12:21:38 -0400
+Subject: [PATCH 1/9] archive: reorder option parsing and config reading
+
+The archive command does three things during its
+initialization phase:
+
+  1. parse command-line options
+
+  2. setup the git directory
+
+  3. read config
+
+During phase (1), if we see any options that do not require
+a git directory (like "--list"), we handle them immediately
+and exit, making it safe to abort step (2) if we are not in
+a git directory.
+
+Step (3) must come after step (2), since the git directory
+may influence configuration.  However, this leaves no
+possibility of configuration from step (3) impacting the
+command-line options in step (1) (which is useful, for
+example, for supporting user-configurable output formats).
+
+Instead, let's reorder this to:
+
+  1. setup the git directory, if it exists
+
+  2. read config
+
+  3. parse command-line options
+
+  4. if we are not in a git repository, die
+
+This should have the same external behavior, but puts
+configuration before command-line parsing.
+---
+ archive.c |   18 ++++++++++++++----
+ 1 files changed, 14 insertions(+), 4 deletions(-)
+
+diff --git a/archive.c b/archive.c
+index 42f2d2f..2616676 100644
+--- a/archive.c
++++ b/archive.c
+@@ -387,17 +387,27 @@ static int parse_archive_args(int argc, const char **argv,
+ int write_archive(int argc, const char **argv, const char *prefix,
+ 		int setup_prefix)
+ {
++	int nongit = 0;
+ 	const struct archiver *ar = NULL;
+ 	struct archiver_args args;
+ 
+-	argc = parse_archive_args(argc, argv, &ar, &args);
+ 	if (setup_prefix && prefix == NULL)
+-		prefix = setup_git_directory();
++		prefix = setup_git_directory_gently(&nongit);
++
++	git_config(git_default_config, NULL);
++
++	argc = parse_archive_args(argc, argv, &ar, &args);
++	if (nongit) {
++		/*
++		 * We know this will die() with an error, so we could just
++		 * die ourselves; but its error message will be more specific
++		 * than what we could write here.
++		 */
++		setup_git_directory();
++	}
+ 
+ 	parse_treeish_arg(argv, &args, prefix);
+ 	parse_pathspec_arg(argv + 1, &args);
+ 
+-	git_config(git_default_config, NULL);
+-
+ 	return ar->write_archive(&args);
+ }
+-- 
+1.7.5.4
+
+
+From 070308adbe9a417d536d82b1de4a6f2c7acc9217 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 12:49:05 -0400
+Subject: [PATCH 2/9] archive-tar: don't reload default config options
+
+We load our own tar-specific config, and then chain to
+git_default_config. This is pointless, as our caller should
+already have loaded the default config. It also introduces a
+needless inconsistency with the zip archiver, which does not
+look at the config files at all (and therefore relies on the
+caller to have loaded config).
+---
+ archive-tar.c |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/archive-tar.c b/archive-tar.c
+index cee06ce..1ab1a2c 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -231,7 +231,7 @@ static int git_tar_config(const char *var, const char *value, void *cb)
+ 		}
+ 		return 0;
+ 	}
+-	return git_default_config(var, value, cb);
++	return 0;
+ }
+ 
+ int write_tar_archive(struct archiver_args *args)
+-- 
+1.7.5.4
+
+
+From 9317c671c84896dd87f76a2232247470009f0448 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 13:01:58 -0400
+Subject: [PATCH 3/9] archive: refactor list of archive formats
+
+Most of the tar and zip code was nicely split out into two
+abstracted files which knew only about their specific
+formats. The entry point to this code was a single "write
+archive" function.
+
+However, as these basic formats grow more complex (e.g., by
+handling multiple file extensions and format names), a
+static list of the entry point functions won't be enough.
+Instead, let's provide a way for the tar and zip code to
+tell the main archive code what they support by registering
+archiver names and functions.
+---
+ archive-tar.c |   16 +++++++++++++---
+ archive-zip.c |   13 ++++++++++++-
+ archive.c     |   33 +++++++++++++++++----------------
+ archive.h     |   17 ++++++++++-------
+ 4 files changed, 52 insertions(+), 27 deletions(-)
+
+diff --git a/archive-tar.c b/archive-tar.c
+index 1ab1a2c..930375b 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -234,12 +234,10 @@ static int git_tar_config(const char *var, const char *value, void *cb)
+ 	return 0;
+ }
+ 
+-int write_tar_archive(struct archiver_args *args)
++static int write_tar_archive(struct archiver_args *args)
+ {
+ 	int err = 0;
+ 
+-	git_config(git_tar_config, NULL);
+-
+ 	if (args->commit_sha1)
+ 		err = write_global_extended_header(args);
+ 	if (!err)
+@@ -248,3 +246,15 @@ int write_tar_archive(struct archiver_args *args)
+ 		write_trailer();
+ 	return err;
+ }
++
++static struct archiver tar_archiver = {
++	"tar",
++	write_tar_archive,
++	0
++};
++
++void init_tar_archiver(void)
++{
++	register_archiver(&tar_archiver);
++	git_config(git_tar_config, NULL);
++}
+diff --git a/archive-zip.c b/archive-zip.c
+index cf28504..a776d83 100644
+--- a/archive-zip.c
++++ b/archive-zip.c
+@@ -261,7 +261,7 @@ static void dos_time(time_t *time, int *dos_date, int *dos_time)
+ 	*dos_time = t->tm_sec / 2 + t->tm_min * 32 + t->tm_hour * 2048;
+ }
+ 
+-int write_zip_archive(struct archiver_args *args)
++static int write_zip_archive(struct archiver_args *args)
+ {
+ 	int err;
+ 
+@@ -278,3 +278,14 @@ int write_zip_archive(struct archiver_args *args)
+ 
+ 	return err;
+ }
++
++static struct archiver zip_archiver = {
++	"zip",
++	write_zip_archive,
++	ARCHIVER_WANT_COMPRESSION_LEVELS
++};
++
++void init_zip_archiver(void)
++{
++	register_archiver(&zip_archiver);
++}
+diff --git a/archive.c b/archive.c
+index 2616676..f0b4e85 100644
+--- a/archive.c
++++ b/archive.c
+@@ -14,16 +14,15 @@ static char const * const archive_usage[] = {
+ 	NULL
+ };
+ 
+-#define USES_ZLIB_COMPRESSION 1
+-
+-static const struct archiver {
+-	const char *name;
+-	write_archive_fn_t write_archive;
+-	unsigned int flags;
+-} archivers[] = {
+-	{ "tar", write_tar_archive },
+-	{ "zip", write_zip_archive, USES_ZLIB_COMPRESSION },
+-};
++static const struct archiver **archivers;
++static int nr_archivers;
++static int alloc_archivers;
++
++void register_archiver(struct archiver *ar)
++{
++	ALLOC_GROW(archivers, nr_archivers + 1, alloc_archivers);
++	archivers[nr_archivers++] = ar;
++}
+ 
+ static void format_subst(const struct commit *commit,
+                          const char *src, size_t len,
+@@ -208,9 +207,9 @@ static const struct archiver *lookup_archiver(const char *name)
+ 	if (!name)
+ 		return NULL;
+ 
+-	for (i = 0; i < ARRAY_SIZE(archivers); i++) {
+-		if (!strcmp(name, archivers[i].name))
+-			return &archivers[i];
++	for (i = 0; i < nr_archivers; i++) {
++		if (!strcmp(name, archivers[i]->name))
++			return archivers[i];
+ 	}
+ 	return NULL;
+ }
+@@ -355,8 +354,8 @@ static int parse_archive_args(int argc, const char **argv,
+ 		base = "";
+ 
+ 	if (list) {
+-		for (i = 0; i < ARRAY_SIZE(archivers); i++)
+-			printf("%s\n", archivers[i].name);
++		for (i = 0; i < nr_archivers; i++)
++			printf("%s\n", archivers[i]->name);
+ 		exit(0);
+ 	}
+ 
+@@ -369,7 +368,7 @@ static int parse_archive_args(int argc, const char **argv,
+ 
+ 	args->compression_level = Z_DEFAULT_COMPRESSION;
+ 	if (compression_level != -1) {
+-		if ((*ar)->flags & USES_ZLIB_COMPRESSION)
++		if ((*ar)->flags & ARCHIVER_WANT_COMPRESSION_LEVELS)
+ 			args->compression_level = compression_level;
+ 		else {
+ 			die("Argument not supported for format '%s': -%d",
+@@ -395,6 +394,8 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 		prefix = setup_git_directory_gently(&nongit);
+ 
+ 	git_config(git_default_config, NULL);
++	init_tar_archiver();
++	init_zip_archiver();
+ 
+ 	argc = parse_archive_args(argc, argv, &ar, &args);
+ 	if (nongit) {
+diff --git a/archive.h b/archive.h
+index 038ac35..f39cede 100644
+--- a/archive.h
++++ b/archive.h
+@@ -14,15 +14,18 @@ struct archiver_args {
+ 	int compression_level;
+ };
+ 
+-typedef int (*write_archive_fn_t)(struct archiver_args *);
++#define ARCHIVER_WANT_COMPRESSION_LEVELS 1
++struct archiver {
++	const char *name;
++	int (*write_archive)(struct archiver_args *);
++	unsigned flags;
++};
++extern void register_archiver(struct archiver *);
+ 
+-typedef int (*write_archive_entry_fn_t)(struct archiver_args *args, const unsigned char *sha1, const char *path, size_t pathlen, unsigned int mode, void *buffer, unsigned long size);
++extern void init_tar_archiver(void);
++extern void init_zip_archiver(void);
+ 
+-/*
+- * Archive-format specific backends.
+- */
+-extern int write_tar_archive(struct archiver_args *);
+-extern int write_zip_archive(struct archiver_args *);
++typedef int (*write_archive_entry_fn_t)(struct archiver_args *args, const unsigned char *sha1, const char *path, size_t pathlen, unsigned int mode, void *buffer, unsigned long size);
+ 
+ extern int write_archive_entries(struct archiver_args *args, write_archive_entry_fn_t write_entry);
+ extern int write_archive(int argc, const char **argv, const char *prefix, int setup_prefix);
+-- 
+1.7.5.4
+
+
+From ad8525f1780bc0cb4efe22b265bc56e0938a3ceb Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 13:34:29 -0400
+Subject: [PATCH 4/9] archive: pass archiver struct to write_archive callback
+
+The current archivers are very static; when you are in the
+write_tar_archive function, you know you are writing a tar.
+However, to facilitate runtime-configurable archivers
+that will share a common write function we need to tell the
+function which archiver was used.
+
+As a convenience, we also provide an opaque data pointer in
+the archiver struct so that individual archivers can put
+something useful there when they register themselves.
+Technically they could just use the "name" field to look in
+an internal map of names to data, but this is much simpler.
+---
+ archive-tar.c |    3 ++-
+ archive-zip.c |    3 ++-
+ archive.c     |    2 +-
+ archive.h     |    3 ++-
+ 4 files changed, 7 insertions(+), 4 deletions(-)
+
+diff --git a/archive-tar.c b/archive-tar.c
+index 930375b..bed9a9b 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -234,7 +234,8 @@ static int git_tar_config(const char *var, const char *value, void *cb)
+ 	return 0;
+ }
+ 
+-static int write_tar_archive(struct archiver_args *args)
++static int write_tar_archive(const struct archiver *ar,
++			     struct archiver_args *args)
+ {
+ 	int err = 0;
+ 
+diff --git a/archive-zip.c b/archive-zip.c
+index a776d83..42df660 100644
+--- a/archive-zip.c
++++ b/archive-zip.c
+@@ -261,7 +261,8 @@ static void dos_time(time_t *time, int *dos_date, int *dos_time)
+ 	*dos_time = t->tm_sec / 2 + t->tm_min * 32 + t->tm_hour * 2048;
+ }
+ 
+-static int write_zip_archive(struct archiver_args *args)
++static int write_zip_archive(const struct archiver *ar,
++			     struct archiver_args *args)
+ {
+ 	int err;
+ 
+diff --git a/archive.c b/archive.c
+index f0b4e85..a0a5beb 100644
+--- a/archive.c
++++ b/archive.c
+@@ -410,5 +410,5 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 	parse_treeish_arg(argv, &args, prefix);
+ 	parse_pathspec_arg(argv + 1, &args);
+ 
+-	return ar->write_archive(&args);
++	return ar->write_archive(ar, &args);
+ }
+diff --git a/archive.h b/archive.h
+index f39cede..b3cf219 100644
+--- a/archive.h
++++ b/archive.h
+@@ -17,8 +17,9 @@ struct archiver_args {
+ #define ARCHIVER_WANT_COMPRESSION_LEVELS 1
+ struct archiver {
+ 	const char *name;
+-	int (*write_archive)(struct archiver_args *);
++	int (*write_archive)(const struct archiver *, struct archiver_args *);
+ 	unsigned flags;
++	void *data;
+ };
+ extern void register_archiver(struct archiver *);
+ 
+-- 
+1.7.5.4
+
+
+From b327c21eaffc96437202df9ffcca6e9b8f1a4f48 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Wed, 15 Jun 2011 15:25:41 -0400
+Subject: [PATCH 5/9] archive: move file extension format-guessing lower
+
+The process for guessing an archive output format based on
+the filename is something like this:
+
+  a. parse --output in cmd_archive; check the filename
+     against a static set of mapping heuristics (right now
+     it just matches ".zip" for zip files).
+
+  b. if found, stick a fake "--format=zip" at the beginning
+     of the arguments list (if the user did specify a
+     --format manually, the later option will override our
+     fake one)
+
+  c. if it's a remote call, ship the arguments to the remote
+     (including the fake), which will call write_archive on
+     their end
+
+  d. if it's local, ship the arguments to write_archive
+     locally
+
+There are two problems:
+
+  1. The set of mappings is static and at too high a level.
+     The write_archive level is going to check config for
+     user-defined formats, some of which will specify
+     extensions. We need to delay lookup until those are
+     parsed, so we can match against them.
+
+  2. For a remote archive call, our set of mappings (or
+     formats) may not match the remote side's. This is OK in
+     practice right now, because all versions of git
+     understand "zip" and "tar". But as new formats are
+     added, there is going to be a mismatch between what the
+     client can do and what the remote server can do.
+
+To fix (1), this patch refactors the location guessing to
+happen at the write_archive level, instead of the
+cmd_archive level. So instead of sticking a fake --format
+field in the argv list, we actually pass a "name hint" down
+the callchain; this hint is used at the appropriate time to
+guess the format (if one hasn't been given already).
+
+This patch leaves (2) unfixed. The name_hint is converted to
+a "--format" option as before, and passed to the remote.
+This means the local side's idea of how extensions map to
+formats will take precedence.
+
+Another option would be to pass the name hint to the remote
+side and let the remote choose. This isn't a good idea for
+two reasons:
+
+  1. There's no room in the protocol for passing that
+     information. We can pass a new argument, but older
+     versions of git on the server will choke on it.
+
+  2. Letting the remote side decide creates a silent
+     inconsistency in user experience. Consider the case
+     that the locally installed git knows about the "tar.gz"
+     format, but a remote server doesn't.
+
+     Running "git archive -o foo.tar.gz" will use the tar.gz
+     format. If we use --remote, and the local side chooses
+     the format, then we send "--format=tar.gz" to the
+     remote, which will complain about the unknown format.
+     But if we let the remote side choose the format, then
+     it will realize that it doesn't know about "tar.gz" and
+     output uncompressed tar without even issuing a warning.
+---
+ archive.c                |   25 +++++++++++++++++++---
+ archive.h                |    4 ++-
+ builtin/archive.c        |   51 ++++++++++++++-------------------------------
+ builtin/upload-archive.c |    2 +-
+ 4 files changed, 41 insertions(+), 41 deletions(-)
+
+diff --git a/archive.c b/archive.c
+index a0a5beb..7d0ca32 100644
+--- a/archive.c
++++ b/archive.c
+@@ -298,9 +298,10 @@ static void parse_treeish_arg(const char **argv,
+ 	  PARSE_OPT_NOARG | PARSE_OPT_NONEG | PARSE_OPT_HIDDEN, NULL, (p) }
+ 
+ static int parse_archive_args(int argc, const char **argv,
+-		const struct archiver **ar, struct archiver_args *args)
++		const struct archiver **ar, struct archiver_args *args,
++		const char *name_hint)
+ {
+-	const char *format = "tar";
++	const char *format = NULL;
+ 	const char *base = NULL;
+ 	const char *remote = NULL;
+ 	const char *exec = NULL;
+@@ -359,6 +360,11 @@ static int parse_archive_args(int argc, const char **argv,
+ 		exit(0);
+ 	}
+ 
++	if (!format && name_hint)
++		format = archive_format_from_filename(name_hint);
++	if (!format)
++		format = "tar";
++
+ 	/* We need at least one parameter -- tree-ish */
+ 	if (argc < 1)
+ 		usage_with_options(archive_usage, opts);
+@@ -384,7 +390,7 @@ static int parse_archive_args(int argc, const char **argv,
+ }
+ 
+ int write_archive(int argc, const char **argv, const char *prefix,
+-		int setup_prefix)
++		  int setup_prefix, const char *name_hint)
+ {
+ 	int nongit = 0;
+ 	const struct archiver *ar = NULL;
+@@ -397,7 +403,7 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 	init_tar_archiver();
+ 	init_zip_archiver();
+ 
+-	argc = parse_archive_args(argc, argv, &ar, &args);
++	argc = parse_archive_args(argc, argv, &ar, &args, name_hint);
+ 	if (nongit) {
+ 		/*
+ 		 * We know this will die() with an error, so we could just
+@@ -412,3 +418,14 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 
+ 	return ar->write_archive(ar, &args);
+ }
++
++const char *archive_format_from_filename(const char *filename)
++{
++	const char *ext = strrchr(filename, '.');
++	if (!ext)
++		return NULL;
++	ext++;
++	if (!strcasecmp(ext, "zip"))
++		return "zip";
++	return NULL;
++}
+diff --git a/archive.h b/archive.h
+index b3cf219..202d528 100644
+--- a/archive.h
++++ b/archive.h
+@@ -29,6 +29,8 @@ extern void init_zip_archiver(void);
+ typedef int (*write_archive_entry_fn_t)(struct archiver_args *args, const unsigned char *sha1, const char *path, size_t pathlen, unsigned int mode, void *buffer, unsigned long size);
+ 
+ extern int write_archive_entries(struct archiver_args *args, write_archive_entry_fn_t write_entry);
+-extern int write_archive(int argc, const char **argv, const char *prefix, int setup_prefix);
++extern int write_archive(int argc, const char **argv, const char *prefix, int setup_prefix, const char *name_hint);
++
++const char *archive_format_from_filename(const char *filename);
+ 
+ #endif	/* ARCHIVE_H */
+diff --git a/builtin/archive.c b/builtin/archive.c
+index b14eaba..2578cf5 100644
+--- a/builtin/archive.c
++++ b/builtin/archive.c
+@@ -24,7 +24,8 @@ static void create_output_file(const char *output_file)
+ }
+ 
+ static int run_remote_archiver(int argc, const char **argv,
+-			       const char *remote, const char *exec)
++			       const char *remote, const char *exec,
++			       const char *name_hint)
+ {
+ 	char buf[LARGE_PACKET_MAX];
+ 	int fd[2], i, len, rv;
+@@ -37,6 +38,17 @@ static int run_remote_archiver(int argc, const char **argv,
+ 	transport = transport_get(_remote, _remote->url[0]);
+ 	transport_connect(transport, "git-upload-archive", exec, fd);
+ 
++	/*
++	 * Inject a fake --format field at the beginning of the
++	 * arguments, with the format inferred from our output
++	 * filename. This way explicit --format options can override
++	 * it.
++	 */
++	if (name_hint) {
++		const char *format = archive_format_from_filename(name_hint);
++		if (format)
++			packet_write(fd[1], "argument --format=%s\n", format);
++	}
+ 	for (i = 1; i < argc; i++)
+ 		packet_write(fd[1], "argument %s\n", argv[i]);
+ 	packet_flush(fd[1]);
+@@ -63,17 +75,6 @@ static int run_remote_archiver(int argc, const char **argv,
+ 	return !!rv;
+ }
+ 
+-static const char *format_from_name(const char *filename)
+-{
+-	const char *ext = strrchr(filename, '.');
+-	if (!ext)
+-		return NULL;
+-	ext++;
+-	if (!strcasecmp(ext, "zip"))
+-		return "--format=zip";
+-	return NULL;
+-}
+-
+ #define PARSE_OPT_KEEP_ALL ( PARSE_OPT_KEEP_DASHDASH | 	\
+ 			     PARSE_OPT_KEEP_ARGV0 | 	\
+ 			     PARSE_OPT_KEEP_UNKNOWN |	\
+@@ -84,7 +85,6 @@ int cmd_archive(int argc, const char **argv, const char *prefix)
+ 	const char *exec = "git-upload-archive";
+ 	const char *output = NULL;
+ 	const char *remote = NULL;
+-	const char *format_option = NULL;
+ 	struct option local_opts[] = {
+ 		OPT_STRING('o', "output", &output, "file",
+ 			"write the archive to this file"),
+@@ -98,32 +98,13 @@ int cmd_archive(int argc, const char **argv, const char *prefix)
+ 	argc = parse_options(argc, argv, prefix, local_opts, NULL,
+ 			     PARSE_OPT_KEEP_ALL);
+ 
+-	if (output) {
++	if (output)
+ 		create_output_file(output);
+-		format_option = format_from_name(output);
+-	}
+-
+-	/*
+-	 * We have enough room in argv[] to muck it in place, because
+-	 * --output must have been given on the original command line
+-	 * if we get to this point, and parse_options() must have eaten
+-	 * it, i.e. we can add back one element to the array.
+-	 *
+-	 * We add a fake --format option at the beginning, with the
+-	 * format inferred from our output filename.  This way explicit
+-	 * --format options can override it, and the fake option is
+-	 * inserted before any "--" that might have been given.
+-	 */
+-	if (format_option) {
+-		memmove(argv + 2, argv + 1, sizeof(*argv) * argc);
+-		argv[1] = format_option;
+-		argv[++argc] = NULL;
+-	}
+ 
+ 	if (remote)
+-		return run_remote_archiver(argc, argv, remote, exec);
++		return run_remote_archiver(argc, argv, remote, exec, output);
+ 
+ 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
+ 
+-	return write_archive(argc, argv, prefix, 1);
++	return write_archive(argc, argv, prefix, 1, output);
+ }
+diff --git a/builtin/upload-archive.c b/builtin/upload-archive.c
+index 73f788e..e6bb97d 100644
+--- a/builtin/upload-archive.c
++++ b/builtin/upload-archive.c
+@@ -64,7 +64,7 @@ static int run_upload_archive(int argc, const char **argv, const char *prefix)
+ 	sent_argv[sent_argc] = NULL;
+ 
+ 	/* parse all options sent by the client */
+-	return write_archive(sent_argc, sent_argv, prefix, 0);
++	return write_archive(sent_argc, sent_argv, prefix, 0, NULL);
+ }
+ 
+ __attribute__((format (printf, 1, 2)))
+-- 
+1.7.5.4
+
+
+From 8601fde9fe5873a2a520955ef2dddaeaee9124f6 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 18:27:15 -0400
+Subject: [PATCH 6/9] archive: refactor file extension format-guessing
+
+Git-archive will guess a format from the output filename if
+no format is explicitly given.  The current function just
+hardcodes "zip" to the zip format, and leaves everything
+else NULL (which will default to tar). Since we are about
+to add user-specified formats, we need to be more flexible.
+The new rule is "if a filename ends with a dot and the name
+of a format, it matches that format". For the existing "tar"
+and "zip" formats, this is identical to the current
+behavior. For new user-specified formats, this will do what
+the user expects if they name their formats appropriately.
+
+Because we will eventually start matching arbitrary
+user-specified extensions that may include dots, the strrchr
+search for the final dot is not sufficient. We need to do an
+actual suffix match with each extension.
+---
+ archive.c |   25 +++++++++++++++++++------
+ 1 files changed, 19 insertions(+), 6 deletions(-)
+
+diff --git a/archive.c b/archive.c
+index 7d0ca32..41065a8 100644
+--- a/archive.c
++++ b/archive.c
+@@ -419,13 +419,26 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 	return ar->write_archive(ar, &args);
+ }
+ 
++static int match_extension(const char *filename, const char *ext)
++{
++	int prefixlen = strlen(filename) - strlen(ext);
++
++	/*
++	 * We need 1 character for the '.', and 1 character to ensure that the
++	 * prefix is non-empty (k.e., we don't match .tar.gz with no actual
++	 * filename).
++	 */
++	if (prefixlen < 2 || filename[prefixlen-1] != '.')
++		return 0;
++	return !strcmp(filename + prefixlen, ext);
++}
++
+ const char *archive_format_from_filename(const char *filename)
+ {
+-	const char *ext = strrchr(filename, '.');
+-	if (!ext)
+-		return NULL;
+-	ext++;
+-	if (!strcasecmp(ext, "zip"))
+-		return "zip";
++	int i;
++
++	for (i = 0; i < nr_archivers; i++)
++		if (match_extension(filename, archivers[i]->name))
++			return archivers[i]->name;
+ 	return NULL;
+ }
+-- 
+1.7.5.4
+
+
+From 5548982d9c36d029500f9d2e5e98f2d7915b198f Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 14:01:12 -0400
+Subject: [PATCH 7/9] archive: implement configurable tar filters
+
+It's common to pipe the tar output produce by "git archive"
+through gzip or some other compressor. Locally, this can
+easily be done by using a shell pipe. When requesting a
+remote archive, though, it cannot be done through the
+upload-archive interface.
+
+This patch allows configurable tar filters, so that one
+could define a "tar.gz" format that automatically pipes tar
+output through gzip.
+---
+ Documentation/git-archive.txt |   16 ++++++
+ archive-tar.c                 |  107 ++++++++++++++++++++++++++++++++++++++++-
+ t/t5000-tar-tree.sh           |   43 ++++++++++++++++
+ 3 files changed, 165 insertions(+), 1 deletions(-)
+
+diff --git a/Documentation/git-archive.txt b/Documentation/git-archive.txt
+index 9c750e2..726bf63 100644
+--- a/Documentation/git-archive.txt
++++ b/Documentation/git-archive.txt
+@@ -101,6 +101,16 @@ tar.umask::
+ 	details.  If `--remote` is used then only the configuration of
+ 	the remote repository takes effect.
+ 
++tar.<format>.command::
++	This variable specifies a shell command through which the tar
++	output generated by `git archive` should be piped. The command
++	is executed using the shell with the generated tar file on its
++	standard input, and should produce the final output on its
++	standard output. Any compression-level options will be passed
++	to the command (e.g., "-9"). An output file with the same
++	extension as `<format>` will be use this format if no other
++	format is given.
++
+ ATTRIBUTES
+ ----------
+ 
+@@ -149,6 +159,12 @@ git archive -o latest.zip HEAD::
+ 	commit on the current branch. Note that the output format is
+ 	inferred by the extension of the output file.
+ 
++git config tar.tar.xz.command "xz -c"::
++
++	Configure a "tar.xz" format for making LZMA-compressed tarfiles.
++	You can use it specifying `--format=tar.xz`, or by creating an
++	output file like `-o foo.tar.xz`.
++
+ 
+ SEE ALSO
+ --------
+diff --git a/archive-tar.c b/archive-tar.c
+index bed9a9b..5c30747 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -4,6 +4,7 @@
+ #include "cache.h"
+ #include "tar.h"
+ #include "archive.h"
++#include "run-command.h"
+ 
+ #define RECORDSIZE	(512)
+ #define BLOCKSIZE	(RECORDSIZE * 20)
+@@ -13,6 +14,9 @@ static unsigned long offset;
+ 
+ static int tar_umask = 002;
+ 
++static int write_tar_filter_archive(const struct archiver *ar,
++				    struct archiver_args *args);
++
+ /* writes out the whole block, but only if it is full */
+ static void write_if_needed(void)
+ {
+@@ -220,6 +224,60 @@ static int write_global_extended_header(struct archiver_args *args)
+ 	return err;
+ }
+ 
++static struct archiver **tar_filters;
++static int nr_tar_filters;
++static int alloc_tar_filters;
++
++static struct archiver *find_tar_filter(const char *name, int len)
++{
++	int i;
++	for (i = 0; i < nr_tar_filters; i++) {
++		struct archiver *ar = tar_filters[i];
++		if (!strncmp(ar->name, name, len) && !ar->name[len])
++			return ar;
++	}
++	return NULL;
++}
++
++static int tar_filter_config(const char *var, const char *value, void *data)
++{
++	struct archiver *ar;
++	const char *dot;
++	const char *name;
++	const char *type;
++	int namelen;
++
++	if (prefixcmp(var, "tar."))
++		return 0;
++	dot = strrchr(var, '.');
++	if (dot == var + 9)
++		return 0;
++
++	name = var + 4;
++	namelen = dot - name;
++	type = dot + 1;
++
++	ar = find_tar_filter(name, namelen);
++	if (!ar) {
++		ar = xcalloc(1, sizeof(*ar));
++		ar->name = xmemdupz(name, namelen);
++		ar->write_archive = write_tar_filter_archive;
++		ar->flags = ARCHIVER_WANT_COMPRESSION_LEVELS;
++		ALLOC_GROW(tar_filters, nr_tar_filters + 1, alloc_tar_filters);
++		tar_filters[nr_tar_filters++] = ar;
++	}
++
++	if (!strcmp(type, "command")) {
++		if (!value)
++			return config_error_nonbool(var);
++		free(ar->data);
++		ar->data = xstrdup(value);
++		return 0;
++	}
++
++	return 0;
++}
++
+ static int git_tar_config(const char *var, const char *value, void *cb)
+ {
+ 	if (!strcmp(var, "tar.umask")) {
+@@ -231,7 +289,8 @@ static int git_tar_config(const char *var, const char *value, void *cb)
+ 		}
+ 		return 0;
+ 	}
+-	return 0;
++
++	return tar_filter_config(var, value, cb);
+ }
+ 
+ static int write_tar_archive(const struct archiver *ar,
+@@ -248,6 +307,45 @@ static int write_tar_archive(const struct archiver *ar,
+ 	return err;
+ }
+ 
++static int write_tar_filter_archive(const struct archiver *ar,
++				    struct archiver_args *args)
++{
++	struct strbuf cmd = STRBUF_INIT;
++	struct child_process filter;
++	const char *argv[2];
++	int r;
++
++	if (!ar->data)
++		die("BUG: tar-filter archiver called with no filter defined");
++
++	strbuf_addstr(&cmd, ar->data);
++	if (args->compression_level >= 0)
++		strbuf_addf(&cmd, " -%d", args->compression_level);
++
++	memset(&filter, 0, sizeof(filter));
++	argv[0] = cmd.buf;
++	argv[1] = NULL;
++	filter.argv = argv;
++	filter.use_shell = 1;
++	filter.in = -1;
++
++	if (start_command(&filter) < 0)
++		die_errno("unable to start '%s' filter", argv[0]);
++	close(1);
++	if (dup2(filter.in, 1) < 0)
++		die_errno("unable to redirect descriptor");
++	close(filter.in);
++
++	r = write_tar_archive(ar, args);
++
++	close(1);
++	if (finish_command(&filter) != 0)
++		die("'%s' filter reported error", argv[0]);
++
++	strbuf_release(&cmd);
++	return r;
++}
++
+ static struct archiver tar_archiver = {
+ 	"tar",
+ 	write_tar_archive,
+@@ -256,6 +354,13 @@ static struct archiver tar_archiver = {
+ 
+ void init_tar_archiver(void)
+ {
++	int i;
+ 	register_archiver(&tar_archiver);
++
+ 	git_config(git_tar_config, NULL);
++	for (i = 0; i < nr_tar_filters; i++) {
++		/* omit any filters that never had a command configured */
++		if (tar_filters[i]->data)
++			register_archiver(tar_filters[i]);
++	}
+ }
+diff --git a/t/t5000-tar-tree.sh b/t/t5000-tar-tree.sh
+index cff1b3e..1f90692 100755
+--- a/t/t5000-tar-tree.sh
++++ b/t/t5000-tar-tree.sh
+@@ -252,4 +252,47 @@ test_expect_success 'git-archive --prefix=olde-' '
+ 	test -f h/olde-a/bin/sh
+ '
+ 
++test_expect_success 'setup tar filters' '
++	git config tar.tar.foo.command "tr ab ba" &&
++	git config tar.bar.command "tr ab ba"
++'
++
++test_expect_success 'archive --list mentions user filter' '
++	git archive --list >output &&
++	grep "^tar\.foo\$" output &&
++	grep "^bar\$" output
++'
++
++test_expect_success 'archive --list shows remote user filters' '
++	git archive --list --remote=. >output &&
++	grep "^tar\.foo\$" output &&
++	grep "^bar\$" output
++'
++
++test_expect_success 'invoke tar filter by format' '
++	git archive --format=tar.foo HEAD >config.tar.foo &&
++	tr ab ba <config.tar.foo >config.tar &&
++	test_cmp b.tar config.tar &&
++	git archive --format=bar HEAD >config.bar &&
++	tr ab ba <config.bar >config.tar &&
++	test_cmp b.tar config.tar
++'
++
++test_expect_success 'invoke tar filter by extension' '
++	git archive -o config-implicit.tar.foo HEAD &&
++	test_cmp config.tar.foo config-implicit.tar.foo &&
++	git archive -o config-implicit.bar HEAD &&
++	test_cmp config.tar.foo config-implicit.bar
++'
++
++test_expect_success 'default output format remains tar' '
++	git archive -o config-implicit.baz HEAD &&
++	test_cmp b.tar config-implicit.baz
++'
++
++test_expect_success 'extension matching requires dot' '
++	git archive -o config-implicittar.foo HEAD &&
++	test_cmp b.tar config-implicittar.foo
++'
++
+ test_done
+-- 
+1.7.5.4
+
+
+From 658200624d675fb4ef1966bdcc114b7442140738 Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Wed, 15 Jun 2011 17:04:08 -0400
+Subject: [PATCH 8/9] archive: provide builtin .tar.gz filter
+
+This works exactly as if the user had configured it via:
+
+  [tar "tgz"]
+	command = gzip -cn
+  [tar "tar.gz"]
+	command = gzip -cn
+
+but since it is so common, it's convenient to have it
+builtin without the user needing to do anything.
+---
+ Documentation/git-archive.txt |   11 +++++++++++
+ archive-tar.c                 |    2 ++
+ t/t5000-tar-tree.sh           |   38 ++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 51 insertions(+), 0 deletions(-)
+
+diff --git a/Documentation/git-archive.txt b/Documentation/git-archive.txt
+index 726bf63..8b0080a 100644
+--- a/Documentation/git-archive.txt
++++ b/Documentation/git-archive.txt
+@@ -110,6 +110,9 @@ tar.<format>.command::
+ 	to the command (e.g., "-9"). An output file with the same
+ 	extension as `<format>` will be use this format if no other
+ 	format is given.
+++
++The "tar.gz" and "tgz" formats are defined automatically and default to
++`gzip -cn`. You may override them with custom commands.
+ 
+ ATTRIBUTES
+ ----------
+@@ -143,6 +146,14 @@ git archive --format=tar --prefix=git-1.4.0/ v1.4.0 | gzip >git-1.4.0.tar.gz::
+ 
+ 	Create a compressed tarball for v1.4.0 release.
+ 
++git archive --format=tar.gz --prefix=git-1.4.0/ v1.4.0 >git-1.4.0.tar.gz::
++
++	Same as above, but using the builtin tar.gz handling.
++
++git archive --prefix=git-1.4.0/ -o git-1.4.0.tar.gz v1.4.0::
++
++	Same as above, but the format is inferred from the output file.
++
+ git archive --format=tar --prefix=git-1.4.0/ v1.4.0{caret}\{tree\} | gzip >git-1.4.0.tar.gz::
+ 
+ 	Create a compressed tarball for v1.4.0 release, but without a
+diff --git a/archive-tar.c b/archive-tar.c
+index 5c30747..f470ebe 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -357,6 +357,8 @@ void init_tar_archiver(void)
+ 	int i;
+ 	register_archiver(&tar_archiver);
+ 
++	tar_filter_config("tar.tgz.command", "gzip -cn", NULL);
++	tar_filter_config("tar.tar.gz.command", "gzip -cn", NULL);
+ 	git_config(git_tar_config, NULL);
+ 	for (i = 0; i < nr_tar_filters; i++) {
+ 		/* omit any filters that never had a command configured */
+diff --git a/t/t5000-tar-tree.sh b/t/t5000-tar-tree.sh
+index 1f90692..070250e 100755
+--- a/t/t5000-tar-tree.sh
++++ b/t/t5000-tar-tree.sh
+@@ -26,6 +26,8 @@ commit id embedding:
+ 
+ . ./test-lib.sh
+ UNZIP=${UNZIP:-unzip}
++GZIP=${GZIP:-gzip}
++GUNZIP=${GUNZIP:-gzip -d}
+ 
+ SUBSTFORMAT=%H%n
+ 
+@@ -295,4 +297,40 @@ test_expect_success 'extension matching requires dot' '
+ 	test_cmp b.tar config-implicittar.foo
+ '
+ 
++if $GZIP --version >/dev/null 2>&1; then
++	test_set_prereq GZIP
++else
++	say "Skipping some tar.gz tests because gzip not found"
++fi
++
++test_expect_success GZIP 'git archive --format=tgz' '
++	git archive --format=tgz HEAD >j.tgz
++'
++
++test_expect_success GZIP 'git archive --format=tar.gz' '
++	git archive --format=tar.gz HEAD >j1.tar.gz &&
++	test_cmp j.tgz j1.tar.gz
++'
++
++test_expect_success GZIP 'infer tgz from .tgz filename' '
++	git archive --output=j2.tgz HEAD &&
++	test_cmp j.tgz j2.tgz
++'
++
++test_expect_success GZIP 'infer tgz from .tar.gz filename' '
++	git archive --output=j3.tar.gz HEAD &&
++	test_cmp j.tgz j3.tar.gz
++'
++
++if $GUNZIP --version >/dev/null 2>&1; then
++	test_set_prereq GUNZIP
++else
++	say "Skipping some tar.gz tests because gunzip was not found"
++fi
++
++test_expect_success GZIP,GUNZIP 'extract tgz file' '
++	$GUNZIP -c <j.tgz >j.tar &&
++	test_cmp b.tar j.tar
++'
++
+ test_done
+-- 
+1.7.5.4
+
+
+From 59297ba7ab37268fa53a04f84153a46d1a89e5ca Mon Sep 17 00:00:00 2001
+From: Jeff King <peff@peff.net>
+Date: Tue, 21 Jun 2011 19:18:01 -0400
+Subject: [PATCH 9/9] upload-archive: allow user to turn off filters
+
+Some tar filters may be very expensive to run, so sites do
+not want to expose them via upload-archive. This patch lets
+users configure tar.<filter>.remote to turn them off.
+
+By default, gzip filters are left on, as they are about as
+expensive as creating zip archives.
+---
+ Documentation/git-archive.txt |    6 ++++++
+ archive-tar.c                 |   11 ++++++++++-
+ archive-zip.c                 |    2 +-
+ archive.c                     |   11 ++++++-----
+ archive.h                     |    3 ++-
+ builtin/archive.c             |    2 +-
+ builtin/upload-archive.c      |    2 +-
+ t/t5000-tar-tree.sh           |   25 ++++++++++++++++++++++---
+ 8 files changed, 49 insertions(+), 13 deletions(-)
+
+diff --git a/Documentation/git-archive.txt b/Documentation/git-archive.txt
+index 8b0080a..1320c87 100644
+--- a/Documentation/git-archive.txt
++++ b/Documentation/git-archive.txt
+@@ -114,6 +114,12 @@ tar.<format>.command::
+ The "tar.gz" and "tgz" formats are defined automatically and default to
+ `gzip -cn`. You may override them with custom commands.
+ 
++tar.<format>.remote::
++	If true, enable `<format>` for use by remote clients via
++	linkgit:git-upload-archive[1]. Defaults to false for
++	user-defined formats, but true for the "tar.gz" and "tgz"
++	formats.
++
+ ATTRIBUTES
+ ----------
+ 
+diff --git a/archive-tar.c b/archive-tar.c
+index f470ebe..20af005 100644
+--- a/archive-tar.c
++++ b/archive-tar.c
+@@ -274,6 +274,13 @@ static int tar_filter_config(const char *var, const char *value, void *data)
+ 		ar->data = xstrdup(value);
+ 		return 0;
+ 	}
++	if (!strcmp(type, "remote")) {
++		if (git_config_bool(var, value))
++			ar->flags |= ARCHIVER_REMOTE;
++		else
++			ar->flags &= ~ARCHIVER_REMOTE;
++		return 0;
++	}
+ 
+ 	return 0;
+ }
+@@ -349,7 +356,7 @@ static int write_tar_filter_archive(const struct archiver *ar,
+ static struct archiver tar_archiver = {
+ 	"tar",
+ 	write_tar_archive,
+-	0
++	ARCHIVER_REMOTE
+ };
+ 
+ void init_tar_archiver(void)
+@@ -358,7 +365,9 @@ void init_tar_archiver(void)
+ 	register_archiver(&tar_archiver);
+ 
+ 	tar_filter_config("tar.tgz.command", "gzip -cn", NULL);
++	tar_filter_config("tar.tgz.remote", "true", NULL);
+ 	tar_filter_config("tar.tar.gz.command", "gzip -cn", NULL);
++	tar_filter_config("tar.tar.gz.remote", "true", NULL);
+ 	git_config(git_tar_config, NULL);
+ 	for (i = 0; i < nr_tar_filters; i++) {
+ 		/* omit any filters that never had a command configured */
+diff --git a/archive-zip.c b/archive-zip.c
+index 42df660..3c102a1 100644
+--- a/archive-zip.c
++++ b/archive-zip.c
+@@ -283,7 +283,7 @@ static int write_zip_archive(const struct archiver *ar,
+ static struct archiver zip_archiver = {
+ 	"zip",
+ 	write_zip_archive,
+-	ARCHIVER_WANT_COMPRESSION_LEVELS
++	ARCHIVER_WANT_COMPRESSION_LEVELS|ARCHIVER_REMOTE
+ };
+ 
+ void init_zip_archiver(void)
+diff --git a/archive.c b/archive.c
+index 41065a8..2a7a28e 100644
+--- a/archive.c
++++ b/archive.c
+@@ -299,7 +299,7 @@ static void parse_treeish_arg(const char **argv,
+ 
+ static int parse_archive_args(int argc, const char **argv,
+ 		const struct archiver **ar, struct archiver_args *args,
+-		const char *name_hint)
++		const char *name_hint, int is_remote)
+ {
+ 	const char *format = NULL;
+ 	const char *base = NULL;
+@@ -356,7 +356,8 @@ static int parse_archive_args(int argc, const char **argv,
+ 
+ 	if (list) {
+ 		for (i = 0; i < nr_archivers; i++)
+-			printf("%s\n", archivers[i]->name);
++			if (!is_remote || archivers[i]->flags & ARCHIVER_REMOTE)
++				printf("%s\n", archivers[i]->name);
+ 		exit(0);
+ 	}
+ 
+@@ -369,7 +370,7 @@ static int parse_archive_args(int argc, const char **argv,
+ 	if (argc < 1)
+ 		usage_with_options(archive_usage, opts);
+ 	*ar = lookup_archiver(format);
+-	if (!*ar)
++	if (!*ar || (is_remote && !((*ar)->flags & ARCHIVER_REMOTE)))
+ 		die("Unknown archive format '%s'", format);
+ 
+ 	args->compression_level = Z_DEFAULT_COMPRESSION;
+@@ -390,7 +391,7 @@ static int parse_archive_args(int argc, const char **argv,
+ }
+ 
+ int write_archive(int argc, const char **argv, const char *prefix,
+-		  int setup_prefix, const char *name_hint)
++		  int setup_prefix, const char *name_hint, int remote)
+ {
+ 	int nongit = 0;
+ 	const struct archiver *ar = NULL;
+@@ -403,7 +404,7 @@ int write_archive(int argc, const char **argv, const char *prefix,
+ 	init_tar_archiver();
+ 	init_zip_archiver();
+ 
+-	argc = parse_archive_args(argc, argv, &ar, &args, name_hint);
++	argc = parse_archive_args(argc, argv, &ar, &args, name_hint, remote);
+ 	if (nongit) {
+ 		/*
+ 		 * We know this will die() with an error, so we could just
+diff --git a/archive.h b/archive.h
+index 202d528..2b0884f 100644
+--- a/archive.h
++++ b/archive.h
+@@ -15,6 +15,7 @@ struct archiver_args {
+ };
+ 
+ #define ARCHIVER_WANT_COMPRESSION_LEVELS 1
++#define ARCHIVER_REMOTE 2
+ struct archiver {
+ 	const char *name;
+ 	int (*write_archive)(const struct archiver *, struct archiver_args *);
+@@ -29,7 +30,7 @@ extern void init_zip_archiver(void);
+ typedef int (*write_archive_entry_fn_t)(struct archiver_args *args, const unsigned char *sha1, const char *path, size_t pathlen, unsigned int mode, void *buffer, unsigned long size);
+ 
+ extern int write_archive_entries(struct archiver_args *args, write_archive_entry_fn_t write_entry);
+-extern int write_archive(int argc, const char **argv, const char *prefix, int setup_prefix, const char *name_hint);
++extern int write_archive(int argc, const char **argv, const char *prefix, int setup_prefix, const char *name_hint, int remote);
+ 
+ const char *archive_format_from_filename(const char *filename);
+ 
+diff --git a/builtin/archive.c b/builtin/archive.c
+index 2578cf5..883c009 100644
+--- a/builtin/archive.c
++++ b/builtin/archive.c
+@@ -106,5 +106,5 @@ int cmd_archive(int argc, const char **argv, const char *prefix)
+ 
+ 	setvbuf(stderr, NULL, _IOLBF, BUFSIZ);
+ 
+-	return write_archive(argc, argv, prefix, 1, output);
++	return write_archive(argc, argv, prefix, 1, output, 0);
+ }
+diff --git a/builtin/upload-archive.c b/builtin/upload-archive.c
+index e6bb97d..2d0b383 100644
+--- a/builtin/upload-archive.c
++++ b/builtin/upload-archive.c
+@@ -64,7 +64,7 @@ static int run_upload_archive(int argc, const char **argv, const char *prefix)
+ 	sent_argv[sent_argc] = NULL;
+ 
+ 	/* parse all options sent by the client */
+-	return write_archive(sent_argc, sent_argv, prefix, 0, NULL);
++	return write_archive(sent_argc, sent_argv, prefix, 0, NULL, 1);
+ }
+ 
+ __attribute__((format (printf, 1, 2)))
+diff --git a/t/t5000-tar-tree.sh b/t/t5000-tar-tree.sh
+index 070250e..9e3ba98 100755
+--- a/t/t5000-tar-tree.sh
++++ b/t/t5000-tar-tree.sh
+@@ -256,7 +256,8 @@ test_expect_success 'git-archive --prefix=olde-' '
+ 
+ test_expect_success 'setup tar filters' '
+ 	git config tar.tar.foo.command "tr ab ba" &&
+-	git config tar.bar.command "tr ab ba"
++	git config tar.bar.command "tr ab ba" &&
++	git config tar.bar.remote true
+ '
+ 
+ test_expect_success 'archive --list mentions user filter' '
+@@ -265,9 +266,9 @@ test_expect_success 'archive --list mentions user filter' '
+ 	grep "^bar\$" output
+ '
+ 
+-test_expect_success 'archive --list shows remote user filters' '
++test_expect_success 'archive --list shows only enabled remote filters' '
+ 	git archive --list --remote=. >output &&
+-	grep "^tar\.foo\$" output &&
++	! grep "^tar\.foo\$" output &&
+ 	grep "^bar\$" output
+ '
+ 
+@@ -297,6 +298,13 @@ test_expect_success 'extension matching requires dot' '
+ 	test_cmp b.tar config-implicittar.foo
+ '
+ 
++test_expect_success 'only enabled filters are available remotely' '
++	test_must_fail git archive --remote=. --format=tar.foo HEAD \
++		>remote.tar.foo &&
++	git archive --remote=. --format=bar >remote.bar HEAD &&
++	test_cmp remote.bar config.bar
++'
++
+ if $GZIP --version >/dev/null 2>&1; then
+ 	test_set_prereq GZIP
+ else
+@@ -333,4 +341,15 @@ test_expect_success GZIP,GUNZIP 'extract tgz file' '
+ 	test_cmp b.tar j.tar
+ '
+ 
++test_expect_success GZIP 'remote tar.gz is allowed by default' '
++	git archive --remote=. --format=tar.gz HEAD >remote.tar.gz &&
++	test_cmp j.tgz remote.tar.gz
++'
++
++test_expect_success GZIP 'remote tar.gz can be disabled' '
++	git config tar.tar.gz.remote false &&
++	test_must_fail git archive --remote=. --format=tar.gz HEAD \
++		>remote.tar.gz
++'
++
+ test_done
+-- 
+1.7.5.4
+
