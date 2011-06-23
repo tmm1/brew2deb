@@ -4,7 +4,7 @@ class Solr < DebianFormula
   md5 '0849a7242f6f861e3a8d5592bd9580c5'
 
   name 'solr'
-  version '3.2.0+github1'
+  version '3.2.0+github2'
   section 'database'
   description 'Enterprise search platform'
 
