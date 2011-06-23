@@ -1,11 +1,11 @@
-class Redis < DebianFormula
+class Redis2 < DebianFormula
   homepage 'http://redis.io/'
   head 'https://github.com/antirez/redis.git'
   url 'http://redis.googlecode.com/files/redis-2.2.5.tar.gz'
   md5 'fe6395bbd2cadc45f4f20f6bbe05ed09'
 
-  section 'database'
   name 'redis-server'
+  section 'database'
   version '2.2.5+github1'
   description 'An advanced key-value store.'
 
@@ -28,12 +28,8 @@ class Redis < DebianFormula
 
     # Head and stable have different code layouts
     src = File.exists?('src/Makefile') ? 'src' : '.'
+    bin.install Dir["#{src}/redis-*"].select{ |f| f =~ /redis-[^\.]+$/ }
 
-    %w( redis-benchmark redis-cli redis-server redis-check-dump redis-check-aof ).each { |p|
-      bin.install "#{src}/#{p}"
-    }
-
-    doc.install Dir["doc/*"]
     (etc+'redis').install "redis.conf"
     (etc+'init.d').install_p(workdir+'redis-server.init.d', 'redis-server')
   end
