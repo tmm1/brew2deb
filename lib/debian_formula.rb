@@ -242,10 +242,15 @@ class DebianFormula < Formula
 end
 
 class DebianSourceFormula < DebianFormula
+  build_depends \
+    'fakeroot',
+    'devscripts',
+    'dpkg-dev'
+
   def build
     ENV['DEBEMAIL'] = maintainer
     safe_system 'dch', '-v', version, 'brew2deb package'
-    safe_system 'dpkg-buildpackage', '-rfakeroot'
+    safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
   end
 
   def install
