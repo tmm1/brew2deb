@@ -29,6 +29,7 @@ case "$1" in
 	echo -n "Starting $DESC: "
 	touch $PIDFILE
 	chown redis:redis $PIDFILE
+	chown redis:redis /var/log/redis
 	if start-stop-daemon --start --quiet --umask 007 --pidfile $PIDFILE --chuid redis:redis --exec $DAEMON -- $DAEMON_ARGS
 	then
 		echo "$NAME."

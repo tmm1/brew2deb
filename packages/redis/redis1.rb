@@ -12,7 +12,7 @@ class Redis1 < Redis2
 
     inreplace "redis.conf" do |s|
       s.gsub! 'redis.pid', 'redis1.pid'
-      s.gsub! 'redis.log', 'redis1.log'
+      s.gsub! 'redis-server.log', 'redis1-server.log'
       s.gsub! '/var/lib/redis', '/var/lib/redis1'
     end
   end

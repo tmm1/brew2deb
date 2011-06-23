@@ -15,7 +15,7 @@ class Redis2 < DebianFormula
     # Fix up default conf file to match our paths
     inreplace "redis.conf" do |s|
       s.gsub! 'daemonize no', 'daemonize yes'
-      s.gsub! 'logfile stdout', 'logfile /var/log/redis.log'
+      s.gsub! 'logfile stdout', 'logfile /var/log/redis/redis-server.log'
       s.gsub! 'loglevel verbose', 'loglevel notice'
 
       s.gsub! 'dir ./', 'dir /var/lib/redis/'
@@ -24,7 +24,7 @@ class Redis2 < DebianFormula
   end
 
   def install
-    %w( run lib/redis log ).each { |p| (var+p).mkpath }
+    %w( run lib/redis log/redis ).each { |p| (var+p).mkpath }
 
     # Head and stable have different code layouts
     src = File.exists?('src/Makefile') ? 'src' : '.'
