@@ -223,15 +223,20 @@ class DebianFormula < Formula
     HOMEBREW_WORKDIR+'tmp-install'
   end
 
-  def configure(opts = {})
-    sh "./configure", *opts.map{ |k,v|
-      option = k.to_s.gsub('_','-')
-      if v == true
-        "--#{option}"
-      else
-        "--#{option}=#{v}"
-      end
-    }
+  def configure(*args)
+    if args.last.is_a?(Hash)
+      opts = args.pop
+      args += opts.map{ |k,v|
+        option = k.to_s.gsub('_','-')
+        if v == true
+          "--#{option}"
+        else
+          "--#{option}=#{v}"
+        end
+      }
+    end
+
+    sh "./configure", *args
   end
 
   public
