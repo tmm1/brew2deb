@@ -61,14 +61,37 @@ class DebianFormula < Formula
     'patch',
     'curl'
 
+  class << self
+    attr_accessor :extra_sources
+  end
+
+  def self.source(url, opts={})
+    @extra_sources ||= []
+    @extra_sources << [url, opts]
+  end
+
+  def download_extra_sources
+    (self.class.extra_sources || []).each do |url, opts|
+      spec = SoftwareSpecification.new(url, opts)
+      downloader = spec.download_strategy.new(url, nil, spec.detect_version, opts)
+      downloader.fetch
+      chdir(builddir) do
+        downloader.stage
+      end
+    end
+  end
+
   def stage
     if skip_build
-      Dir.chdir(HOMEBREW_WORKDIR+'tmp-build') do
+      chdir(builddir) do
         @downloader.send :chdir
         yield
       end
     else
-      super
+      super do
+        download_extra_sources
+        yield
+      end
     end
   end
 

@@ -275,6 +275,7 @@ class GitDownloadStrategy < AbstractDownloadStrategy
   def initialize url, name, version, specs
     super
     @unique_token="#{name}--git" unless name.to_s.empty? or name == '__UNKNOWN__'
+    @unique_token ||= File.basename(url)
     @clone=HOMEBREW_CACHE+@unique_token
   end
 
