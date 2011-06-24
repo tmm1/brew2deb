@@ -3,8 +3,11 @@ class Nginx < DebianFormula
   url 'http://nginx.org/download/nginx-1.0.4.tar.gz'
   md5 'd23f6e6b07b57ac061e790b1ed64bb98'
 
+  source 'https://github.com/agentzh/chunkin-nginx-module.git'
+  source 'https://github.com/agentzh/headers-more-nginx-module.git'
+
   name 'nginx'
-  version '1.0.4'
+  version '1.0.4+github1'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
@@ -32,8 +35,11 @@ class Nginx < DebianFormula
       '--with-http_ssl_module',
       '--with-http_gzip_static_module',
       '--with-pcre',
-      '--with-zlib',
       '--with-debug',
+
+      "--add-module=#{builddir/'chunkin-nginx-module.git'}",
+      "--add-module=#{builddir/'headers-more-nginx-module.git'}",
+
       :user => 'www-data',
       :group => 'www-data',
       :prefix => prefix,
