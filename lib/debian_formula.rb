@@ -177,18 +177,18 @@ class DebianFormula < Formula
     FileUtils.mkdir_p(builddir)
     raise "Couldn't create build sandbox" if not builddir.directory?
 
-    begin
-      wd=Dir.pwd
-      Dir.chdir builddir
+    chdir(builddir) do
       yield
-    ensure
-      Dir.chdir wd
     end
   end
   alias :mktemp :mkbuilddir
 
-  def chdir(dir, &blk)
-    Dir.chdir(dir, &blk)
+  def chdir(dir)
+    wd = Dir.pwd
+    Dir.chdir(dir)
+    yield
+  ensure
+    Dir.chdir(wd)
   end
 
   def maintainer
