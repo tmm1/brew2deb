@@ -5,7 +5,12 @@ class Redis1 < Redis2
   md5 'b1f026ed495252e7820a2946a61f6f61'
 
   name 'redis1-server'
+  section 'database'
   version '1.2.1+github1'
+  description 'An advanced key-value store (v1).'
+
+  conffiles! \
+    '/etc/redis/redis1.conf'
 
   def build
     super

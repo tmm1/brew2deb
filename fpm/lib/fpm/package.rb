@@ -62,6 +62,9 @@ class FPM::Package
   # hash of paths for maintainer/package scripts (postinstall, etc)
   attr_accessor :scripts
 
+  # Array of configuration files
+  attr_accessor :conffiles
+
   def initialize(source)
     @source = source
     @logger = Logger.new(STDERR)
@@ -109,6 +112,7 @@ class FPM::Package
     @replaces = source[:replaces] || []
     @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
+    @conffiles = source[:conffiles] || []
   end # def initialize
 
   def generate_specfile(builddir, paths)

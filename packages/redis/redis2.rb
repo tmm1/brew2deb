@@ -9,6 +9,9 @@ class Redis2 < DebianFormula
   version '2.2.5+github1'
   description 'An advanced key-value store.'
 
+  conffiles \
+    '/etc/redis/redis.conf'
+
   def build
     make
 

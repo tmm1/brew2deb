@@ -19,6 +19,7 @@ class FPM::Program
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {}
+    @settings.conffiles ||= []
   end # def initialize
 
   def run(args)
@@ -134,6 +135,10 @@ class FPM::Program
     opts.on("--replaces REPLACES") do |thing|
       @settings.replaces << thing
     end # --replaces
+
+    opts.on("--conffile CONFFILE") do |thing|
+      @settings.conffiles << thing
+    end
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
       @settings.architecture = arch

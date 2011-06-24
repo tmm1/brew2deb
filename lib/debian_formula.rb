@@ -34,6 +34,10 @@ class Formula
           @#{attr}.uniq!
           @#{attr}
         end
+        def self.#{attr}!(*list)
+          @#{attr} = []
+          #{attr}(*list)
+        end
       }
     end
   end
@@ -46,6 +50,7 @@ class DebianFormula < Formula
 
   attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
+  attr_rw_list :conffiles
 
   attr_accessor :skip_build
   attr_writer :installing
@@ -132,10 +137,10 @@ class DebianFormula < Formula
         '--description', self.class.description.ui.strip
       ] if self.class.description
 
-      %w[ depends provides replaces conflicts ].each do |type|
+      %w[ depends provides replaces conflicts conffiles ].each do |type|
         if self.class.send(type).any?
           self.class.send(type).each do |dep|
-            opts += ["--#{type}", dep]
+            opts += ["--#{type == 'conffiles' ? 'conffile' : type}", dep]
           end
         end
       end
