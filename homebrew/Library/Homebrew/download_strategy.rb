@@ -287,9 +287,9 @@ class GitDownloadStrategy < AbstractDownloadStrategy
   end
 
   def fetch
-    raise "You must install Git:\n\n"+
-          "  brew install git\n" \
-          unless system "/usr/bin/which git"
+    # raise "You must install Git:\n\n"+
+    #       "  brew install git\n" \
+    #       unless system "/usr/bin/which git"
 
     ohai "Cloning #{@url}"
 
