@@ -30,6 +30,7 @@ case "$1" in
 	touch $PIDFILE
 	chown redis:redis $PIDFILE
 	chown redis:redis /var/log/redis
+	chown redis:redis /var/lib/redis
 	if start-stop-daemon --start --quiet --umask 007 --pidfile $PIDFILE --chuid redis:redis --exec $DAEMON -- $DAEMON_ARGS
 	then
 		echo "$NAME."

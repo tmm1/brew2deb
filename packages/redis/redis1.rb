@@ -22,11 +22,13 @@ class Redis1 < Redis2
 
     mv etc+'redis/redis.conf', etc+'redis/redis1.conf'
     mv etc+'init.d/redis-server', etc+'init.d/redis1-server'
+    mv var+'lib/redis', var+'lib/redis1'
 
     inreplace(etc+'init.d/redis1-server') do |s|
       s.gsub! 'redis-server', 'redis1-server'
       s.gsub! 'redis.conf', 'redis1.conf'
       s.gsub! 'redis.pid', 'redis1.pid'
+      s.gsub! '/var/lib/redis', '/var/lib/redis1'
     end
 
     Dir[bin+'redis-*'].each do |bin|
