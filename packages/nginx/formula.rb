@@ -21,6 +21,10 @@ class Nginx < DebianFormula
     'zlib1g',
     'openssl'
 
+  provides  'nginx-full', 'nginx-common'
+  replaces  'nginx-full', 'nginx-common'
+  conflicts 'nginx-full', 'nginx-common'
+
   conffiles \
     '/etc/nginx/nginx.conf',
     '/etc/nginx/mime.types'
@@ -58,7 +62,6 @@ class Nginx < DebianFormula
   def install
     # startup script
     (etc/'init.d').install_p(workdir/'init.d', 'nginx')
-    (etc/'init.d/nginx').chmod 0755
 
     # config files
     (etc/'nginx').install Dir['conf/*']
