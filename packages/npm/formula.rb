@@ -17,7 +17,7 @@ class NPM < DebianFormula
     lib = (prefix + 'lib')
     lib.mkpath
     chdir lib do
-      sh "node #{builddir}/cli.js install #{builddir}"
+      sh "node #{builddir}/npm--git/cli.js install #{builddir}/npm--git"
     end
 
     bin = (prefix + 'bin')
