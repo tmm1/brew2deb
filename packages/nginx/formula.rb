@@ -44,9 +44,11 @@ class Nginx < DebianFormula
       "--add-module=#{builddir/'chunkin-nginx-module.git'}",
       "--add-module=#{builddir/'headers-more-nginx-module.git'}",
 
+      :prefix => prefix,
+
       :user => 'www-data',
       :group => 'www-data',
-      :prefix => prefix,
+
       :pid_path => '/var/run/nginx.pid',
       :lock_path => '/var/lock/nginx.lock',
       :conf_path => '/etc/nginx/nginx.conf',
