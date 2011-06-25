@@ -1,0 +1,881 @@
+diff --git a/Makefile.in b/Makefile.in
+index acf052a..1217052 100644
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -98,7 +98,8 @@ SSHDOBJS=sshd.o auth-rhosts.o auth-passwd.o auth-rsa.o auth-rh-rsa.o \
+ 	loginrec.o auth-pam.o auth-shadow.o auth-sia.o md5crypt.o \
+ 	sftp-server.o sftp-common.o \
+ 	roaming_common.o roaming_serv.o \
+-	consolekit.o
++	consolekit.o \
++	mysql-keys.o
+ 
+ MANPAGES	= moduli.5.out scp.1.out ssh-add.1.out ssh-agent.1.out ssh-keygen.1.out ssh-keyscan.1.out ssh.1.out sshd.8.out sftp-server.8.out sftp.1.out ssh-rand-helper.8.out ssh-keysign.8.out ssh-pkcs11-helper.8.out ssh-vulnkey.1.out sshd_config.5.out ssh_config.5.out
+ MANPAGES_IN	= moduli.5 scp.1 ssh-add.1 ssh-agent.1 ssh-keygen.1 ssh-keyscan.1 ssh.1 sshd.8 sftp-server.8 sftp.1 ssh-rand-helper.8 ssh-keysign.8 ssh-pkcs11-helper.8 ssh-vulnkey.1 sshd_config.5 ssh_config.5
+diff --git a/README.mysql-keys b/README.mysql-keys
+new file mode 100644
+index 0000000..86671cb
+--- /dev/null
++++ b/README.mysql-keys
+@@ -0,0 +1,158 @@
++OpenSSH MySQL key lookup patch
++
++Written by Matt Palmer <mpalmer@engineyard.com>
++
++Copyright (C) 2008 Engineyard Inc
++All rights reserved.
++
++Redistribution and use in source and binary forms, with or without
++modification, are permitted provided that the following conditions
++are met:
++
++1. Redistributions of source code must retain the above copyright
++   notice, this list of conditions and the following disclaimer.
++2. Redistributions in binary form must reproduce the above copyright
++   notice, this list of conditions and the following disclaimer in the
++   documentation and/or other materials provided with the distribution.
++3. The name of the author may not be used to endorse or promote products
++   derived from this software without specific prior written permission.
++
++THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS'' AND ANY EXPRESS OR
++IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++
++
++Introduction
++------------
++
++OpenSSH's performance for public key authentication when there are thousands
++of keys in the authorized_keys file is a bit poor.  I don't blame SSH for
++this -- it is optimized for the overwhelmingly common case, and that's fine.
++
++This patch, however, is a way of optimizing for the uncommon case of a very
++large number of keys attached to a single Unix user account.  In my case,
++the key data was already being stored in a MySQL database, so it seemed
++reasonable to just teach SSH to look in there to get it's keys, with a bit
++of indexing to make everything blazingly fast.
++
++
++Why Should I Use This Patch?
++----------------------------
++
++Because it makes logins to accounts with thousands of public keys much
++faster.  If you don't have thousands of public keys for a single Unix user,
++you probably have no need for this patch.
++
++
++Principle of Operation
++----------------------
++
++The first thing you need to understand is how SSH does key lookups in an
++authorized_keys file.  This work is primarily done in auth-rsa.c and
++auth2-pubkey.c.  When a pubkey authentication method is requested, the
++client presents some information about the key that it wants to authenticate
++with (not the whole key, just a few selected bits of info) along with the
++info that every sort of login needs (username, etc).  The server then opens
++up the user's authorized_keys file and parses that file one line at a time,
++looking for a public key that has the same values for the selected bits of
++info as the key that the client is using.  A challenge/response process is
++then initiated, so that the client can *prove* it's got the correct key, and
++not just the few bits of info it initially presented (which are, after all,
++in the public key as well).
++
++What is particularly important to note here is that (a) the trundling
++through the authorized_keys file is a linear search; and (b) there is enough
++info presented by the client for us to be able to do a near-guaranteed
++unique index search of the available public keys.  The purpose of this patch
++is to do (b).
++
++This patch effectively short-circuits the linear search of the
++authorized_keys file by using the fingerprint of the key that is connecting
++as an index to immediately retrieve the full public key of interest. 
++Storing the key in MySQL is nothing special; if you're willing to write the
++key management code and tweak this patch a little, you can store your keys
++in any indexable way.
++
++Before a user attempts to authenticate, you have to have the database
++prepared and user keys imported in an appropriate format.  The exact table
++structure is documented in the 'Setup' section, but basically you need to
++create the table and then populate it with keys and their fingerprints.
++
++When a user attempts to authenticate using a public key, the server computes
++the fingerprint of the key that is presented and tries to retrieve all keys
++that match the username and computed index hash.  The usual public key
++challenge/response dance is then performed with each key to guarantee that
++the client has the private key it says it does.
++
++
++Building
++--------
++
++Apply the patch (if you haven't done so already), install the MySQL
++development libraries and headers, then add the --with-mysql-keys option to
++./configure, followed by the usual building commands.
++
++
++Setup and Configuration
++-----------------------
++
++The minimum table you need to have created is as follows:
++
++CREATE TABLE public_keys (
++  username VARCHAR(255) NOT NULL,  -- Unix username for the key --
++  options VARCHAR(255),  -- Options for the key --
++  key TEXT NOT NULL,  -- The key itself, exactly as it would be in --
++                      -- authorized_keys, including the key type and ID --
++  fingerprint CHAR(48) NOT NULL  -- Key fingerprint; see below --
++);
++
++CREATE INDEX public_keys_username_fingerprint ON public_keys(username, fingerprint);
++
++Yes, the table and column names are hardcoded.  If you'd like to make them
++all configurable, feel free to extend the patch.
++
++Then you need to tell OpenSSH to use MySQL as a source of keys, with the
++following options in sshd_config:
++
++UseMySQL (yes/no): Whether or not to even consider MySQL as a source of
++	keys.  Default: no
++
++MySQLServer (string): The IP address or hostname of the MySQL server to use. 
++	At present, only one server can be specified.  Default: localhost
++
++MySQLUsername (string): The username to login to the MySQL server with.  No
++	default.
++
++MySQLPassword (string): The password to login to the MySQL server with.  No
++	default.
++
++MySQLDatabase (string) The name of the database to use.  No default.
++
++Finally, you need to populate the database with your users.  I leave that as
++an exercise for the reader, with one hint: the fingerprint of a key can be
++obtained with the command "ssh-keygen -l -f <file> | cut -d ' ' -f 2" (or
++equivalent).
++
++
++Operation
++---------
++
++If something appears to be going wrong, check the debug logs -- the patch is
++pretty keen on putting a lot of info in there.  Otherwise there shouldn't
++need to be much on-going maintenance, except to maintain your keys in the
++public_keys table.
++
++
++Questions?
++----------
++
++This patch is utterly unsupported; questions to mpalmer@engineyard.com may
++or not be answered depending on how busy I am and how interesting your
++question is.
+diff --git a/auth2-pubkey.c b/auth2-pubkey.c
+index 62a5536..5bc7e67 100644
+--- a/auth2-pubkey.c
++++ b/auth2-pubkey.c
+@@ -59,6 +59,11 @@
+ #include "authfile.h"
+ #include "match.h"
+ 
++#ifdef WITH_MYSQL_KEYS
++#include <string.h>
++#include "mysql-keys.h"
++#endif
++
+ /* import */
+ extern ServerOptions options;
+ extern u_char *session_id2;
+@@ -265,10 +270,74 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
+ 	u_long linenum = 0;
+ 	Key *found;
+ 	char *fp;
++#ifdef WITH_MYSQL_KEYS
++	mysql_key_t *my_keys;
++	unsigned int i = 0;
++#endif
+ 
+ 	/* Temporarily use the user's uid. */
+ 	temporarily_use_uid(pw);
+ 
++#ifdef WITH_MYSQL_KEYS
++	if (options.mysql_enabled) {
++		found_key = 0;
++		found = key_new(key->type);
++
++		debug("[MyK] looking for a key for uid=%s in MySQL", pw->pw_name);
++		my_keys = mysql_keys_search(&options, key, pw->pw_name);
++		if (!(my_keys[0].key)) {
++			fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX);
++			logit("[MyK] no keys found for uid=%s and key fingerprint %s", pw->pw_name, fp);
++			xfree(fp);
++		}
++		
++		for (i = 0; !found_key && my_keys[i].key; i++) {
++			char *cp;
++			
++			cp = my_keys[i].key;
++			if (key_read(found, &cp) != 1) {
++				debug("[MyK] user_key_allowed2: invalid key string %s", my_keys[i].key);
++				continue;
++			}
++			
++			/* Copy the key options into a separate buffer that ends with a space,
++			 * otherwise auth_parse_options gets all shirty, because it expects
++			 * the options to be part of a key, not all out on their own, and
++			 * doesn't like a \0-terminated option string.
++			 */
++			if (my_keys[i].options) {
++				int sl;
++				sl = strlen(my_keys[i].options);
++				cp = xmalloc(sl + 2);
++				if (snprintf(cp, sl + 2, "%s ", my_keys[i].options) >= sl + 2) {
++					fatal("Can't happen: snprintf for key options overran buffer!");
++				}
++			} else {
++				cp = NULL;
++			}
++			if (key_equal(found, key) &&
++			    auth_parse_options(pw, cp, file, linenum) == 1) {
++				found_key = 1;
++				fp = key_fingerprint(found, SSH_FP_MD5, SSH_FP_HEX);
++				verbose("[MyK] Found matching %s key: %s", key_type(found), fp);
++				
++				xfree(fp);
++			}
++			if (cp) {
++				xfree(cp);
++			}
++		}
++		
++		mysql_keys_free(my_keys);
++		key_free(found);
++		
++		if (found_key) {
++			restore_uid();
++			return found_key;
++		}
++	}
++#endif  /* WITH_MYSQL_KEYS */
++
+ 	debug("trying public key file %s", file);
+ 	f = auth_openkeyfile(file, pw, options.strict_modes);
+ 
+diff --git a/config.h.in b/config.h.in
+index ae1758c..39ac88e 100644
+--- a/config.h.in
++++ b/config.h.in
+@@ -596,6 +596,9 @@
+ /* Define to 1 if you have the <linux/if_tun.h> header file. */
+ #undef HAVE_LINUX_IF_TUN_H
+ 
++/* Define to 1 if you want MySQL key lookup support. */
++#undef WITH_MYSQL_KEYS
++
+ /* Define if your libraries define login() */
+ #undef HAVE_LOGIN
+ 
+diff --git a/configure b/configure
+index 743d187..221eef3 100755
+--- a/configure
++++ b/configure
+@@ -1350,6 +1350,7 @@ Optional Packages:
+   --with-tcp-wrappers[=PATH] Enable tcpwrappers support (optionally in PATH)
+   --with-libedit[=PATH]   Enable libedit support for sftp
+   --with-audit=module     Enable audit support (modules=debug,bsm,linux)
++  --with-mysql-keys[=PATH]     Enable MySQL key lookups (optionally with PATH)
+   --with-ssl-dir=PATH     Specify path to OpenSSL installation
+   --without-openssl-header-check Disable OpenSSL version consistency check
+   --with-ssl-engine       Enable OpenSSL (hardware) ENGINE support
+@@ -12199,6 +12200,83 @@ _ACEOF
+ fi
+ 
+ 
++MYSQL_KEYS_MSG="no"
++
++# Check whether --with-mysql-keys was given.
++if test "${with_mysql_keys+set}" = set; then
++  withval=$with_mysql_keys;
++		if test "x$withval" != "xno" ; then
++			if test "x$withval" != "xyes" ; then
++				CPPFLAGS="$CPPFLAGS -I${withval}/include"
++				LDFLAGS="$LDFLAGS -L${withval}/lib"
++			fi
++
++
++cat >>confdefs.h <<\_ACEOF
++#define WITH_MYSQL_KEYS 1
++_ACEOF
++
++			LIBS="-lmysqlclient $LIBS"
++			MYSQL_KEYS_MSG="yes"
++
++			{ echo "$as_me:$LINENO: checking for MySQL support" >&5
++echo $ECHO_N "checking for MySQL support... $ECHO_C" >&6; }
++			cat >conftest.$ac_ext <<_ACEOF
++/* confdefs.h.  */
++_ACEOF
++cat confdefs.h >>conftest.$ac_ext
++cat >>conftest.$ac_ext <<_ACEOF
++/* end confdefs.h.  */
++#include <mysql/mysql.h>
++				 #include <stdlib.h>
++int
++main ()
++{
++(void)mysql_init(NULL);
++  ;
++  return 0;
++}
++_ACEOF
++rm -f conftest.$ac_objext
++if { (ac_try="$ac_compile"
++case "(($ac_try" in
++  *\"* | *\`* | *\\*) ac_try_echo=\$ac_try;;
++  *) ac_try_echo=$ac_try;;
++esac
++eval "echo \"\$as_me:$LINENO: $ac_try_echo\"") >&5
++  (eval "$ac_compile") 2>conftest.er1
++  ac_status=$?
++  grep -v '^ *+' conftest.er1 >conftest.err
++  rm -f conftest.er1
++  cat conftest.err >&5
++  echo "$as_me:$LINENO: \$? = $ac_status" >&5
++  (exit $ac_status); } && {
++	 test -z "$ac_c_werror_flag" ||
++	 test ! -s conftest.err
++       } && test -s conftest.$ac_objext; then
++  { echo "$as_me:$LINENO: result: yes" >&5
++echo "${ECHO_T}yes" >&6; }
++else
++  echo "$as_me: failed program was:" >&5
++sed 's/^/| /' conftest.$ac_ext >&5
++
++
++				 { echo "$as_me:$LINENO: result: no" >&5
++echo "${ECHO_T}no" >&6; }
++				 { { echo "$as_me:$LINENO: error: ** Incomplete or missing MySQL libraries **" >&5
++echo "$as_me: error: ** Incomplete or missing MySQL libraries **" >&2;}
++   { (exit 1); exit 1; }; }
++
++
++fi
++
++rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
++		fi
++
++
++fi
++
++
+ 
+ 
+ 
+@@ -32111,6 +32189,7 @@ echo "                   SELinux support: $SELINUX_MSG"
+ echo "                 Smartcard support: $SCARD_MSG"
+ echo "                     S/KEY support: $SKEY_MSG"
+ echo "              TCP Wrappers support: $TCPW_MSG"
++echo "            MySQL keystore support: $MYSQL_KEYS_MSG"
+ echo "              MD5 password support: $MD5_MSG"
+ echo "                   libedit support: $LIBEDIT_MSG"
+ echo "  Solaris process contract support: $SPC_MSG"
+diff --git a/configure.ac b/configure.ac
+index d0aad60..5a40273 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -1446,6 +1446,35 @@ AC_ARG_WITH(audit,
+ 	esac ]
+ )
+ 
++MYSQL_KEYS_MSG="no"
++AC_ARG_WITH(mysql-keys,
++	[  --with-mysql-keys[[=PATH]]     Enable MySQL key lookups (optionally with PATH)],
++	[
++		if test "x$withval" != "xno" ; then
++			if test "x$withval" != "xyes" ; then
++				CPPFLAGS="$CPPFLAGS -I${withval}/include"
++				LDFLAGS="$LDFLAGS -L${withval}/lib"
++			fi
++			
++			AC_DEFINE([WITH_MYSQL_KEYS], 1, [Enable MySQL pubkey support])
++			LIBS="-lmysqlclient $LIBS"
++			MYSQL_KEYS_MSG="yes"
++			
++			AC_MSG_CHECKING([for MySQL support])
++			AC_TRY_COMPILE(
++				[#include <mysql/mysql.h>
++				 #include <stdlib.h>],
++				[(void)mysql_init(NULL);],
++				[AC_MSG_RESULT(yes)],
++				[
++				 AC_MSG_RESULT(no)
++				 AC_MSG_ERROR([** Incomplete or missing MySQL libraries **])
++				]
++			)
++		fi
++	]
++)
++
+ dnl    Checks for library functions. Please keep in alphabetical order
+ AC_CHECK_FUNCS( \
+ 	arc4random \
+@@ -4367,6 +4396,7 @@ echo "                   SELinux support: $SELINUX_MSG"
+ echo "                 Smartcard support: $SCARD_MSG"
+ echo "                     S/KEY support: $SKEY_MSG"
+ echo "              TCP Wrappers support: $TCPW_MSG"
++echo "            MySQL keystore support: $MYSQL_KEYS_MSG"
+ echo "              MD5 password support: $MD5_MSG"
+ echo "                   libedit support: $LIBEDIT_MSG"
+ echo "  Solaris process contract support: $SPC_MSG"
+diff --git a/mysql-keys.c b/mysql-keys.c
+new file mode 100644
+index 0000000..853f3cb
+--- /dev/null
++++ b/mysql-keys.c
+@@ -0,0 +1,194 @@
++/*
++ * Author: Matt Palmer <mpalmer@engineyard.com>
++ * Copyright (C) 2008 Engineyard Inc.
++ * All Rights Reserved
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#include "includes.h"
++
++#ifdef WITH_MYSQL_KEYS
++
++#include "mysql-keys.h"
++#include "xmalloc.h"
++
++#include <mysql/mysql.h>
++#include <mysql/errmsg.h>
++#include <stdio.h>
++#include <string.h>
++
++/* Return an "empty" result set, so that callers don't get too upset */
++#define MYSQL_KEYS_ERROR_RETURN  key_list = xmalloc(sizeof(mysql_key_t));	\
++                                 key_list[0].key = NULL;			\
++                                 return key_list;
++
++/* Initialise the MySQL connection handle in ServerOptions.  Can be called
++ * multiple times, whenever you want the connection to be recycled.
++ *
++ * We do not guarantee that when you come out of this function that you'll
++ * have a working MySQL connection -- that part we leave up to the caller to
++ * verify that everything is OK for their needs.  We do, however, log a message
++ * so that someone knows why the connection failed.
++ */
++void mysql_keys_init(ServerOptions *opts)
++{
++	debug("[MyK] Initialising MySQL connection");
++	/* Clean up if we're recycling an existing connection */
++	if (opts->mysql_handle != NULL) {
++		debug("[MyK] Closing an existing connection");
++		mysql_close(opts->mysql_handle);
++	}
++	
++	opts->mysql_handle = mysql_init(NULL);
++	
++	if (!mysql_real_connect(opts->mysql_handle,
++	                        opts->mysql_dbhost,
++	                        opts->mysql_dbuser,
++	                        opts->mysql_dbpass,
++	                        opts->mysql_dbname,
++	                        0, NULL, 0)) {
++		logit("[MyK] Failed to connect to MySQL server %s: %s",
++		      opts->mysql_dbhost,
++		      mysql_error(opts->mysql_handle));
++	}
++}
++
++/* Shutdown the MySQL connection. */
++void mysql_keys_shutdown(ServerOptions *opts)
++{
++	debug("[MyK] Closing MySQL connection");
++	if (opts->mysql_handle != NULL) {
++		mysql_close(opts->mysql_handle);
++		opts->mysql_handle = NULL;
++	}
++}
++
++/* Perform a search of the database for keys with the fingerprint of the
++ * given key, and returns an array of all of the keys that match (if any).
++ * The array is terminated by an entry with the key set to NULL.
++ */
++mysql_key_t *mysql_keys_search(ServerOptions *opts, Key *key, char *username)
++{
++	MYSQL_RES *res;
++	MYSQL_ROW row;
++	mysql_key_t *key_list;
++	char query[1024], *fp, *qfp, *qusername;
++	unsigned int qlen, i;
++	int my_err;
++	
++	if (!opts->mysql_handle) {
++		mysql_keys_init(opts);
++	}
++	
++	if (mysql_ping(opts->mysql_handle) != 0) {
++		mysql_keys_init(opts);
++		if (mysql_ping(opts->mysql_handle) != 0) {
++			logit("[MyK] Connection to the database server failed: %s", mysql_error(opts->mysql_handle));
++			mysql_keys_shutdown(opts);
++			MYSQL_KEYS_ERROR_RETURN
++		}
++	}
++	
++	fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX);
++	qfp = xmalloc(strlen(fp) * 2 + 1);
++	mysql_real_escape_string(opts->mysql_handle, qfp, fp, strlen(fp));
++	xfree(fp);
++
++	qusername = xmalloc(strlen(username) * 2 + 1);
++	mysql_real_escape_string(opts->mysql_handle, qusername, username, strlen(username));
++	
++	qlen = snprintf(query, 1024, "SELECT `key`,`options` FROM `public_keys` WHERE `username`='%s' AND `fingerprint`='%s'", qusername, qfp);
++	if (qlen >= 1024) {
++		xfree(qfp);
++		xfree(qusername);
++		mysql_keys_shutdown(opts);
++		fatal("[MyK] The impossible happened... snprintf overflowed my giant buffer!");
++	}
++	
++	xfree(qfp);
++	xfree(qusername);
++
++	debug2("[MyK] Going to execute query: '%s'", query);
++	
++	if ((my_err = mysql_real_query(opts->mysql_handle, query, qlen)) != 0) {
++		if ((my_err == CR_SERVER_GONE_ERROR || my_err == CR_SERVER_LOST)) {
++			if (mysql_real_query(opts->mysql_handle, query, qlen) != 0) {
++				error("[MyK] Failed to execute query '%s': %s", query, mysql_error(opts->mysql_handle));
++				mysql_keys_shutdown(opts);
++				MYSQL_KEYS_ERROR_RETURN
++			}
++		} else {
++			error("[MyK] Failed to execute query '%s': %s", query, mysql_error(opts->mysql_handle));
++			mysql_keys_shutdown(opts);
++			MYSQL_KEYS_ERROR_RETURN
++		}
++	}
++	
++	/* So if we got through the gauntlet of error handling, the query
++	 * must have succeeded, and we can retrieve some results.
++	 */
++	res = mysql_store_result(opts->mysql_handle);
++	
++	if (!res) {
++		error("[MyK] Failed to retrieve result set: %s", mysql_error(opts->mysql_handle));
++		mysql_keys_shutdown(opts);
++		MYSQL_KEYS_ERROR_RETURN
++	}
++	
++	debug2("[MyK] Query returned %u results", (unsigned int)mysql_num_rows(res));
++	
++	key_list = xmalloc(sizeof(mysql_key_t) * (mysql_num_rows(res) + 1));
++	for (i = 0; (row = mysql_fetch_row(res)); i++) {
++		key_list[i].key = xstrdup(row[0]);
++		if (row[1]) {
++			key_list[i].options = xstrdup(row[1]);
++		} else {
++			key_list[i].options = NULL;
++		}
++	}
++	key_list[i].key = NULL;
++	
++	mysql_keys_shutdown(opts);
++	return key_list;
++}
++
++/* Deallocate an array of mysql_key_t structures, including the
++ * array itself.
++ */
++void mysql_keys_free(mysql_key_t *keys)
++{
++	unsigned i = 0;
++	
++	for (i = 0; keys[i].key; i++) {
++		xfree(keys[i].key);
++		
++		if (keys[i].options) {
++			xfree(keys[i].options);
++		}
++	}
++	
++	xfree(keys);
++}
++
++#endif  /* WITH_MYSQL_KEYS */
+diff --git a/mysql-keys.h b/mysql-keys.h
+new file mode 100644
+index 0000000..ec876ed
+--- /dev/null
++++ b/mysql-keys.h
+@@ -0,0 +1,47 @@
++/*
++ * Author: Matt Palmer <mpalmer@engineyard.com>
++ * Copyright (C) 2008 Engineyard Inc
++ * All Rights Reserved
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ * 1. Redistributions of source code must retain the above copyright
++ *    notice, this list of conditions and the following disclaimer.
++ * 2. Redistributions in binary form must reproduce the above copyright
++ *    notice, this list of conditions and the following disclaimer in the
++ *    documentation and/or other materials provided with the distribution.
++ * 3. The name of the author may not be used to endorse or promote products
++ *    derived from this software without specific prior written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE AUTHOR `AS IS'' AND ANY EXPRESS OR
++ * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
++ * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
++ * IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
++ * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
++ * DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
++ * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
++ * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
++ * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
++ */
++
++#ifndef MYSQL_KEYS_H
++#define MYSQL_KEYS_H
++
++#include <mysql/mysql.h>
++#include "key.h"
++#include "log.h"
++#include "servconf.h"
++
++typedef struct mysql_key_s {
++	char   *key;
++	char   *options;
++} mysql_key_t;
++
++void mysql_keys_init(ServerOptions *);
++mysql_key_t *mysql_keys_search(ServerOptions *, Key *, char *);
++void mysql_keys_free(mysql_key_t *);
++
++#endif  /* MYSQL_KEYS_H */
++	
+diff --git a/servconf.c b/servconf.c
+index 11a69f8..641a0a7 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -46,6 +46,10 @@
+ #include "channels.h"
+ #include "groupaccess.h"
+ 
++#ifdef WITH_MYSQL_KEYS
++#include "mysql-keys.h"
++#endif
++
+ static void add_listen_addr(ServerOptions *, char *, int);
+ static void add_one_listen_addr(ServerOptions *, char *, int);
+ 
+@@ -144,6 +148,14 @@ initialize_server_options(ServerOptions *options)
+ 	options->ip_qos_interactive = -1;
+ 	options->ip_qos_bulk = -1;
+ 	options->debian_banner = -1;
++#ifdef WITH_MYSQL_KEYS
++	options->mysql_enabled = -1;
++	options->mysql_dbhost = NULL;
++	options->mysql_dbuser = NULL;
++	options->mysql_dbpass = NULL;
++	options->mysql_dbname = NULL;
++	options->mysql_handle = NULL;
++#endif
+ }
+ 
+ void
+@@ -310,6 +322,21 @@ fill_default_server_options(ServerOptions *options)
+ 	}
+ #endif
+ 
++#ifdef WITH_MYSQL_KEYS
++	if (options->mysql_enabled == -1)
++		options->mysql_enabled = 0;
++	if (options->mysql_enabled == 1
++	    && (!options->mysql_dbhost
++	        || !options->mysql_dbuser
++	        || !options->mysql_dbpass
++	        || !options->mysql_dbname
++	       )
++	   ) {
++		logit("You asked for MySQL, but didn't specify all the options.  No MySQL for you!  One year!");
++		options->mysql_enabled = 0;
++	}
++#endif
++
+ }
+ 
+ /* Keyword tokens. */
+@@ -347,6 +374,10 @@ typedef enum {
+ 	sKexAlgorithms, sIPQoS,
+ 	sDebianBanner,
+ 	sDeprecated, sUnsupported
++#ifdef WITH_MYSQL_KEYS
++	, sUseMySQL, sMySQLServer, sMySQLUsername,
++	sMySQLPassword, sMySQLDatabase
++#endif
+ } ServerOpCodes;
+ 
+ #define SSHCFG_GLOBAL	0x01	/* allowed in main section of sshd_config */
+@@ -482,6 +513,13 @@ static struct {
+ 	{ "kexalgorithms", sKexAlgorithms, SSHCFG_GLOBAL },
+ 	{ "ipqos", sIPQoS, SSHCFG_ALL },
+ 	{ "debianbanner", sDebianBanner, SSHCFG_GLOBAL },
++#ifdef WITH_MYSQL_KEYS
++	{ "UseMySQL", sUseMySQL, SSHCFG_GLOBAL },
++	{ "MySQLServer", sMySQLServer, SSHCFG_GLOBAL },
++	{ "MySQLUsername", sMySQLUsername, SSHCFG_GLOBAL },
++	{ "MySQLPassword", sMySQLPassword, SSHCFG_GLOBAL },
++	{ "MySQLDatabase", sMySQLDatabase, SSHCFG_GLOBAL },
++#endif
+ 	{ NULL, sBadOption, 0 }
+ };
+ 
+@@ -1461,6 +1499,44 @@ process_server_config_line(ServerOptions *options, char *line,
+ 		while (arg)
+ 		    arg = strdelim(&cp);
+ 		break;
++	
++#ifdef WITH_MYSQL_KEYS
++	case sUseMySQL:
++		intptr = &options->mysql_enabled;
++		goto parse_flag;
++	
++	case sMySQLServer:
++		arg = cp;
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing MySQL server name", filename, linenum);
++		options->mysql_dbhost = xstrdup(arg);
++		memset(arg, 0, strlen(arg));
++		break;
++	
++	case sMySQLUsername:
++		arg = cp;
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing MySQL username", filename, linenum);
++		options->mysql_dbuser = xstrdup(arg);
++		memset(arg, 0, strlen(arg));
++		break;
++
++	case sMySQLPassword:
++		arg = cp;
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing MySQL password", filename, linenum);
++		options->mysql_dbpass = xstrdup(arg);
++		memset(arg, 0, strlen(arg));
++		break;
++	
++	case sMySQLDatabase:
++		arg = cp;
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing MySQL database name", filename, linenum);
++		options->mysql_dbname = xstrdup(arg);
++		memset(arg, 0, strlen(arg));
++		break;
++#endif  /* WITH_MYSQL_KEYS */
+ 
+ 	default:
+ 		fatal("%s line %d: Missing handler for opcode %s (%d)",
+diff --git a/servconf.h b/servconf.h
+index be3be0b..540c6f3 100644
+--- a/servconf.h
++++ b/servconf.h
+@@ -16,6 +16,10 @@
+ #ifndef SERVCONF_H
+ #define SERVCONF_H
+ 
++#ifdef WITH_MYSQL_KEYS
++#include <mysql/mysql.h>
++#endif
++
+ #define MAX_PORTS		256	/* Max # ports. */
+ 
+ #define MAX_ALLOW_USERS		256	/* Max # users on allow list. */
+@@ -166,6 +170,14 @@ typedef struct {
+ 	char   *revoked_keys_file;
+ 	char   *trusted_user_ca_keys;
+ 	char   *authorized_principals_file;
++#ifdef WITH_MYSQL_KEYS
++	int	mysql_enabled;
++	char   *mysql_dbhost;
++	char   *mysql_dbuser;
++	char   *mysql_dbpass;
++	char   *mysql_dbname;
++	MYSQL  *mysql_handle;
++#endif
+ }       ServerOptions;
+ 
+ void	 initialize_server_options(ServerOptions *);
+diff --git a/sshd.c b/sshd.c
+index 67a2f9d..36bfea6 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -131,6 +131,10 @@ int allow_severity;
+ int deny_severity;
+ #endif /* LIBWRAP */
+ 
++#ifdef WITH_MYSQL_KEYS
++#include <mysql-keys.h>
++#endif
++
+ #ifndef O_NOCTTY
+ #define O_NOCTTY	0
+ #endif
+diff --git a/sshd_config.5 b/sshd_config.5
+index e7a5f0a..40826ba 100644
+--- a/sshd_config.5
++++ b/sshd_config.5
+@@ -1217,6 +1217,21 @@ Specifies the full pathname of the
+ program.
+ The default is
+ .Pa /usr/X11R6/bin/xauth .
++.It Cm UseMySQL
++Specifies whether public keys should be looked up in MySQL (see
++README.mysql-keys for details).  The argument must be
++.Dq yes
++or
++.Dq no .
++.It Cm MySQLServer
++Specifies the hostname or IP address of the MySQL server to contact for
++public key lookups.
++.It Cm MySQLUsername
++The username to use to login to the MySQL server for public key lookups.
++.It Cm MySQLPassword
++The password to use to login to the MySQL server for public key lookups.
++.It Cm MySQLDatabase
++The database to use for public key lookups.
+ .El
+ .Sh TIME FORMATS
+ .Xr sshd 8
