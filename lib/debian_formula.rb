@@ -102,11 +102,13 @@ class DebianFormula < Formula
   def self.package!
     f = new
 
-    # Check for build deps.
-    system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
-    if $? != 0
-      f.send :onoe, 'Missing build dependencies.'
-      exit(1)
+    unless RUBY_PLATFORM =~ /darwin/
+      # Check for build deps.
+      system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
+      if $? != 0
+        f.send :onoe, 'Missing build dependencies.'
+        exit(1)
+      end
     end
 
     built_file = HOMEBREW_WORKDIR + "tmp-build/.built-#{f.name}-#{f.version.gsub(/[^\w]/,'_')}"
