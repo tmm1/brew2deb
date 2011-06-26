@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github4'
+  version '1:1.7.5.4-1+github5'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -28,13 +28,28 @@ class Git < DebianFormula
 
   def patches
     [
+      # fire a hook on post-upload so we can track # of clones
       'patches/post-upload-pack-hook.patch',
+
+      # eliminate duplicate .have refs
       'patches/remove-duplicate-dot-have-lines.patch',
+
+      # speed up git-fetch with large number of refs
       'patches/git-fetch-performance.patch',
+
+      # fsckObjects doesn't show user warnings
       'patches/receive-pack-fsck-object-warnings-non-fatal.patch',
+
+      # add .tar.gz to git-archive
       'patches/archive-gz-external.patch',
+
+      # hide refs/pull/* via receive.hiderefs
       'patches/receive-pack-hide-refs.patch',
+
+      # bug in git-patch-id with newline diff markers
       # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
+
+      # git-upload-pack hangs w/ --depth
       # 'patches/upload-pack-deadlock.patch', # in 1.7.5.1
     ]
   end
