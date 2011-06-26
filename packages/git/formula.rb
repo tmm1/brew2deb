@@ -33,6 +33,7 @@ class Git < DebianFormula
       'patches/git-fetch-performance.patch',
       'patches/receive-pack-fsck-object-warnings-non-fatal.patch',
       'patches/archive-gz-external.patch',
+      'patches/receive-pack-hide-refs.patch',
       # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
       # 'patches/upload-pack-deadlock.patch', # in 1.7.5.1
     ]
