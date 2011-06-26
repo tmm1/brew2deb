@@ -14,13 +14,17 @@ class Git < DebianFormula
     'libz-dev',
     'libcurl4-gnutls-dev | libcurl3-gnutls-dev',
     'libexpat1-dev',
-    'subversion', 'libsvn-perl | libsvn-core-perl',
+    'subversion',
+    'libsvn-perl | libsvn-core-perl',
     'unzip',
     'gettext'
 
   depends \
-    'perl-modules, liberror-perl',
-    'libsvn-perl | libsvn-core-perl, libwww-perl, libterm-readkey-perl'
+    'perl-modules',
+    'liberror-perl',
+    'libsvn-perl | libsvn-core-perl',
+    'libwww-perl',
+    'libterm-readkey-perl'
 
   provides  'git-core', 'git-svn'
   replaces  'git-core', 'git-svn'
