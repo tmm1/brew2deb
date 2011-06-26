@@ -284,7 +284,9 @@ class DebianSourceFormula < DebianFormula
 
   def build
     ENV['DEBEMAIL'] = maintainer
-    safe_system 'dch', '-v', version, 'brew2deb package'
+    if ver = self.class.version
+      safe_system 'dch', '-v', ver, 'brew2deb package'
+    end
     safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
   end
 
