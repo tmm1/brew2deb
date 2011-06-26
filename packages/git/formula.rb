@@ -53,7 +53,7 @@ class Git < DebianFormula
     {
       'prefix' => '/usr',
       'gitexecdir' => '/usr/lib/git-core',
-      'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
+      # 'NO_CROSS_DIRECTORY_HARDLINKS' => 1,
       # 'NO_PERL' => 1,
       # 'NO_PYTHON' => 1,
       'NO_TCLTK' => 1
