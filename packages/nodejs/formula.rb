@@ -1,4 +1,4 @@
-class Node < DebianFormula
+class NodeJS < DebianFormula
   url 'http://nodejs.org/dist/node-v0.4.8.tar.gz'
   head 'https://github.com/joyent/node.git'
   homepage 'http://nodejs.org/'
