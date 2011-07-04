@@ -7,6 +7,14 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 
 ## usage
 
+brew2deb can builds packages for various architectures (i386, amd64). By default it picks environment
+architecture and uses local versions of core libraries such as libc or libstd++, so it is recommended
+that you use it in the target environment and then rsync/scp resulting file to your development
+machine (and put to your Puppet or Chef repository, for example).
+
+
+## example: building a .deb package of git 1.7.5.4 with custom patches with just essential build tools installed
+
 ```
 $ cd packages/git
 $ tree
