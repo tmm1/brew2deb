@@ -23,7 +23,9 @@ class NodeJS < DebianFormula
       s.gsub! '/opt/local/lib', '/usr/lib'
     end
 
-    sh './configure', "--prefix=#{prefix}", '--debug'
+    configure \
+      :prefix => prefix,
+      :debug => true
     make
   end
 
