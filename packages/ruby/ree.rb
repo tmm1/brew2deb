@@ -1,6 +1,6 @@
 require 'mri'
 
-class RubyREE < RubyMRI
+class REE < MRI
   homepage 'http://www.rubyenterpriseedition.com/'
   url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2011.03.tar.gz'
   md5 '038604ce25349e54363c5df9cd535ec8'

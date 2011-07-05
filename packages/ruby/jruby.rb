@@ -1,4 +1,6 @@
-class RubyJRuby < DebianFormula
+require 'base'
+
+class JRuby < Ruby
   homepage 'http://www.jruby.org/'
   url 'http://jruby.org.s3.amazonaws.com/downloads/1.6.2/jruby-bin-1.6.2.tar.gz', :as => 'jruby-1.6.2.tar.gz'
   md5 'a46f978c24a208717023bb4b8995c678'

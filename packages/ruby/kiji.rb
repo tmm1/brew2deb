@@ -1,6 +1,6 @@
 require 'mri'
 
-class RubyKiji < RubyMRI
+class Kiji < MRI
   url 'https://github.com/twitter/rubyenterpriseedition187-248.git', :sha => '584cdea'
   homepage 'https://github.com/twitter/rubyenterpriseedition187-248/blob/master/README-kiji'
 
