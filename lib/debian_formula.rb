@@ -138,6 +138,7 @@ class DebianFormula < Formula
         FileUtils.rm_rf(dir)
         FileUtils.mkdir_p(dir)
         f.install
+        f.post_install if f.respond_to?(:post_install)
       ensure
         f.installing = false
       end
