@@ -128,7 +128,7 @@ private
       when 1 then Dir.chdir entries.first
       else
         # Look for directories that match @tarball_path.basename
-        %w[ tar tar.gz zip tar.bz2 ].find do |ext|
+        %w[ tgz tar tar.gz zip tar.bz2 ].find do |ext|
           dir = @tarball_path.basename(".#{ext}")
           if File.exists?(dir)
             Dir.chdir(dir)
