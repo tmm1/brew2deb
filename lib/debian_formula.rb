@@ -66,7 +66,7 @@ class DebianFormula < Formula
   end
 
   def self.extra_sources
-    @extra_sources ||= (superclass.instance_variable_get(:@extra_sources) || []).dup
+    @extra_sources ||= (self == DebianFormula ? [] : superclass.extra_sources.dup)
   end
 
   def self.source(url, opts={})
