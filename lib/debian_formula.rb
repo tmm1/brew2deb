@@ -227,6 +227,7 @@ class DebianFormula < Formula
     @maintainer ||= self.class.maintainer || begin
       username = `git config --get user.name`.strip
       useremail = `git config --get user.email`.strip
+      raise 'Set maintainer name/email via `git config --global user.name <name>`' if username.empty?
       "#{username} <#{useremail}>"
     end
   end
