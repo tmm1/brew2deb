@@ -62,16 +62,19 @@ class DebianFormula < Formula
     'curl'
 
   class << self
-    attr_accessor :extra_sources
+    @extra_sources = []
+  end
+
+  def self.extra_sources
+    @extra_sources ||= (superclass.instance_variable_get(:@extra_sources) || []).dup
   end
 
   def self.source(url, opts={})
-    @extra_sources ||= []
-    @extra_sources << [url, opts]
+    extra_sources << [url, opts]
   end
 
   def download_extra_sources
-    (self.class.extra_sources || []).each do |url, opts|
+    self.class.extra_sources.each do |url, opts|
       spec = SoftwareSpecification.new(url, opts)
       downloader = spec.download_strategy.new(url, nil, spec.detect_version, opts)
       downloader.fetch
