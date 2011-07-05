@@ -120,6 +120,8 @@ class DebianFormula < Formula
       f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
     end
 
+    env = ENV.to_hash
+
     f.brew do
       unless f.skip_build
         f.send :ohai, 'Compiling source'
@@ -139,6 +141,8 @@ class DebianFormula < Formula
       ensure
         f.installing = false
       end
+
+      ENV.replace(env)
 
       f.send :ohai, 'Packaging into a .deb'
       f.package
