@@ -1,0 +1,31 @@
+From 03c7d3c08222a3c371f6d1e9ae16e7261c20fdcd Mon Sep 17 00:00:00 2001
+From: Aman Gupta <aman@tmm1.net>
+Date: Tue, 5 Jul 2011 18:07:16 -0700
+Subject: [PATCH] avoid modifying frozen array (fixes `bundle install
+ --without` on kiji)
+
+bundler-1.0.15/lib/bundler/cli.rb:157:in `map!': can't modify frozen array (TypeError)
+---
+ lib/bundler/cli.rb |    4 ++--
+ 1 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/lib/bundler/cli.rb b/lib/bundler/cli.rb
+index 8713193..3c8dee0 100644
+--- a/lib/bundler/cli.rb
++++ b/lib/bundler/cli.rb
+@@ -152,10 +152,10 @@ module Bundler
+       opts = options.dup
+       opts[:without] ||= []
+       if opts[:without].size == 1
+-        opts[:without].map!{|g| g.split(" ") }
++        opts[:without] = opts[:without].map{|g| g.split(" ") }
+         opts[:without].flatten!
+       end
+-      opts[:without].map!{|g| g.to_sym }
++      opts[:without] = opts[:without].map{|g| g.to_sym }
+ 
+       # Can't use Bundler.settings for this because settings needs gemfile.dirname
+       ENV['BUNDLE_GEMFILE'] = File.expand_path(opts[:gemfile]) if opts[:gemfile]
+-- 
+1.7.5.4
+
