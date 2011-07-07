@@ -4,10 +4,12 @@ class Redis2 < DebianFormula
   url 'http://redis.googlecode.com/files/redis-2.2.5.tar.gz'
   md5 'fe6395bbd2cadc45f4f20f6bbe05ed09'
 
-  name 'redis-server'
+  name 'redis2-server'
   section 'database'
   version '2.2.5+github1'
   description 'An advanced key-value store.'
+
+  conflicts 'redis-server'
 
   conffiles \
     '/etc/redis/redis.conf'
