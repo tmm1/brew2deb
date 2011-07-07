@@ -1,0 +1,23 @@
+diff --git a/object.c b/object.c
+index b389958..f042214 100644
+--- a/object.c
++++ b/object.c
+@@ -241,7 +241,7 @@ rb_obj_freeze(VALUE obj)
+     int i;
+     if (!OBJ_MOVED(obj)) {
+         obj = rb_obj_move(obj);
+-        switch (TYPE(obj)) {
++        /*switch (TYPE(obj)) {
+           case T_HASH:
+             st_foreach_map(RHASH(obj)->tbl, rb_obj_freeze, rb_obj_freeze);
+             break;
+@@ -250,7 +250,7 @@ rb_obj_freeze(VALUE obj)
+                 rb_ary_store(obj, i, rb_obj_freeze(rb_ary_entry(obj, i)));
+             }
+             break;
+-        }
++        }*/
+     }
+     if (!OBJ_FROZEN(obj) && TYPE(obj) != T_CLASS && TYPE(obj) != T_MODULE) {
+         if (rb_safe_level() >= 4 && !OBJ_TAINTED(obj)) {
+

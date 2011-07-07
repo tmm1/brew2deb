@@ -6,7 +6,7 @@ class Kiji < MRI
 
   name 'kiji'
   section 'interpreters'
-  version '0.11'
+  version '0.11.1'
   description 'The Kiji Ruby virtual machine (installed in /opt)'
 
   conflicts 'ree'
@@ -18,6 +18,10 @@ class Kiji < MRI
 
   depends \
     'google-perftools'
+
+  def patches
+    'no-recursive-freeze.patch'
+  end
 
   def build
     ENV['CFLAGS'] = '-O2 -ggdb -Wall -fPIC -fno-builtin-malloc
