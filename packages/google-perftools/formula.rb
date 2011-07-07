@@ -5,7 +5,7 @@ class GooglePerftools < DebianFormula
 
   name 'google-perftools'
   section 'devel'
-  version '1.7'
+  version '1.7+github1'
   description 'Fast, multi-threaded malloc() and nifty performance analysis tools'
 
   build_depends \
@@ -13,4 +13,8 @@ class GooglePerftools < DebianFormula
 
   depends \
     'libunwind7'
+
+  conflicts 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
+  replaces  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
+  provides  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
 end
