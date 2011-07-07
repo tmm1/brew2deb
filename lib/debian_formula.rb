@@ -170,6 +170,10 @@ class DebianFormula < Formula
         '--description', self.class.description.ui.strip
       ] if self.class.description
 
+      opts += [
+        '--architecture', self.class.arch.to_s
+      ] if self.class.arch
+
       %w[ depends provides replaces conflicts conffiles ].each do |type|
         if self.class.send(type).any?
           self.class.send(type).each do |dep|
