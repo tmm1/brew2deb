@@ -5,10 +5,10 @@ class REE < MRI
   url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2011.03.tar.gz'
   md5 '038604ce25349e54363c5df9cd535ec8'
 
-  name 'ruby-ree'
+  name 'ree'
   section 'interpreters'
   version '1.8.7-2011.03'
-  description 'The REE Ruby virtual machine'
+  description 'The REE Ruby virtual machine (installed in /opt)'
 
   build_depends \
     'ruby',
@@ -16,6 +16,10 @@ class REE < MRI
 
   depends \
     'google-perftools'
+
+  conflicts 'kiji'
+  replaces  'kiji'
+  provides  'kiji'
 
   def build
   end
@@ -30,7 +34,13 @@ class REE < MRI
       '--no-dev-docs',
       '--no-tcmalloc',
       '--dont-install-useful-gems',
-      '--auto', '/usr',
+      '--auto', '/opt',
       '--destdir', destdir
+  end
+
+  private
+
+  def prefix
+    current_pathname_for('opt')
   end
 end
