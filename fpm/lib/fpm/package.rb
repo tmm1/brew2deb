@@ -1,6 +1,7 @@
 require "fpm/namespace"
 require "socket" # for Socket.gethostname
 require "logger"
+require "find" # for Find.find (directory walking)
 
 class FPM::Package
   # The name of this package
@@ -63,11 +64,15 @@ class FPM::Package
   attr_accessor :scripts
 
   # Array of configuration files
-  attr_accessor :conffiles
+  attr_accessor :config_files
 
-  def initialize(source)
+	# target-specific settings
+	attr_accessor :settings
+
+  def initialize(source, params={})
     @source = source
     @logger = Logger.new(STDERR)
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
 
     @name = source[:name] # || fail
 
@@ -112,37 +117,46 @@ class FPM::Package
     @replaces = source[:replaces] || []
     @conflicts = source[:conflicts] || []
     @scripts = source[:scripts]
-    @conffiles = source[:conffiles] || []
+    @config_files = source[:config_files] || []
+
+    # Target-specific settings, mirrors :settings metadata in FPM::Source
+    @settings = params[:settings] || {}
   end # def initialize
 
-  def generate_specfile(builddir, paths)
-    spec = template.result(binding)
-    File.open(specfile(builddir), "w") { |f| f.puts spec }
-  end # def generate_specfile
-
-  def generate_md5sums(builddir, paths)
-    md5sums = self.checksum(paths)
-    File.open("#{builddir}/md5sums", "w") { |f| f.puts md5sums }
-    md5sums
-  end # def generate_md5sums
+  # nobody needs md5sums by default.
+  def needs_md5sums
+    false
+  end # def needs_md5sums
 
   # TODO [Jay]: make this better...?
   def type
     self.class.name.split(':').last.downcase
   end # def type
 
-  def template
-    @template ||= begin
-      tpl = File.read(
-        "#{FPM::DIRS[:templates]}/#{type}.erb"
-      )
-      ERB.new(tpl, nil, "<>")
-    end
+  def template(path=nil)
+    path ||= "#{type}.erb"
+    @logger.info("Reading template: #{path}")
+    tpl = File.read("#{FPM::DIRS[:templates]}/#{path}")
+    return ERB.new(tpl, nil, "-")
   end # def template
 
   def render_spec
+    # find all files in paths given.
+    paths = []
+    @source.paths.each do |path|
+      Find.find(path) { |p| paths << p }
+    end
+    #@logger.info(:paths => paths.sort)
     template.result(binding)
   end # def render_spec
+
+  # Default specfile generator just makes one specfile, whatever that is for
+  # this package.
+  def generate_specfile(builddir)
+    File.open(specfile(builddir), "w") do |f|
+      f.puts render_spec
+    end
+  end # def generate_specfile
 
   def default_output
     if iteration
@@ -151,4 +165,17 @@ class FPM::Package
       "#{name}-#{version}.#{architecture}.#{type}"
     end
   end # def default_output
-end
+
+  def fixpath(path)
+    if path[0,1] != "/"
+      path = File.join(@source.root, path)
+    end
+    return path if File.symlink?(path)
+    @logger.info(:fixpath => path)
+    realpath = Pathname.new(path).realpath.to_s
+    re = Regexp.new("^#{Regexp.escape(@source.root)}")
+    realpath.gsub!(re, "")
+    @logger.info(:fixpath_result => realpath)
+    return realpath
+  end # def fixpath
+end # class FPM::Package

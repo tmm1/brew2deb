@@ -1,4 +1,6 @@
-require 'fileutils'
+require "fileutils"
+require "pathname"
+
 class FPM::Builder
   # where is the package's root?
   def root
@@ -27,6 +29,9 @@ class FPM::Builder
   attr_reader :source
 
   def initialize(settings, paths=[])
+    @logger = Logger.new(STDERR)
+    @logger.level = $DEBUG ? Logger::DEBUG : Logger::WARN
+
     @working_dir = Dir.pwd
     root = settings.chdir || '.'
     paths = ['.'] if paths.empty?
@@ -51,7 +56,9 @@ class FPM::Builder
     @edit = !!settings.edit
 
     @paths = paths
-    @package = package_class_for(settings.package_type).new(@source)
+    @package = package_class_for(settings.package_type).new(@source,
+			:settings => settings.target
+		)
     # Append dependencies given from settings (-d flag for fpm)
     @package.dependencies += settings.dependencies if settings.dependencies
     # Append provides given from settings (--provides flag for fpm)
@@ -61,7 +68,7 @@ class FPM::Builder
     @package.architecture = settings.architecture if settings.architecture
     @package.category = settings.category if settings.category
     @package.scripts = settings.scripts
-    @package.conffiles = settings.conffiles
+    @package.config_files = settings.config_files
 
     @output = settings.package_path
     @recurse_dependencies = settings.recurse_dependencies
@@ -88,7 +95,22 @@ class FPM::Builder
     ::Dir.chdir root do
       @source.make_tarball!(tar_path, builddir)
 
-      generate_md5sums
+      # Hack to unpack before generating the spec, etc.
+      # Need to formalize this feature.
+      # Perhaps something like @package.prepare
+      if @package.respond_to?(:unpack_data_to)
+        data_tarball = File.join(builddir, "data.tar.gz")
+        Dir.chdir(builddir) do
+          FileUtils.mkdir_p(@package.unpack_data_to)
+          system("gzip -d #{data_tarball}")
+          Dir.chdir(@package.unpack_data_to) do
+            @source.root = Dir.pwd
+            system("tar -xf #{data_tarball.gsub(/\.gz$/, "")}")
+          end
+        end
+      end
+
+      generate_md5sums if @package.needs_md5sums
       generate_specfile
       edit_specfile if @edit
     end
@@ -122,23 +144,29 @@ class FPM::Builder
   # TODO: [Jay] make this better.
   private
   def package_class_for(type)
-    type = FPM::Target::constants.find { |c| c.downcase.to_s == type }
-    if !type
+    realtype = FPM::Target.constants.find { |c| c.downcase.to_s == type }
+    if !realtype
+      valid_types = FPM::Target.constants.collect { |c| c.downcase }
+      @logger.fatal("No such package target type #{type.inspect}; " \
+                    "Valid types: #{valid_types.join(", ")}")
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
 
-    return FPM::Target.const_get(type)
+    return FPM::Target.const_get(realtype)
   end
 
   # TODO: [Jay] make this better.
   private
   def source_class_for(type)
-    type = FPM::Source::constants.find { |c| c.downcase.to_s == type }
-    if !type
+    realtype = FPM::Source::constants.find { |c| c.downcase.to_s == type }
+    if !realtype
+      valid_types = FPM::Source.constants.collect { |c| c.downcase }
+      @logger.fatal("No such package source type #{type.inspect}; " \
+                    "Valid types: #{valid_types.join(", ")}")
       raise ArgumentError, "unknown package type #{type.inspect}"
     end
 
-    return FPM::Source.const_get(type)
+    return FPM::Source.const_get(realtype)
   end
 
   private
@@ -149,13 +177,13 @@ class FPM::Builder
 
   private
   def generate_specfile
-    File.open(@package.specfile(builddir), "w") do |f|
-      f.puts @package.render_spec
-    end
+    @package.generate_specfile(builddir)
   end
 
   private
   def edit_specfile
+    # TODO(sissel): support editing multiple files for targets like
+    # puppet which generate multiple manifests.
     editor = ENV['FPM_EDITOR'] || ENV['EDITOR'] || 'vi'
     system("#{editor} '#{package.specfile(builddir)}'")
     unless File.size? package.specfile(builddir)
@@ -175,6 +203,7 @@ class FPM::Builder
   def checksum(paths)
     md5sums = []
     paths.each do |path|
+      next if !File.exists?(path)
       md5sums += %x{find #{path} -type f -print0 | xargs -0 md5sum}.split("\n")
     end
   end # def checksum

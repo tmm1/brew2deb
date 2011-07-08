@@ -10,7 +10,7 @@ class FPM::Target::Rpm < FPM::Package
       when "all"
         # Translate fpm "all" arch to what it means in RPM.
         return "noarch"
-      else 
+      else
         return @architecture
     end
   end # def architecture
@@ -30,7 +30,7 @@ class FPM::Target::Rpm < FPM::Package
     end
 
     %w(BUILD RPMS SRPMS SOURCES SPECS).each { |d| Dir.mkdir(d) }
-    args = ["rpmbuild", "-ba", 
+    args = ["rpmbuild", "-ba",
            "--define", "buildroot #{Dir.pwd}/BUILD",
            "--define", "_topdir #{Dir.pwd}",
            "--define", "_sourcedir #{Dir.pwd}",
@@ -45,6 +45,5 @@ class FPM::Target::Rpm < FPM::Package
       # This should only output one rpm, should we verify this?
       system("mv", path, params[:output])
     end
-
-  end
-end
+  end # def build!
+end # class FPM::Target::RPM

@@ -16,10 +16,13 @@ class FPM::Program
     @settings.replaces = []
     @settings.conflicts = []
     @settings.source = {}   # source settings
+    @settings.target = {}   # target settings
+    @settings.config_files ||= []
 
     # Maintainer scripts - https://github.com/jordansissel/fpm/issues/18
     @settings.scripts ||= {}
-    @settings.conffiles ||= []
+
+    @help = nil
   end # def initialize
 
   def run(args)
@@ -40,7 +43,7 @@ class FPM::Program
     if !ok
       $stderr.puts "There were errors; see above."
       $stderr.puts
-      $stderr.puts opts.help
+      $stderr.puts @help
       return 1
     end
 
@@ -58,12 +61,17 @@ class FPM::Program
     FPM::Source::Gem.flags(FPM::Flags.new(opts, "gem", "gem source only"), @settings)
     FPM::Source::Python.flags(FPM::Flags.new(opts, "python", "python source only"),
                               @settings)
+    FPM::Target::Deb.flags(FPM::Flags.new(opts, "deb", "deb target only"), @settings)
 
     # Process fpmrc first
     fpmrc(opts)
 
     # Proces normal flags now.
     remaining = opts.parse(args)
+
+    # need to print help in a different scope
+    @help = opts.help
+
     return remaining
   end # def options
 
@@ -136,8 +144,9 @@ class FPM::Program
       @settings.replaces << thing
     end # --replaces
 
-    opts.on("--conffile CONFFILE") do |thing|
-      @settings.conffiles << thing
+    opts.on("--config-files PATH",
+            "(optional) Treat path as a configuration file. Uses conffiles in deb or %config in rpm. (/etc/package.conf)") do |thing|
+      @settings.config_files << thing
     end
 
     opts.on("-a ARCHITECTURE", "--architecture ARCHITECTURE") do |arch|
@@ -158,7 +167,7 @@ class FPM::Program
 
     opts.on("-s SOURCE_TYPE", "what to build the package from") do |st|
       @settings.source_type = st
-    end # -s 
+    end # -s
 
     opts.on("-S PACKAGE_SUFFIX", "which suffix to append to package and dependencies") do |sfx|
       @settings.suffix = sfx
@@ -211,5 +220,6 @@ class FPM::Program
             "Add a url for this package.") do |url|
       @settings.url = url
     end # --url
+
   end # def default_options
 end # class FPM::Program
