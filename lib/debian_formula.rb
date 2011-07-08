@@ -185,7 +185,7 @@ class DebianFormula < Formula
       %w[ depends provides replaces conflicts config_files ].each do |type|
         if self.class.send(type).any?
           self.class.send(type).each do |dep|
-            opts += ["--#{type}", dep]
+            opts += ["--#{type.gsub('_','-')}", dep]
           end
         end
       end
