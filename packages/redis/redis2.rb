@@ -11,7 +11,7 @@ class Redis2 < DebianFormula
 
   conflicts 'redis-server'
 
-  conffiles \
+  config_files \
     '/etc/redis/redis.conf'
 
   def build

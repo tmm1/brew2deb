@@ -50,7 +50,7 @@ class DebianFormula < Formula
 
   attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
-  attr_rw_list :conffiles
+  attr_rw_list :config_files
 
   attr_accessor :skip_build
   attr_writer :installing
@@ -182,10 +182,10 @@ class DebianFormula < Formula
         '--architecture', self.class.arch.to_s
       ] if self.class.arch
 
-      %w[ depends provides replaces conflicts conffiles ].each do |type|
+      %w[ depends provides replaces conflicts config_files ].each do |type|
         if self.class.send(type).any?
           self.class.send(type).each do |dep|
-            opts += ["--#{type == 'conffiles' ? 'conffile' : type}", dep]
+            opts += ["--#{type}", dep]
           end
         end
       end

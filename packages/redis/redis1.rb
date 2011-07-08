@@ -9,7 +9,7 @@ class Redis1 < Redis2
   version '1.2.1+github1'
   description 'An advanced key-value store (v1).'
 
-  conffiles! \
+  config_files! \
     '/etc/redis/redis1.conf'
 
   def build

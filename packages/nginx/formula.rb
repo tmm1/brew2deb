@@ -25,7 +25,7 @@ class Nginx < DebianFormula
   replaces  'nginx-full', 'nginx-common'
   conflicts 'nginx-full', 'nginx-common'
 
-  conffiles \
+  config_files \
     '/etc/nginx/nginx.conf',
     '/etc/nginx/mime.types'
 

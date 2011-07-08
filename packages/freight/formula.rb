@@ -8,7 +8,7 @@ class Freight < DebianFormula
   version '0.0.7+github1'
   description 'A modern take on the Debian archive'
 
-  conffiles '/etc/freight.conf'
+  config_files '/etc/freight.conf'
 
   def build
   end
