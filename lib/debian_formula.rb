@@ -153,11 +153,15 @@ class DebianFormula < Formula
   def package
     FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
     Dir.chdir HOMEBREW_WORKDIR+'pkg' do
-      # TODO: use FPM::Builder directly here
+      epoch, ver = self.class.version.split(':', 2)
+      if ver.nil?
+        ver, epoch = epoch, nil
+      end
+
       opts = [
         # architecture
         '-n', name,
-        '-v', self.class.version,
+        '-v', ver,
         '-t', 'deb',
         '-s', 'dir',
         '--url', self.class.homepage || self.class.url,
@@ -165,6 +169,10 @@ class DebianFormula < Formula
         '--maintainer', maintainer,
         '--category', self.class.section,
       ]
+
+      opts += [
+        '--epoch', epoch
+      ] if epoch
 
       opts += [
         '--description', self.class.description.ui.strip
