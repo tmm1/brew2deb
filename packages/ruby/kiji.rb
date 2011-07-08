@@ -6,7 +6,7 @@ class Kiji < MRI
 
   name 'kiji'
   section 'interpreters'
-  version '0.11.1'
+  version '0.11.1+github1'
   description 'The Kiji Ruby virtual machine (installed in /opt)'
 
   conflicts 'ree'
@@ -30,7 +30,7 @@ class Kiji < MRI
     ENV['LIBS'] = '-ltcmalloc_minimal'
 
     sh 'autoconf'
-    configure :prefix => prefix, :disable_pthread => true, :disable_shared => true, :disable_ucontext => true
+    configure :prefix => prefix, :disable_pthread => true, :disable_shared => true, :disable_ucontext => true, :enable_gc_debug => true
     make
   end
 
