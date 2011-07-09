@@ -1,7 +1,7 @@
 require './formula'
 
 class Nginx
-  version << "+memcachessl"
+  version << "+memcache-ssl4"
 
   build_depends \
     'libmemcache-dev'
@@ -11,7 +11,7 @@ class Nginx
 
   def patches
     {:p0 => 'request_start_variable.patch',
-     :p1 => 'https://github.com/mpalmer/nginx/compare/master...memcache-ssl-0.8.patch'}
+     :p1 => 'https://github.com/tmm1/nginx/compare/master...memcache-ssl-0.8.patch'}
   end
 
   def configure(*args)
