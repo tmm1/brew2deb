@@ -1,13 +1,13 @@
 require './formula'
 
 class Nginx
-  version << "+memcache-ssl4"
+  version << "+memcache-ssl7"
 
   build_depends \
-    'libmemcache-dev'
+    'libmemcache'
 
   depends \
-    'libmemcache0'
+    'libmemcache'
 
   def patches
     {:p0 => 'request_start_variable.patch',
