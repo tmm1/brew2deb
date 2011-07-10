@@ -1,0 +1,48 @@
+http://bugs.debian.org/cgi-bin/bugreport.cgi?msg=5;bug=450533
+
+From: Ari Pollak <ari@debian.org>
+To: submit@bugs.debian.org
+Subject: Fix for crash after memcache server goes down
+Date: Wed, 07 Nov 2007 17:25:49 -0500
+
+Package: libmemcache0
+Severity: important
+Version: 1.4.0.rc2-1
+Tags: patch
+
+I was just testing out libmemcache with multiple memcached servers where
+one or more daemons might be down. If one of them does go down, it's
+highly likely for at least one double free() to occur during mc_free()
+time, seemingly because the read & write buffer pointers for
+memcache_servers are passed around between memcache_servers, even though
+the original memcache_server might have been freed already. Here's a
+patch against src/memcache.c which fixes the problem for me, though it
+might not be totally correct (the copying should probably happen in
+mcm_server_deactivate maybe?).
+
+
+diff -u -r1.1 memcache.c
+--- src/memcache.c      7 Jun 2006 17:02:11 -0000       1.1
++++ src/memcache.c      9 Jun 2006 18:39:14 -0000
+@@ -2344,9 +2344,17 @@
+
+   /* If there was a present left behind by the last memcache_server,
+    * assume ownership of the command. */
+-  if (ctxt->_rbuf != NULL || ctxt->_wbuf != NULL) {
+-    ms->rbuf = ctxt->_rbuf;
+-    ms->wbuf = ctxt->_wbuf;
++  if (ctxt->_rbuf != NULL) {
++    if(ms->rbuf != NULL)
++      mcm_buf_free(ctxt, &ms->rbuf);
++    ms->rbuf = mcm_buf_copy(ctxt, ctxt->_rbuf);
++    ctxt->_rbuf = NULL;
++  }
++  if (ctxt->_wbuf != NULL) {
++    if(ms->wbuf != NULL)
++      mcm_buf_free(ctxt, &ms->wbuf);
++    ms->wbuf = mcm_buf_copy(ctxt, ctxt->_wbuf);
++    ctxt->_wbuf = NULL;
+   }
+
+   return ms;
+
