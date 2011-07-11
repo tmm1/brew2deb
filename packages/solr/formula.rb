@@ -1,10 +1,10 @@
 class Solr < DebianFormula
   homepage 'http://lucene.apache.org/solr/'
-  url 'http://www.eng.lsu.edu/mirrors/apache/lucene/solr/3.2.0/apache-solr-3.2.0.tgz'
-  md5 '0849a7242f6f861e3a8d5592bd9580c5'
+  url 'http://www.eng.lsu.edu/mirrors/apache/lucene/solr/3.3.0/apache-solr-3.3.0.tgz'
+  md5 '048e2aa7e16358600fa5fe3570b90018'
 
   name 'solr'
-  version '3.2.0+github2'
+  version '3.3.0+github1'
   section 'database'
   description 'Enterprise search platform'
 
