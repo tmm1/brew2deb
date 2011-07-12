@@ -96,7 +96,7 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
       chdir
     when '____dsc'
       dsc = File.read(@tarball_path)
-      files = dsc.scan(/[\d\w\.+~-]+\.gz/).uniq
+      files = dsc.scan(/[\d\w\.+~-]+\.(?:tar\.gz|t?gz|bz2)/).uniq
       files.each do |f|
         CurlDownloadStrategy.new(File.dirname(@url)+'/'+f, '', '', nil).fetch
       end
