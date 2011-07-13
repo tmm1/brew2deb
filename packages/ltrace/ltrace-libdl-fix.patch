@@ -1,0 +1,41 @@
+diff --git a/ltrace-elf.c b/ltrace-elf.c
+index 1a33ec3..a055642 100644
+--- a/ltrace-elf.c
++++ b/ltrace-elf.c
+@@ -512,9 +512,11 @@ symbol_matches(struct ltelf *lte, size_t lte_i, GElf_Sym *sym,
+ 	if (gelf_getsym(lte[lte_i].dynsym, symidx, tmp) == NULL)
+ 		error(EXIT_FAILURE, 0, "Couldn't get symbol from .dynsym");
+ 	else {
++		debug(2, "symbol found: %s, %zd, %#" PRIx64 " + %#" PRIx64,
++					lte[lte_i].dynstr + tmp->st_name,
++					lte_i,
++					lte[lte_i].base_addr, tmp->st_value);
+ 		tmp->st_value += lte[lte_i].base_addr;
+-		debug(2, "symbol found: %s, %zd, %#" PRIx64,
+-		      name, lte_i, tmp->st_value);
+ 	}
+ 	return tmp->st_value != 0
+ 		&& tmp->st_shndx != SHN_UNDEF
+diff --git a/sysdeps/linux-gnu/proc.c b/sysdeps/linux-gnu/proc.c
+index e1cadf7..1116545 100644
+--- a/sysdeps/linux-gnu/proc.c
++++ b/sysdeps/linux-gnu/proc.c
+@@ -113,7 +113,7 @@ crawl_linkmap(Process *proc, struct r_debug *dbg, void (*callback)(void *), stru
+ 
+ 		if (callback) {
+ 			debug(2, "Dispatching callback for: %s, "
+-					"Loaded at 0x%" PRI_ELF_ADDR "\n",
++					"Loaded at 0x%" PRI_ELF_ADDR,
+ 					lib_name, rlm.l_addr);
+ 			data->addr = rlm.l_addr;
+ 			data->lib_name = lib_name;
+@@ -243,8 +243,8 @@ hook_libdl_cb(void *data) {
+ 	lte = hook_data->lte;
+ 
+ 	if (library_num < MAX_LIBRARIES) {
+-		lte[library_num].base_addr = addr;
+ 		library[library_num++] = strdup(lib_name);
++		lte[library_num].base_addr = addr;
+ 	}
+ 	else {
+ 		fprintf (stderr, "MAX LIBS REACHED\n");
