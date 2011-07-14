@@ -11,7 +11,7 @@ class Nginx
 
   def patches
     {:p0 => 'request_start_variable.patch',
-     :p1 => 'https://github.com/tmm1/nginx/compare/master...libmemcached-ssl.patch'}
+     :p1 => ['https://github.com/tmm1/nginx/compare/master...libmemcached-ssl.patch', 'no-tls-tickets.patch']}
   end
 
   def configure(*args)
