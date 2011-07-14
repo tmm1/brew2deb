@@ -7,19 +7,19 @@ class Nginx < DebianFormula
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
 
   name 'nginx'
-  version '1.0.4+github2'
+  version '1.0.4+github4'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
   build_depends \
     'libpcre3-dev',
     'zlib1g-dev',
-    'libssl-dev'
+    'libssl-dev (<< 1.0.0)'
 
   depends \
     'libpcre3',
     'zlib1g',
-    'openssl'
+    'libssl0.9.8'
 
   provides  'nginx-full', 'nginx-common'
   replaces  'nginx-full', 'nginx-common'
