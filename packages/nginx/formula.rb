@@ -27,7 +27,8 @@ class Nginx < DebianFormula
 
   config_files \
     '/etc/nginx/nginx.conf',
-    '/etc/nginx/mime.types'
+    '/etc/nginx/mime.types',
+    '/var/www/nginx-default/index.html'
 
   def patches
     {:p0 => 'request_start_variable.patch'}
