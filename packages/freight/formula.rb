@@ -1,12 +1,19 @@
 class Freight < DebianFormula
   homepage 'http://rcrowley.github.com/freight/'
-  url 'https://github.com/rcrowley/freight.git', :sha => '8e4972e'
+  url 'https://github.com/rcrowley/freight.git', :tag => 'v0.0.9'
 
   arch 'all'
   name 'freight'
   section 'admin'
-  version '0.0.8+github1'
+  version '0.0.9+github1'
   description 'A modern take on the Debian archive'
+
+  depends \
+    'coreutils',
+    'bash | dash',
+    'dpkg',
+    'gnupg',
+    'grep'
 
   config_files '/etc/freight.conf'
 
