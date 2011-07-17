@@ -1,11 +1,11 @@
 class Freight < DebianFormula
   homepage 'http://rcrowley.github.com/freight/'
-  url 'https://github.com/rcrowley/freight.git', :tag => 'v0.0.9'
+  url 'https://github.com/rcrowley/freight.git', :sha => '3e4c347'
 
   arch 'all'
   name 'freight'
   section 'admin'
-  version '0.0.9+github1'
+  version '0.0.9+github2'
   description 'A modern take on the Debian archive'
 
   depends \
@@ -28,8 +28,21 @@ class Freight < DebianFormula
 
     mv etc/'freight.conf.example', etc/'freight.conf'
 
+    inreplace etc/'freight.conf' do |s|
+      s.gsub! 'example@example.com', 'support@github.com'
+      s << 'GNUPGHOME="/etc/freight/keys"'
+      s << "\n\nexport GNUPGHOME"
+    end
+
     %w(lib cache).each do |dir|
       (var/dir/'freight').mkpath
     end
+
+    %w(bash_completion.d profile.d).each do |dir|
+      rm_rf etc/dir
+    end
+
+    (etc/'freight/keys').mkpath
+    chmod 0700, etc/'freight/keys'
   end
 end
