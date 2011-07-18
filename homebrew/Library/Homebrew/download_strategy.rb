@@ -100,7 +100,7 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
       files.each do |f|
         CurlDownloadStrategy.new(File.dirname(@url)+'/'+f, '', '', nil).fetch
       end
-      safe_system 'dpkg-source', '-x', @tarball_path
+      safe_system 'dpkg-source', '-x', @tarball_path, @tarball_path.basename('.dsc')
       chdir
     when 'Rar!'
       quiet_safe_system 'unrar', 'x', {:quiet_flag => '-inul'}, @tarball_path
@@ -128,13 +128,13 @@ private
       when 1 then Dir.chdir entries.first
       else
         # Look for directories that match @tarball_path.basename
-        %w[ tgz tar tar.gz zip tar.bz2 ].find do |ext|
+        %w[ tgz tar tar.gz zip tar.bz2 dsc ].find do |ext|
           dir = @tarball_path.basename(".#{ext}")
           if File.exists?(dir)
             Dir.chdir(dir)
             true
           end
-        end or raise "Could not find source directory"
+        end or raise "Could not find source directory for #{File.basename @tarball_path}"
     end
   end
 
