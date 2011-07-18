@@ -1,4 +1,5 @@
 $:.unshift File.expand_path('../../homebrew/Library/Homebrew', __FILE__)
+require 'tempfile'
 require 'global'
 require 'formula'
 
@@ -61,7 +62,14 @@ class DebianFormula < Formula
     'patch',
     'curl'
 
+  def self.requires_user(name, opts={})
+    @create_user ||= {}
+    @create_user.update(opts)
+    @create_user[:name] = name
+  end
+
   class << self
+    attr_reader :create_user
     @extra_sources = []
   end
 
@@ -102,7 +110,43 @@ class DebianFormula < Formula
     skip_build ? nil : super
   end
 
+  def postinst
+    set_instance_variable 'create_user'
+
+    if @create_user and user = @create_user[:name]
+      home = @create_user[:home] || '/nonexistent'
+
+      script = "
+        #!/bin/sh
+        set -e
+
+        (id #{user} >/dev/null 2>&1) ||
+          adduser --system --group --no-create-home --home #{home} #{user}
+      "
+
+      paths = Array(@create_user[:chown])
+      script += "
+        chown -R #{user}:#{user} #{paths.map(&:dump).join(' ')}
+      " if paths and paths.any?
+
+      script.ui
+    end
+  end
+
+  def postrm
+    if @create_user and user = @create_user[:name] and @create_user[:remove] != false
+      "
+        #!/bin/sh
+        set -e
+
+        deluser --system #{user}
+      ".ui
+    end
+  end
+
   def self.package!
+    raise 'Missing name/version' unless name and version
+
     f = new
 
     unless RUBY_PLATFORM =~ /darwin/
@@ -159,7 +203,6 @@ class DebianFormula < Formula
       end
 
       opts = [
-        # architecture
         '-n', name,
         '-v', ver,
         '-t', 'deb',
@@ -181,6 +224,21 @@ class DebianFormula < Formula
       opts += [
         '--architecture', self.class.arch.to_s
       ] if self.class.arch
+
+      if self.postinst
+        postinst_file = Tempfile.open('postinst')
+        postinst_file.puts(postinst)
+        chmod 0755, postinst_file.path
+        postinst_file.close
+        opts += ['--post-install', postinst_file.path]
+      end
+      if self.postrm
+        postrm_file = Tempfile.open('postrm')
+        postrm_file.puts(postrm)
+        chmod 0755, postrm_file.path
+        postrm_file.close
+        opts += ['--post-uninstall', postrm_file.path]
+      end
 
       %w[ depends provides replaces conflicts config_files ].each do |type|
         if self.class.send(type).any?
