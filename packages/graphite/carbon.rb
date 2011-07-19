@@ -13,7 +13,8 @@ class Carbon < DebianFormula
 
   depends \
     'python',
-    'python-twisted'
+    'python-twisted',
+    'python-pkg-resources'
 
   requires_user 'graphite',
     :home => '/var/lib/graphite',
