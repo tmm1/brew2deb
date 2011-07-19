@@ -1,4 +1,5 @@
 class Carbon < DebianFormula
+  homepage 'http://graphite.wikidot.com/carbon'
   url 'http://launchpad.net/graphite/1.0/0.9.8/+download/carbon-0.9.8.tar.gz'
   md5 '611083ec9ad7418e7e72b962719204ae'
 
@@ -14,9 +15,25 @@ class Carbon < DebianFormula
     'python',
     'python-twisted'
 
+  requires_user 'graphite',
+    :home => '/var/lib/graphite',
+    :chown => [
+      '/var/log/graphite',
+      '/var/lib/graphite',
+      '/var/run/graphite'
+    ]
+
+  config_files \
+    '/etc/aggregation-rules.conf',
+    '/etc/carbon.conf',
+    '/etc/relay-rules.conf',
+    '/etc/rewrite-rules.conf',
+    '/etc/storage-schemas.conf'
+
   def build
     %w( lib/carbon/conf.py conf/carbon.conf.example ).each do |file|
       inreplace file, "/opt/graphite/storage/whisper/", "/var/lib/graphite/whisper/"
+      inreplace file, "USER = ", "USER = graphite"
     end
 
     rm 'setup.cfg'
@@ -52,9 +69,24 @@ class Carbon < DebianFormula
       cp conf, etc/'graphite'/File.basename(conf, '.example')
     end
 
+    open etc/'graphite/storage-schemas.conf', 'w' do |f|
+      f.puts %(
+        [default]
+        priority = 110
+        pattern = .*
+        retentions = 10:2160,60:10080,600:262974
+      ).ui
+    end
+
     %w( lib log run ).each do |dir|
       (var/dir/'graphite').mkpath
     end
+
+    rm_rf prefix/'storage/log'
+    mv Dir[prefix/'storage/*'], var/'lib/graphite'
     rm_rf prefix/'storage'
+
+    (etc/'init.d').mkpath
+    cp workdir/'init.d-carbon', etc/'init.d/carbon'
   end
 end

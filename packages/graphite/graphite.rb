@@ -1,4 +1,5 @@
 class Graphite < DebianFormula
+  homepage 'https://launchpad.net/graphite'
   url 'http://launchpad.net/graphite/1.0/0.9.8/+download/graphite-web-0.9.8.tar.gz'
   md5 '1822e5db0535d7b0ce1f29c013b29c1f'
 
@@ -19,6 +20,17 @@ class Graphite < DebianFormula
     'whisper',
     'carbon'
 
+  requires_user 'graphite',
+    :home => '/var/lib/graphite',
+    :remove => false,
+    :chown => [
+      '/var/log/graphite',
+      '/var/lib/graphite'
+    ]
+
+  config_files \
+    '/etc/graphite/dashboard.conf'
+
   def build
     inreplace 'webapp/graphite/settings.py' do |s|
       # use system paths
@@ -26,22 +38,34 @@ class Graphite < DebianFormula
       s.gsub! /^LOG_DIR = .*$/, 'LOG_DIR = "/var/log/graphite/webapp/"'
       s.gsub! /^CONF_DIR = .*$/, 'CONF_DIR = "/etc/graphite/"'
     end
+
+    sh 'python', 'setup.py', 'build'
   end
 
   def install
     (var/'lib/graphite').mkpath
     (var/'log/graphite/webapp').mkpath
     (share/'graphite').install 'webapp'
-    mv Dir['conf/*'], share/'graphite'
+    cp Dir['conf/*'], share/'graphite'
 
-    # setup sqlite db
-    File.open(share/'graphite/webapp/graphite/local_settings.py','w') do |f|
-      f.puts "DATABASE_NAME = '#{var/'lib/graphite/graphite.db'}'"
+    # config
+    (etc/'graphite').mkpath
+    cp share/'graphite/dashboard.conf.example', etc/'graphite/dashboard.conf'
+
+    open(share/'graphite/webapp/graphite/local_settings.py','w') do |f|
+      f.puts "DEBUG = True"
     end
-    chdir share/'graphite/webapp/graphite' do
-      sh 'python', 'manage.py', 'syncdb', '--noinput'
+    ln_s '../../usr/share/graphite/webapp/graphite/local_settings.py', etc/'graphite/graphite.conf.py'
+
+    open(etc/'graphite/gunicorn.conf.py','w') do |f|
+      f.puts "bind = '0.0.0.0:8000'"
+      f.puts "workers = 3"
+      f.puts "log_file = '/var/log/graphite/webapp/gunicorn.log'"
+      f.puts "daemon = True"
+      f.puts "pidfile = '/var/run/graphite/gunicorn.pid'"
     end
 
-    rm share/'graphite/webapp/graphite/local_settings.py'
+    (etc/'init.d').mkpath
+    cp workdir/'init.d-graphite', etc/'init.d/graphite'
   end
 end

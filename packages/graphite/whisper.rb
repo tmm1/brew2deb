@@ -1,4 +1,5 @@
 class Whisper < DebianFormula
+  homepage 'http://graphite.wikidot.com/whisper'
   url 'http://launchpad.net/graphite/1.0/0.9.8/+download/whisper-0.9.8.tar.gz'
   md5 'c5f291bfd2d7da96b524b8423ffbdc68'
 
