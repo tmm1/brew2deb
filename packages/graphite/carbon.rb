@@ -4,7 +4,7 @@ class Carbon < DebianFormula
   md5 '611083ec9ad7418e7e72b962719204ae'
 
   name 'carbon'
-  version '0.9.8'
+  version '0.9.8+github1'
   section 'python'
   description 'the Graphite backend'
 
@@ -30,6 +30,10 @@ class Carbon < DebianFormula
     '/etc/relay-rules.conf',
     '/etc/rewrite-rules.conf',
     '/etc/storage-schemas.conf'
+
+  def patches
+    'carbon-status-exit-code.patch'
+  end
 
   def build
     %w( lib/carbon/conf.py conf/carbon.conf.example ).each do |file|

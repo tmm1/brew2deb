@@ -1,0 +1,22 @@
+diff --git a/bin/carbon-cache.py b/bin/carbon-cache.py
+index d7c6b05..ef0e44c 100755
+--- a/bin/carbon-cache.py
++++ b/bin/carbon-cache.py
+@@ -96,7 +96,7 @@ if action == 'stop':
+ elif action == 'status':
+   if not exists(options.pidfile):
+     print '%s is not running' % program
+-    raise SystemExit(0)
++    raise SystemExit(1)
+ 
+   pidfile = open(options.pidfile, 'r')
+   try:
+@@ -110,7 +110,7 @@ elif action == 'status':
+     raise SystemExit(0)
+   else:
+     print "%s is not running" % program
+-    raise SystemExit(0)
++    raise SystemExit(1)
+ 
+ elif action != 'start':
+   parser.print_usage()
