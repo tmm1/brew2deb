@@ -4,7 +4,7 @@ class Graphite < DebianFormula
   md5 '1822e5db0535d7b0ce1f29c013b29c1f'
 
   name 'graphite'
-  version '0.9.8+github2'
+  version '0.9.8+github3'
   section 'python'
   description 'Enterprise scalable realtime graphing'
 
@@ -28,7 +28,9 @@ class Graphite < DebianFormula
     ]
 
   config_files \
-    '/etc/graphite/dashboard.conf'
+    '/etc/graphite/dashboard.conf',
+    '/etc/graphite/gunicorn.conf.py',
+    '/usr/share/graphite/webapp/graphite/local_settings.py'
 
   def patches
     [
@@ -56,7 +58,7 @@ class Graphite < DebianFormula
     end
 
     open etc/'graphite/gunicorn.conf.py', 'w' do |f|
-      f.puts "name = 'graphite'"
+      f.puts "proc_name = 'graphite'"
       f.puts "bind = '0.0.0.0:8000'"
       f.puts "workers = 4"
       f.puts "logfile = '/var/log/graphite/gunicorn.log'"
