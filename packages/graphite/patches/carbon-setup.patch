@@ -1,0 +1,42 @@
+diff --git a/setup.cfg b/setup.cfg
+deleted file mode 100644
+index aeccfb2..0000000
+--- a/setup.cfg
++++ /dev/null
+@@ -1,3 +0,0 @@
+-[install]
+-prefix = /opt/graphite
+-install-lib = %(prefix)s/lib
+diff --git a/setup.py b/setup.py
+index d9a445f..9c9c975 100644
+--- a/setup.py
++++ b/setup.py
+@@ -11,10 +11,11 @@ else:
+   from distutils.core import setup
+   setup_kwargs = dict()
+ 
+-
+-storage_dirs = [ ('storage/whisper',[]), ('storage/lists',[]),
+-                 ('storage/log',[]), ('storage/rrd',[]) ]
+-conf_files = [ ('conf', glob('conf/*.example')) ]
++storage_dirs = [
++    ('../var/lib/carbon/whisper',[]),
++    ('../var/lib/carbon/lists',[]),
++    ('../var/lib/carbon/rrd',[])
++]
+ 
+ setup(
+   name='carbon',
+@@ -26,9 +27,9 @@ setup(
+   description='Backend data caching and persistence daemon for Graphite',
+   packages=['carbon', 'carbon.aggregator'],
+   package_dir={'' : 'lib'},
+-  scripts=glob('bin/*'),
++  scripts=glob('bin/*.py'),
+   package_data={ 'carbon' : ['*.xml'] },
+-  data_files=storage_dirs + conf_files,
++  data_files=storage_dirs,
+   install_requires=['twisted', 'txamqp'],
+   **setup_kwargs
+ )
+

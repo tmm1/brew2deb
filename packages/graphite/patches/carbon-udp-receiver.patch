@@ -1,0 +1,94 @@
+diff --git a/bin/carbon-cache.py b/bin/carbon-cache.py
+index d7c6b05..c53ff11 100755
+--- a/bin/carbon-cache.py
++++ b/bin/carbon-cache.py
+@@ -128,7 +128,7 @@ settings.readFrom(options.config, 'cache')
+ 
+ # Import application components
+ from carbon.log import logToStdout, logToDir
+-from carbon.listeners import MetricLineReceiver, MetricPickleReceiver, CacheQueryHandler, startListener
++from carbon.listeners import MetricLineReceiver, MetricPickleReceiver, MetricDatagramReceiver, CacheQueryHandler, startListener
+ from carbon.cache import MetricCache
+ from carbon.instrumentation import startRecordingCacheMetrics
+ from carbon.events import metricReceived
+@@ -187,6 +187,7 @@ metricReceived.installHandler(MetricCache.store)
+ startListener(settings.LINE_RECEIVER_INTERFACE, settings.LINE_RECEIVER_PORT, MetricLineReceiver)
+ startListener(settings.PICKLE_RECEIVER_INTERFACE, settings.PICKLE_RECEIVER_PORT, MetricPickleReceiver)
+ startListener(settings.CACHE_QUERY_INTERFACE, settings.CACHE_QUERY_PORT, CacheQueryHandler)
++reactor.listenUDP(int(settings.UDP_RECEIVER_PORT), MetricDatagramReceiver(), interface=settings.UDP_RECEIVER_INTERFACE)
+ 
+ if use_amqp:
+   amqp_listener.startReceiver(amqp_host, amqp_port, amqp_user, amqp_password,
+diff --git a/conf/carbon.amqp.conf.example b/conf/carbon.amqp.conf.example
+index 3877050..920a055 100644
+--- a/conf/carbon.amqp.conf.example
++++ b/conf/carbon.amqp.conf.example
+@@ -32,6 +32,9 @@ MAX_CREATES_PER_MINUTE = inf
+ LINE_RECEIVER_INTERFACE = 0.0.0.0
+ LINE_RECEIVER_PORT = 2003
+ 
++UDP_RECEIVER_INTERFACE = 0.0.0.0
++UDP_RECEIVER_PORT = 2003
++
+ PICKLE_RECEIVER_INTERFACE = 0.0.0.0
+ PICKLE_RECEIVER_PORT = 2004
+ 
+diff --git a/conf/carbon.conf.example b/conf/carbon.conf.example
+index 0f379ff..d22f405 100644
+--- a/conf/carbon.conf.example
++++ b/conf/carbon.conf.example
+@@ -30,6 +30,9 @@ MAX_CREATES_PER_MINUTE = 50
+ LINE_RECEIVER_INTERFACE = 0.0.0.0
+ LINE_RECEIVER_PORT = 2003
+ 
++UDP_RECEIVER_INTERFACE = 0.0.0.0
++UDP_RECEIVER_PORT = 2003
++
+ PICKLE_RECEIVER_INTERFACE = 0.0.0.0
+ PICKLE_RECEIVER_PORT = 2004
+ 
+diff --git a/lib/carbon/conf.py b/lib/carbon/conf.py
+index d4d09e2..88899ef 100644
+--- a/lib/carbon/conf.py
++++ b/lib/carbon/conf.py
+@@ -23,6 +23,8 @@ defaults = dict(
+   MAX_CREATES_PER_MINUTE='inf',
+   LINE_RECEIVER_INTERFACE='0.0.0.0',
+   LINE_RECEIVER_PORT=2003,
++  UDP_RECEIVER_INTERFACE='0.0.0.0',
++  UDP_RECEIVER_PORT=2003,
+   PICKLE_RECEIVER_INTERFACE='0.0.0.0',
+   PICKLE_RECEIVER_PORT=2004,
+   CACHE_QUERY_INTERFACE='0.0.0.0',
+diff --git a/lib/carbon/listeners.py b/lib/carbon/listeners.py
+index 4bc8ce2..f4aef8d 100644
+--- a/lib/carbon/listeners.py
++++ b/lib/carbon/listeners.py
+@@ -1,5 +1,5 @@
+ from twisted.internet import reactor
+-from twisted.internet.protocol import Factory
++from twisted.internet.protocol import Factory, DatagramProtocol
+ from twisted.internet.error import ConnectionDone
+ from twisted.protocols.basic import LineOnlyReceiver, Int32StringReceiver
+ from carbon.cache import MetricCache
+@@ -42,6 +42,19 @@ class MetricLineReceiver(LoggingMixin, LineOnlyReceiver):
+     metricReceived(metric, datapoint)
+ 
+ 
++class MetricDatagramReceiver(LoggingMixin, DatagramProtocol):
++  def datagramReceived(self, data, (host, port)):
++    for line in data.splitlines():
++      try:
++        metric, value, timestamp = line.strip().split()
++        datapoint = ( float(timestamp), float(value) )
++
++        increment('metricsReceived')
++        metricReceived(metric, datapoint)
++      except:
++        log.listener('invalid line received from client %s, ignoring' % host)
++
++
+ class MetricPickleReceiver(LoggingMixin, Int32StringReceiver):
+   MAX_LENGTH = 2 ** 20
+ 
+
