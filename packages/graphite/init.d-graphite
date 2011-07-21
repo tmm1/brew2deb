@@ -3,13 +3,13 @@ NAME=graphite
 DESC=graphite-web
 DAEMON=/usr/bin/gunicorn_django
 DAEMON_ARGS="-c /etc/graphite/gunicorn.conf.py"
-PIDFILE=/var/run/graphite/gunicorn.pid
+PIDFILE=/var/run/graphite.pid
 APP=/usr/share/graphite/webapp/graphite
 
 case "$1" in
   start)
     echo -n "Starting $DESC: "
-    cd $APP && python manage.py syncdb --noinput
+    cd $APP && python manage.py syncdb --noinput > /dev/null
     if start-stop-daemon --start --quiet --umask 007 -d $APP --chuid graphite:graphite --exec $DAEMON -- $DAEMON_ARGS
     then
       echo "$NAME."

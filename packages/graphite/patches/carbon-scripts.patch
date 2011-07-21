@@ -9,9 +9,9 @@ diff -Nru a/bin/carbon-aggregator.py b/bin/carbon-aggregator.py
 -LOG_DIR = join(STORAGE_DIR, 'log', 'carbon-aggregator')
 -LIB_DIR = join(ROOT_DIR, 'lib')
 -CONF_DIR = join(ROOT_DIR, 'conf')
-+STORAGE_DIR = '/var/lib/carbon'
-+LOG_DIR = '/var/log/carbon'
-+CONF_DIR = '/etc/carbon'
++STORAGE_DIR = '/var/lib/carbon/'
++LOG_DIR = '/var/log/carbon/aggregator/'
++CONF_DIR = '/etc/carbon/'
  
 -sys.path.insert(0, LIB_DIR)
  os.environ['GRAPHITE_ROOT'] = ROOT_DIR
@@ -36,9 +36,9 @@ diff -Nru a/bin/carbon-cache.py b/bin/carbon-cache.py
 -LOG_DIR = join(STORAGE_DIR, 'log', 'carbon-cache')
 -LIB_DIR = join(ROOT_DIR, 'lib')
 -CONF_DIR = join(ROOT_DIR, 'conf')
-+STORAGE_DIR = '/var/lib/carbon'
-+LOG_DIR = '/var/log/carbon'
-+CONF_DIR = '/etc/carbon'
++STORAGE_DIR = '/var/lib/carbon/'
++LOG_DIR = '/var/log/carbon/cache/'
++CONF_DIR = '/etc/carbon/'
  __builtins__.CONF_DIR = CONF_DIR # evil I know, but effective.
  
 -sys.path.insert(0, LIB_DIR)
@@ -69,9 +69,9 @@ diff -Nru a/bin/carbon-relay.py b/bin/carbon-relay.py
 -LOG_DIR = join(STORAGE_DIR, 'log', 'carbon-relay')
 -LIB_DIR = join(ROOT_DIR, 'lib')
 -CONF_DIR = join(ROOT_DIR, 'conf')
-+STORAGE_DIR = '/var/lib/carbon'
-+LOG_DIR = '/var/log/carbon'
-+CONF_DIR = '/etc/carbon'
++STORAGE_DIR = '/var/lib/carbon/'
++LOG_DIR = '/var/log/carbon/relay/'
++CONF_DIR = '/etc/carbon/'
  __builtins__.CONF_DIR = CONF_DIR
  
 -sys.path.insert(0, LIB_DIR)

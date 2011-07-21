@@ -4,7 +4,7 @@ class Carbon < DebianFormula
   md5 '611083ec9ad7418e7e72b962719204ae'
 
   name 'carbon'
-  version '0.9.8+github2'
+  version '0.9.8+github3'
   section 'python'
   description 'the Graphite backend'
 
@@ -51,8 +51,10 @@ class Carbon < DebianFormula
     (share/'carbon').install Dir['conf/*.example']
     (etc/'carbon').install_p 'conf/carbon.conf.example', 'carbon.conf'
     (etc/'init.d').install_p workdir/'init.d-carbon', 'carbon'
-    (var/'log/carbon').mkpath
     (var/'run').mkpath
+    %w( cache relay aggregator ).each do |dir|
+      (var/'log/carbon'/dir).mkpath
+    end
 
     open etc/'carbon/storage-schemas.conf', 'w' do |f|
       f.puts %(
