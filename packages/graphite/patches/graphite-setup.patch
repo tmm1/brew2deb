@@ -1,0 +1,64 @@
+diff --git a/setup.cfg b/setup.cfg
+deleted file mode 100644
+index 23cb654..0000000
+--- a/setup.cfg
++++ /dev/null
+@@ -1,3 +0,0 @@
+-[install]
+-prefix = /opt/graphite
+-install-lib = %(prefix)s/webapp
+diff --git a/setup.py b/setup.py
+index 1daa55a..2561b9d 100644
+--- a/setup.py
++++ b/setup.py
+@@ -1,6 +1,7 @@
+ #!/usr/bin/env python
+ 
+ import os
++import string
+ from glob import glob
+ 
+ if os.environ.get('USE_SETUPTOOLS'):
+@@ -11,25 +12,20 @@ else:
+   from distutils.core import setup
+   setup_kwargs = dict()
+ 
+-
+-storage_dirs = []
+-
+-for subdir in ('whisper', 'lists', 'rrd', 'log', 'log/webapp'):
+-  storage_dirs.append( ('storage/%s' % subdir, []) )
+-
+ webapp_content = {}
+ 
+ for root, dirs, files in os.walk('webapp/content'):
+-  for filename in files:
+-    filepath = os.path.join(root, filename)
+ 
+-    if root not in webapp_content:
+-      webapp_content[root] = []
++  key = string.replace(root, 'webapp/content', '/usr/share/graphite/webapp/content')
++
++  for filename in files:
+ 
+-    webapp_content[root].append(filepath)
++    filepath = os.path.join(root, filename)
+ 
++    if key  not in webapp_content:
++      webapp_content[key] = []
+ 
+-conf_files = [ ('conf', glob('conf/*.example')) ]
++    webapp_content[key].append(filepath)
+ 
+ setup(
+   name='graphite-web',
+@@ -42,7 +38,6 @@ setup(
+   package_dir={'' : 'webapp'},
+   packages=['graphite', 'graphite.account', 'graphite.browser', 'graphite.cli', 'graphite.composer', 'graphite.render', 'graphite.whitelist', 'graphite.metrics', 'graphite.dashboard', 'graphite.thirdparty', 'graphite.thirdparty.pytz'],
+   package_data={'graphite' : ['templates/*', 'local_settings.py.example', 'render/graphTemplates.conf']},
+-  scripts=glob('bin/*'),
+-  data_files=webapp_content.items() + storage_dirs + conf_files,
++  data_files=webapp_content.items(),
+   **setup_kwargs
+ )
+
