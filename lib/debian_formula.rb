@@ -145,7 +145,7 @@ class DebianFormula < Formula
   end
 
   def self.package!
-    raise 'Missing name/version' unless name and version
+    raise 'Missing name/version' if self == DebianFormula and (!name or !version)
 
     f = new
 
