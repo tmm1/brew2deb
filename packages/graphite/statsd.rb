@@ -2,13 +2,17 @@ class Statsd < DebianFormula
   url 'https://github.com/etsy/statsd.git', :sha => '116dfe3'
 
   name 'statsd'
-  version '0.1.0'
+  version '0.1.0+github1'
   section 'devel'
   description 'Stats aggregation daemon'
 
   depends \
     'nodejs',
     'graphite'
+
+  def patches
+    'patches/statsd-no-sampling.patch'
+  end
 
   def build
   end
