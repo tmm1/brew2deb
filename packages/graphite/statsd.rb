@@ -2,7 +2,7 @@ class Statsd < DebianFormula
   url 'https://github.com/etsy/statsd.git', :sha => '116dfe3'
 
   name 'statsd'
-  version '0.1.0+github1'
+  version '0.1.0+github2'
   section 'devel'
   description 'Stats aggregation daemon'
 

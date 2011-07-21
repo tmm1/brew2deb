@@ -1,25 +1,15 @@
-From b4feaf1e8215a95acdd13086dd3b6cd0ec2f00e0 Mon Sep 17 00:00:00 2001
-From: alunny <alunny@gmail.com>
-Date: Thu, 23 Jun 2011 16:04:43 -0700
-Subject: [PATCH] don't mess with the counter value
-
----
- stats.js |    2 +-
- 1 files changed, 1 insertions(+), 1 deletions(-)
-
 diff --git a/stats.js b/stats.js
-index f61cfb0..f7df717 100644
+index f76d173..f84cbc5 100644
 --- a/stats.js
 +++ b/stats.js
-@@ -69,7 +69,7 @@ config.configFile(file, function (config, oldConfig) {
+@@ -68,9 +68,8 @@ config.configFile(process.argv[2], function (config, oldConfig) {
        var key;
  
        for (key in counters) {
 -        var value = counters[key] / (flushInterval / 1000);
 +        var value = counters[key];
          var message = 'stats.' + key + ' ' + value + ' ' + ts + "\n";
-         message += 'stats.counts.' + key + ' ' + counters[key] + ' ' + ts + "\n";
+-        message += 'stats_counts.' + key + ' ' + counters[key] + ' ' + ts + "\n";
          statString += message;
--- 
-1.7.5.4
-
+         counters[key] = 0;
+ 
