@@ -345,7 +345,7 @@ class GitDownloadStrategy < AbstractDownloadStrategy
       # check for submodules
       if File.exist?('.gitmodules')
         safe_system 'git', 'submodule', 'update', '--init', '--recursive'
-        sub_cmd = "git checkout-index -a -f \"--prefix=#{dst}/$path/\""
+        sub_cmd = "git checkout-index -a -f \"--prefix=#{dst}/${toplevel##{Dir.pwd}}/$path/\""
         safe_system 'git', 'submodule', '--quiet', 'foreach', '--recursive', sub_cmd
       end
     end
