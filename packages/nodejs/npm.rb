@@ -7,7 +7,7 @@ class NPM < DebianFormula
 
   name 'npm'
   section 'devel'
-  version '1.0.18+github1'
+  version '1.0.18+github2'
   description 'A package manager for node'
 
   def build
