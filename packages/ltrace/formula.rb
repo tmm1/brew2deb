@@ -20,7 +20,7 @@ class Ltrace < DebianFormula
 
   depends \
     'libelfg0',
-    'libunwind7'
+    'libunwind7 (>= 0.99)'
 
   def patches
     {:p1 => 'ltrace-libdl-fix.patch'}
