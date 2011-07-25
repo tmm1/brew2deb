@@ -1,8 +1,6 @@
-require 'formula'
-
 class Collectd < DebianFormula
-  url 'http://collectd.org/files/collectd-5.0.0.tar.bz2'
   homepage 'http://collectd.org/'
+  url 'http://collectd.org/files/collectd-5.0.0.tar.bz2'
   md5 '7bfea6e82d35b36f16d1da2c71397213'
 
   name 'collectd'
@@ -10,17 +8,23 @@ class Collectd < DebianFormula
   version '5.0.0+github1'
   description 'statistics collection and monitoring daemon'
 
+  build_depends \
+    'python-dev'
+
+  depends \
+    'python'
+
   config_files '/etc/collectd/collectd.conf'
 
   def build
-    args = ["--disable-debug", "--disable-dependency-tracking",
-            "--with-python=/usr/bin",
-            "--prefix=#{prefix}",
-            "--localstatedir=#{var}",
-            "--sysconfdir=/etc/collectd"]
+    configure \
+      '--disable-debug',
+      '--with-python=/usr/bin',
+      '--prefix=/usr',
+      '--localstatedir=/var',
+      '--sysconfdir=/etc/collectd'
 
-    system "./configure", *args
-    system "make"
+    make
   end
 
   def install
