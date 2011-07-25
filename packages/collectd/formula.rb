@@ -9,10 +9,12 @@ class Collectd < DebianFormula
   description 'statistics collection and monitoring daemon'
 
   build_depends \
-    'python-dev'
+    'python-dev',
+    'libmysqlclient15-dev'
 
   depends \
-    'python'
+    'python',
+    'libmysqlclient15off'
 
   config_files '/etc/collectd/collectd.conf'
 
