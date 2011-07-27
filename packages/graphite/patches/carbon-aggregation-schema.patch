@@ -1,0 +1,99 @@
+diff --git a/lib/carbon/storage.py b/carbon/lib/carbon/storage.py
+index 9fe9c8a..53a5e4c 100644
+--- a/lib/carbon/storage.py
++++ b/lib/carbon/storage.py
+@@ -79,31 +79,34 @@ class Schema:
+ 
+ 
+ class DefaultSchema(Schema):
+-  def __init__(self, name, archives):
++  def __init__(self, name, archives, aggregate):
+     self.name = name
+     self.archives = archives
++    self.aggregate = aggregate
+ 
+   def test(self, metric):
+     return True
+ 
+ 
+ class PatternSchema(Schema):
+-  def __init__(self, name, pattern, archives):
++  def __init__(self, name, pattern, archives, aggregate):
+     self.name = name
+     self.pattern = pattern
+     self.regex = re.compile(pattern)
+     self.archives = archives
++    self.aggregate = aggregate
+ 
+   def test(self, metric):
+     return self.regex.search(metric)
+ 
+ 
+ class ListSchema(Schema):
+-  def __init__(self, name, listName, archives):
++  def __init__(self, name, listName, archives, aggregate):
+     self.name = name
+     self.listName = listName
+     self.archives = archives
+     self.path = join(WHITELISTS_DIR, listName)
++    self.aggregate = aggregate
+ 
+     if exists(self.path):
+       self.mtime = os.stat(self.path).st_mtime
+@@ -156,18 +159,19 @@ def loadStorageSchemas():
+     matchAll = options.get('match-all')
+     pattern = options.get('pattern')
+     listName = options.get('list')
++    aggregate = options.get('aggregate')
+ 
+     retentions = options['retentions'].split(',')
+     archives = [ Archive.fromString(s) for s in retentions ]
+ 
+     if matchAll:
+-      mySchema = DefaultSchema(section, archives)
++      mySchema = DefaultSchema(section, archives, aggregate)
+ 
+     elif pattern:
+-      mySchema = PatternSchema(section, pattern, archives)
++      mySchema = PatternSchema(section, pattern, archives, aggregate)
+ 
+     elif listName:
+-      mySchema = ListSchema(section, listName, archives)
++      mySchema = ListSchema(section, listName, archives, aggregate)
+ 
+     else:
+       raise ValueError('schema "%s" has no pattern or list parameter configured' % section)
+@@ -179,4 +183,4 @@ def loadStorageSchemas():
+ 
+ 
+ defaultArchive = Archive(60, 60 * 24 * 7) #default retention for unclassified data (7 days of minutely data)
+-defaultSchema = DefaultSchema('default', [defaultArchive])
++defaultSchema = DefaultSchema('default', [defaultArchive], 'average')
+diff --git a/lib/carbon/writer.py b/carbon/lib/carbon/writer.py
+index 4d2d59f..bac75af 100644
+--- a/lib/carbon/writer.py
++++ b/lib/carbon/writer.py
+@@ -91,11 +91,13 @@ def writeCachedDataPoints():
+ 
+       if not dbFileExists:
+         archiveConfig = None
++        aggregationMethod = None
+ 
+         for schema in schemas:
+           if schema.matches(metric):
+             log.creates('new metric %s matched schema %s' % (metric, schema.name))
+             archiveConfig = [archive.getTuple() for archive in schema.archives]
++            aggregationMethod = schema.aggregate
+             break
+ 
+         if not archiveConfig:
+@@ -105,7 +107,7 @@ def writeCachedDataPoints():
+         os.system("mkdir -p -m 755 '%s'" % dbDir)
+ 
+         log.creates("creating database file %s" % dbFilePath)
+-        whisper.create(dbFilePath, archiveConfig)
++        whisper.create(dbFilePath, archiveConfig, aggregationMethod=aggregationMethod)
+         os.chmod(dbFilePath, 0755)
+         increment('creates')
+ 
+

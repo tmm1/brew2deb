@@ -4,7 +4,7 @@ class Carbon < DebianFormula
   md5 '611083ec9ad7418e7e72b962719204ae'
 
   name 'carbon'
-  version '0.9.8+github3'
+  version '0.9.8+github4'
   section 'python'
   description 'the Graphite backend'
 
@@ -14,7 +14,8 @@ class Carbon < DebianFormula
   depends \
     'python',
     'python-twisted',
-    'python-pkg-resources'
+    'python-pkg-resources',
+    'whisper (>= 0.9.8+github1)'
 
   requires_user 'carbon',
     :home => '/var/lib/carbon',
@@ -33,7 +34,8 @@ class Carbon < DebianFormula
       'patches/carbon-scripts.patch',
       'patches/carbon-config.patch',
       'patches/carbon-status-exit-code.patch',
-      'patches/carbon-udp-receiver.patch'
+      'patches/carbon-udp-receiver.patch',
+      'patches/carbon-aggregation-schema.patch'
     ]
   end
 
