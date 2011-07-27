@@ -4,7 +4,7 @@ class Carbon < DebianFormula
   md5 '611083ec9ad7418e7e72b962719204ae'
 
   name 'carbon'
-  version '0.9.8+github4'
+  version '0.9.8+github5'
   section 'python'
   description 'the Graphite backend'
 

@@ -1,3 +1,66 @@
+diff --git a/lib/carbon/cache.py b/carbon/lib/carbon/cache.py
+index e98daa1..3129ea0 100644
+--- a/lib/carbon/cache.py
++++ b/lib/carbon/cache.py
+@@ -19,13 +19,14 @@ from carbon import log
+ class MetricCache(dict):
+   def __init__(self):
+     self.size = 0
++    self.aggregateTypes = dict()
+ 
+ 
+   def __setitem__(self, key, value):
+     raise TypeError("Use store() method instead!")
+ 
+ 
+-  def store(self, metric, datapoint):
++  def store(self, metric, datapoint, aggregate=None):
+     if self.isFull():
+       return
+ 
+@@ -40,6 +41,9 @@ class MetricCache(dict):
+     dict.__setitem__(self, metric, datapoints)
+     self.size += 1
+ 
++    if aggregate:
++        self.aggregateTypes[metric] = aggregate
++
+ 
+   def isFull(self):
+     return self.size >= settings.MAX_CACHE_SIZE
+@@ -54,6 +58,9 @@ class MetricCache(dict):
+   def counts(self):
+     return [ (metric, len(datapoints)) for (metric, datapoints) in self.items() ]
+ 
++
++  def aggregationFor(self, metric):
++      return self.aggregateTypes.get(metric)
+   
+ 
+ MetricCache = MetricCache()
+diff --git a/lib/carbon/listeners.py b/carbon/lib/carbon/listeners.py
+index 4bc8ce2..1c82a14 100644
+--- a/lib/carbon/listeners.py
++++ b/lib/carbon/listeners.py
+@@ -32,14 +32,16 @@ class MetricLineReceiver(LoggingMixin, LineOnlyReceiver):
+ 
+   def lineReceived(self, line):
+     try:
+-      metric, value, timestamp = line.strip().split()
++      data = line.strip().split()
++      metric, value, timestamp = data[0:3]
++      aggregate = len(data) > 3 and data[3] or None
+       datapoint = ( float(timestamp), float(value) )
+     except:
+       log.listener('invalid line received from client %s, ignoring' % self.peerAddr)
+       return
+ 
+     increment('metricsReceived')
+-    metricReceived(metric, datapoint)
++    metricReceived(metric, datapoint, aggregate=aggregate)
+ 
+ 
+ class MetricPickleReceiver(LoggingMixin, Int32StringReceiver):
 diff --git a/lib/carbon/storage.py b/carbon/lib/carbon/storage.py
 index 9fe9c8a..53a5e4c 100644
 --- a/lib/carbon/storage.py
@@ -70,7 +133,7 @@ index 9fe9c8a..53a5e4c 100644
 -defaultSchema = DefaultSchema('default', [defaultArchive])
 +defaultSchema = DefaultSchema('default', [defaultArchive], 'average')
 diff --git a/lib/carbon/writer.py b/carbon/lib/carbon/writer.py
-index 4d2d59f..bac75af 100644
+index 4d2d59f..29a1794 100644
 --- a/lib/carbon/writer.py
 +++ b/lib/carbon/writer.py
 @@ -91,11 +91,13 @@ def writeCachedDataPoints():
@@ -87,13 +150,37 @@ index 4d2d59f..bac75af 100644
              break
  
          if not archiveConfig:
-@@ -105,7 +107,7 @@ def writeCachedDataPoints():
+@@ -104,8 +106,11 @@ def writeCachedDataPoints():
+         dbDir = dirname(dbFilePath)
          os.system("mkdir -p -m 755 '%s'" % dbDir)
  
-         log.creates("creating database file %s" % dbFilePath)
+-        log.creates("creating database file %s" % dbFilePath)
 -        whisper.create(dbFilePath, archiveConfig)
++        if MetricCache.aggregationFor(metric):
++            aggregationMethod = MetricCache.aggregationFor(metric)
++
++        log.creates("creating database file %s (aggregationMethod: %s)" % (dbFilePath, aggregationMethod))
 +        whisper.create(dbFilePath, archiveConfig, aggregationMethod=aggregationMethod)
          os.chmod(dbFilePath, 0755)
          increment('creates')
  
-
+diff --git a/lib/carbon/listeners.py b/lib/carbon/listeners.py
+index eee87cb..08e03dc 100644
+--- a/lib/carbon/listeners.py
++++ b/lib/carbon/listeners.py
+@@ -48,11 +48,13 @@ class MetricDatagramReceiver(LoggingMixin, DatagramProtocol):
+   def datagramReceived(self, data, (host, port)):
+     for line in data.splitlines():
+       try:
+-        metric, value, timestamp = line.strip().split()
++        data = line.strip().split()
++        metric, value, timestamp = data[0:3]
++        aggregate = len(data) > 3 and data[3] or None
+         datapoint = ( float(timestamp), float(value) )
+ 
+         increment('metricsReceived')
+-        metricReceived(metric, datapoint)
++        metricReceived(metric, datapoint, aggregate=aggregate)
+       except:
+         log.listener('invalid line received from client %s, ignoring' % host)
+ 
