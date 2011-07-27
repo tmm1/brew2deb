@@ -5,13 +5,17 @@ class Whisper < DebianFormula
 
   arch 'all'
   name 'whisper'
-  version '0.9.8'
+  version '0.9.8+github1'
   section 'python'
   description 'database engine for fast, reliable fixed-sized databases'
 
   build_depends 'python'
   depends 'python', 'python-rrdtool'
   conflicts 'python-whisper'
+
+  def patches
+    'patches/whisper-aggregation-method.patch'
+  end
 
   def build
     sh 'python', 'setup.py', 'build'
