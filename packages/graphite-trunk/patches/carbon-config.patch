@@ -1,0 +1,58 @@
+diff --git a/carbon/conf/carbon.conf.example b/carbon/conf/carbon.conf.example
+index 44ed939..b9e3dad 100644
+--- a/carbon/conf/carbon.conf.example
++++ b/carbon/conf/carbon.conf.example
+@@ -33,7 +33,7 @@
+ # Specify the user to drop privileges to
+ # If this is blank carbon runs as the user that invokes it
+ # This user must have write access to the local data directory
+-USER =
++USER = carbon
+ 
+ # Limit the size of the cache to avoid swapping or becoming CPU bound.
+ # Sorts and serving cache queries gets more expensive as the cache grows.
+@@ -62,7 +62,7 @@ LINE_RECEIVER_PORT = 2003
+ # Set this to True to enable the UDP listener. By default this is off
+ # because it is very common to run multiple carbon daemons and managing
+ # another (rarely used) port for every carbon instance is not fun.
+-ENABLE_UDP_LISTENER = False
++ENABLE_UDP_LISTENER = True
+ UDP_RECEIVER_INTERFACE = 0.0.0.0
+ UDP_RECEIVER_PORT = 2003
+ 
+diff --git a/carbon/lib/carbon/conf.py b/carbon/lib/carbon/conf.py
+index e674655..57245b5 100644
+--- a/carbon/lib/carbon/conf.py
++++ b/carbon/lib/carbon/conf.py
+@@ -27,6 +27,10 @@ from twisted.python import usage
+ 
+ 
+ defaults = dict(
++  STORAGE_DIR="/var/lib/carbon/",
++  CONF_DIR="/etc/carbon/",
++  LOG_DIR="/var/log/carbon/",
++  PID_DIR="/var/run/",
+   USER="",
+   MAX_CACHE_SIZE='inf',
+   MAX_UPDATES_PER_SECOND=1000,
+diff --git a/carbon/lib/carbon/conf.py b/carbon/lib/carbon/conf.py
+index e674655..37b208b 100644
+--- a/carbon/lib/carbon/conf.py
++++ b/carbon/lib/carbon/conf.py
+@@ -444,12 +444,12 @@ def read_config(program, options, **kwargs):
+             join(settings["PID_DIR"], "%s-%s.pid" %
+                  (program, options["instance"])))
+         settings["LOG_DIR"] = (options["logdir"] or
+-                              "%s-%s" % (settings["LOG_DIR"].rstrip('/'),
+-                                          options["instance"]))
++                              "%s/%s-%s" % (settings["LOG_DIR"].rstrip('/'),
++                                          section, options["instance"]))
+     else:
+         settings["pidfile"] = (
+             options["pidfile"] or
+             join(settings["PID_DIR"], '%s.pid' % program))
+-        settings["LOG_DIR"] = (options["logdir"] or settings["LOG_DIR"])
++        settings["LOG_DIR"] = (options["logdir"] or join(settings["LOG_DIR"], section))
+ 
+     return settings
+

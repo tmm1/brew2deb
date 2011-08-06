@@ -1,0 +1,27 @@
+diff --git a/webapp/graphite/settings.py b/webapp/graphite/settings.py
+index 6754765..6d8ee3d 100644
+--- a/webapp/graphite/settings.py
++++ b/webapp/graphite/settings.py
+@@ -35,7 +35,7 @@ RRD_DIR = STORAGE_DIR + 'rrd/'
+ LISTS_DIR = STORAGE_DIR + 'lists/'
+ INDEX_FILE = STORAGE_DIR + 'index'
+ WHITELIST_FILE = LISTS_DIR + 'whitelist'
+-LOG_DIR = STORAGE_DIR + 'log/webapp/'
++LOG_DIR = '/var/log/graphite/'
+ 
+ CLUSTER_SERVERS = []
+ 
+diff --git a/webapp/graphite/settings.py b/webapp/graphite/settings.py
+index 6754765..537ff5e 100644
+--- a/webapp/graphite/settings.py
++++ b/webapp/graphite/settings.py
+@@ -86,7 +86,7 @@ LDAP_USER_QUERY = "" # "(username=%s)"  For Active Directory use "(sAMAccountNam
+ 
+ #Database settings, sqlite is intended for single-server setups
+ DATABASE_ENGINE = 'sqlite3'			# 'postgresql', 'mysql', 'sqlite3' or 'ado_mssql'.
+-DATABASE_NAME = STORAGE_DIR + 'graphite.db'	# Or path to database file if using sqlite3.
++DATABASE_NAME = '/var/lib/graphite/graphite.db'	# Or path to database file if using sqlite3.
+ DATABASE_USER = ''				# Not used with sqlite3.
+ DATABASE_PASSWORD = ''				# Not used with sqlite3.
+ DATABASE_HOST = ''				# Set to empty string for localhost. Not used with sqlite3.
+

@@ -1,0 +1,6 @@
+#!/bin/sh
+export GRAPHITE_CONF_DIR=/etc/graphite/
+export GRAPHITE_STORAGE_DIR=/var/lib/carbon/
+cd /usr/share/graphite/webapp/graphite
+python manage.py syncdb --noinput > /dev/null
+exec gunicorn_django -c /etc/graphite/gunicorn.conf
