@@ -78,3 +78,7 @@ $ dpkg --info pkg/git_1.7.5.4-1+github1_amd64.deb
  Homepage: http://git-scm.com
  Description: The Git DVCS with custom patches and bugfixes for GitHub.
 ```
+
+## Building on OSX
+
+Some packages can be built on OSX, but you must install the [dpkg](https://raw.github.com/gist/1137917/318569ae4f6748024fa9416271a012bb97e1f6e5/dpkg-homebrew), findutils, and gnu-tar packages from homebrew.

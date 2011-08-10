@@ -129,7 +129,7 @@ class FPM::Source
 
     files_tar = [ tar_cmd ] \
                 + excludes \
-                + [ "--owner=root", "--group=root", "-rf", output ] \
+                + [ "--owner=root", "-rf", output ] \
                 + paths
     ::Dir.chdir(chdir) do
       system(*files_tar)
@@ -139,7 +139,7 @@ class FPM::Source
   def tar_cmd
     # Rely on gnu tar for solaris.
     case %x{uname -s}.chomp
-    when "SunOS"
+    when "SunOS", "Darwin"
       return "gtar"
     else
       return "tar"
