@@ -203,7 +203,7 @@ class FPM::Builder
   def checksum(paths)
     paths.collect do |path|
       next if !File.exists?(path)
-      %x{find #{path} -type f -printf %P\\\\0 | xargs -0 md5sum}.split("\n")
+      %x{gfind #{path} -type f -printf %P\\\\0 | xargs -0 md5sum}.split("\n")
     end.flatten
   end # def checksum
 end
