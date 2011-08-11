@@ -8,6 +8,10 @@ module Brew2Deb
       }
     end
 
+    def self.new(attrs = {})
+      super(defaults.merge(attrs))
+    end
+
     def build_dir
       super || begin
         base_dir + 'tmp-build'

@@ -5,7 +5,6 @@ require 'tempfile'
 
 require 'fpm'
 require "fpm/program"
-require 'ruby-debug'
 
 module Brew2Deb
   def self.clean(env)

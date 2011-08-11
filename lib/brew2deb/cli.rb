@@ -1,7 +1,7 @@
 module Brew2Deb
   module CLI
     def self.run(argv = ARGV)
-      options = Env.defaults
+      options = {}
 
       if argv.empty?
         options[:formula] = 'formula.rb'
@@ -11,7 +11,8 @@ module Brew2Deb
 
       parse(options, argv)
 
-      Brew2Deb.send(options.delete(:action), Env.new(options))
+      env = Env.new(options)
+      Brew2Deb.send(env.action, env)
     end
 
     def self.parse(options, argv)
