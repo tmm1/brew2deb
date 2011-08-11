@@ -9,7 +9,7 @@ module Brew2Deb
 
       @env = Env.new(:formula => formula)
 
-      yield env if block_given?
+      yield @env if block_given?
     end
 
     def define
