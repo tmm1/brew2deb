@@ -5,7 +5,7 @@ require 'brew2deb'
 module Brew2Deb
   class BuildTask < Rake::TaskLib
     def initialize(formula)
-      @name = File.basename(formula)
+      @name = File.basename(formula).sub(/\.rb$/, '.deb')
 
       @env = Env.new(:formula => formula)
 
