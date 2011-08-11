@@ -5,6 +5,7 @@ module Brew2Deb
         :action       => :build,
         :architecture => 'i386',
         :base_dir     => Pathname.new(Dir.pwd),
+        :homebrew_dir => Pathname.new(File.dirname(__FILE__)) + 'vendor' + 'homebrew',
       }
     end
 
@@ -21,12 +22,6 @@ module Brew2Deb
     def install_dir
       super || begin
         base_dir + 'tmp-install'
-      end
-    end
-
-    def homebrew_dir
-      super || begin
-        base_dir + 'homebrew'
       end
     end
 
