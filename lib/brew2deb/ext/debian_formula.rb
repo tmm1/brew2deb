@@ -1,49 +1,3 @@
-$:.unshift File.expand_path('../../homebrew/Library/Homebrew', __FILE__)
-require 'tempfile'
-require 'global'
-require 'formula'
-
-class String
-  # Useful for writing indented String and unindent on demand, based on the
-  # first line with indentation.
-  def unindent
-    find_indent = proc{ |l| l.find{|l| !l.strip.empty?}.to_s[/^(\s+)/, 1] }
-
-    lines = self.split("\n")
-    space = find_indent[lines]
-    space = find_indent[lines.reverse] unless space
-
-    strip.gsub(/^#{space}/, '')
-  end
-  alias ui unindent
-
-  # Destructive variant of undindent, replacing the String
-  def unindent!
-    self.replace unindent
-  end
-  alias ui! unindent!
-end
-
-class Formula
-  def self.attr_rw_list(*attrs)
-    attrs.each do |attr|
-      instance_variable_set("@#{attr}", [])
-      class_eval %Q{
-        def self.#{attr}(*list)
-          @#{attr} ||= superclass.respond_to?(:#{attr}) ? superclass.#{attr} : []
-          list.empty? ? @#{attr} : @#{attr} += list
-          @#{attr}.uniq!
-          @#{attr}
-        end
-        def self.#{attr}!(*list)
-          @#{attr} = []
-          #{attr}(*list)
-        end
-      }
-    end
-  end
-end
-
 class DebianFormula < Formula
   attr_rw :name, :description
   attr_rw :maintainer, :section, :arch
@@ -53,8 +7,10 @@ class DebianFormula < Formula
   attr_rw_list :provides, :conflicts, :replaces
   attr_rw_list :config_files
 
-  attr_accessor :skip_build
+  attr_accessor :skip_build, :env
   attr_writer :installing
+
+  attr_accessor :workdir, :builddir, :destdir, :pkgdir
 
   build_depends \
     'build-essential',
@@ -144,10 +100,15 @@ class DebianFormula < Formula
     end
   end
 
-  def self.package!
+  def self.package!(env)
     raise 'Missing name/version' if self == DebianFormula and (!name or !version)
 
     f = new
+
+    f.workdir   = env.base_dir
+    f.builddir  = env.build_dir
+    f.destdir   = env.install_dir
+    f.pkgdir    = env.package_dir
 
     unless RUBY_PLATFORM =~ /darwin/
       # Check for build deps.
@@ -158,13 +119,14 @@ class DebianFormula < Formula
       end
     end
 
-    built_file = HOMEBREW_WORKDIR + "tmp-build/.built-#{f.name}-#{f.version.gsub(/[^\w]/,'_')}"
+    built_file = f.builddir + ".built-#{f.name}-#{f.version.gsub(/[^\w]/,'_')}"
+
     if File.exists?(built_file)
       f.skip_build = true
       f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
     end
 
-    env = ENV.to_hash
+    real_env = ENV.to_hash
 
     f.brew do
       unless f.skip_build
@@ -187,7 +149,7 @@ class DebianFormula < Formula
         f.installing = false
       end
 
-      ENV.replace(env)
+      ENV.replace(real_env)
 
       f.send :ohai, 'Packaging into a .deb'
       f.package
@@ -195,8 +157,8 @@ class DebianFormula < Formula
   end
 
   def package
-    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
-    Dir.chdir HOMEBREW_WORKDIR+'pkg' do
+    FileUtils.mkdir_p(pkgdir)
+    Dir.chdir pkgdir do
       epoch, ver = self.class.version.split(':', 2)
       if ver.nil?
         ver, epoch = epoch, nil
@@ -251,7 +213,7 @@ class DebianFormula < Formula
 
       opts << '.'
 
-      safe_system File.expand_path('../../fpm/bin/fpm', __FILE__), *opts
+      FPM::Program.new.run(opts.map {|o| o.to_s})
     end
   end
 
@@ -271,10 +233,6 @@ class DebianFormula < Formula
 
   def skip_clean_all?
     true
-  end
-
-  def builddir
-    HOMEBREW_WORKDIR+'tmp-build'
   end
 
   def mkbuilddir
@@ -304,10 +262,6 @@ class DebianFormula < Formula
     end
   end
 
-  def workdir
-    HOMEBREW_WORKDIR
-  end
-
   def prefix
     current_pathname_for('usr')
   end
@@ -322,10 +276,6 @@ class DebianFormula < Formula
 
   def current_pathname_for(dir)
     @installing ? destdir + dir : Pathname.new("/#{dir}")
-  end
-
-  def destdir
-    HOMEBREW_WORKDIR+'tmp-install'
   end
 
   def configure(*args)
@@ -355,29 +305,3 @@ class DebianFormula < Formula
     make :install, 'DESTDIR' => destdir
   end
 end
-
-class DebianSourceFormula < DebianFormula
-  build_depends \
-    'fakeroot',
-    'devscripts',
-    'dpkg-dev'
-
-  def build
-    ENV['DEBEMAIL'] = maintainer
-    if ver = self.class.version
-      safe_system 'dch', '-v', ver, 'brew2deb package'
-    end
-    safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
-  end
-
-  def install
-  end
-
-  def package
-    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
-    Dir[HOMEBREW_WORKDIR+'tmp-build'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
-      FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
-    end
-  end
-end
-

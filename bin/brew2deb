@@ -1,33 +1,5 @@
 #!/usr/bin/env ruby
-require 'optparse'
-require 'fileutils'
 
-formula = ARGV.find{ |arg| arg =~ /\.rb$/ and File.exists?(arg) }
-formula ||= 'formula.rb'
+require 'brew2deb'
 
-unless File.exists?(formula)
-  STDERR.puts '*** No formula.rb found in the working directory'
-  exit(1)
-end
-
-Dir.chdir File.dirname(File.expand_path(formula))
-
-if ARGV.include? 'clean'
-  FileUtils.rm_rf %w[ tmp-build tmp-install ], :verbose => true
-  exit
-end
-
-$:.unshift File.expand_path('../../lib', __FILE__)
-require 'debian_formula'
-
-Object.__send__ :remove_const, :HOMEBREW_CACHE
-HOMEBREW_WORKDIR = Pathname.new(Dir.pwd)
-HOMEBREW_CACHE = HOMEBREW_WORKDIR+'src'
-FileUtils.mkdir_p(HOMEBREW_CACHE)
-
-$:.unshift File.expand_path('.')
-load formula
-
-klass = File.read(formula)[/class (\w+)/, 1]
-eval(klass).package!
-
+Brew2Deb::CLI.run
