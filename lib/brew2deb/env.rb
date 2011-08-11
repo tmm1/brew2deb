@@ -34,5 +34,9 @@ module Brew2Deb
         base_dir + 'pkg'
       end
     end
+
+    def output_dir
+      super || base_dir
+    end
   end
 end

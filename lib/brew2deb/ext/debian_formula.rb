@@ -10,7 +10,7 @@ class DebianFormula < Formula
   attr_accessor :skip_build, :env
   attr_writer :installing
 
-  attr_accessor :workdir, :builddir, :destdir, :pkgdir
+  attr_accessor :workdir, :builddir, :destdir, :pkgdir, :outputdir
 
   build_depends \
     'build-essential',
@@ -109,6 +109,7 @@ class DebianFormula < Formula
     f.builddir  = env.build_dir
     f.destdir   = env.install_dir
     f.pkgdir    = env.package_dir
+    f.outputdir = env.output_dir
 
     unless RUBY_PLATFORM =~ /darwin/
       # Check for build deps.
@@ -213,8 +214,10 @@ class DebianFormula < Formula
 
       opts << '.'
 
-      FPM::Program.new.run(opts.map {|o| o.to_s})
+      fpm(opts.map {|o| o.to_s})
     end
+
+
   end
 
   protected
@@ -303,5 +306,16 @@ class DebianFormula < Formula
 
   def install
     make :install, 'DESTDIR' => destdir
+  end
+
+  def fpm(opts = {})
+    program   = FPM::Program.new
+    paths     = program.options(opts)
+    settings  = program.instance_variable_get(:@settings)
+
+    builder = FPM::Builder.new(settings, paths)
+    builder.assemble!
+
+    FileUtils.cp builder.output, outputdir
   end
 end

@@ -57,6 +57,10 @@ module Brew2Deb
           options[:build_dir] = Pathname.new(dir)
         end
 
+        opts.on('-t', '--output-dir DIR', 'Output directory. Defaults to pwd.') do |dir|
+          options[:output_dir] = Pathname.new(dir)
+        end
+
         opts.on('-v', '--verbose') do
           options[:verbose] = true
         end
