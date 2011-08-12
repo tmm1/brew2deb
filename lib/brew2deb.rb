@@ -28,6 +28,7 @@ module Brew2Deb
 
   def self.load_homebrew(env)
     Kernel.eval("::HOMEBREW_WORKDIR = Pathname.new('#{env.base_dir}')")
+    Kernel.eval("::HOMEBREW_CACHE = Pathname.new('#{env.cache_dir}')")
 
     $:.unshift(env.homebrew_library_dir)
     require 'global'
