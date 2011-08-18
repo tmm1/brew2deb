@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github5'
+  version '1:1.7.5.4-1+github6'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -49,6 +49,9 @@ class Git < DebianFormula
 
       # hide refs/pull/* via receive.hiderefs
       'patches/receive-pack-hide-refs.patch',
+
+      # ignore invalid timezones
+      'patches/tz-fsck-warning.patch',
 
       # bug in git-patch-id with newline diff markers
       # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
