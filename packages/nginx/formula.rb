@@ -5,9 +5,10 @@ class Nginx < DebianFormula
 
   source 'https://github.com/agentzh/chunkin-nginx-module.git', :sha => '0654f34'
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
+  source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2.0'
 
   name 'nginx'
-  version '1.0.4+github4'
+  version '1.0.4+github5'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
@@ -44,6 +45,7 @@ class Nginx < DebianFormula
 
       "--add-module=#{builddir/'chunkin-nginx-module.git'}",
       "--add-module=#{builddir/'headers-more-nginx-module.git'}",
+      "--add-module=#{builddir/'nginx-upload-module.git'}",
 
       :prefix => prefix,
 
