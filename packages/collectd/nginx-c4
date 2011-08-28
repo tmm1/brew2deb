@@ -1,0 +1,11 @@
+server {
+  listen 9877;
+  root /usr/share/collection;
+  location / {
+    include fastcgi_params;
+    fastcgi_pass unix:/var/run/c4.sock;
+  }
+  location /share/collection {
+    alias /usr/share/collection;
+  }
+}
