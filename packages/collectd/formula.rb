@@ -5,7 +5,7 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.0.0+github2'
+  version '5.0.0+github3'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
