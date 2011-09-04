@@ -5,13 +5,13 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.0.0+github1'
+  version '5.0.0+github2'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
     'python-dev',
     'libmysqlclient15-dev',
-    'libcurl4-openssl-dev',
+    'libcurl4-openssl-dev | libcurl4-gnutls-dev',
     'pkg-config',
     'libdbi0-dev',
     'libesmtp-dev',
@@ -26,7 +26,8 @@ class Collectd < DebianFormula
     'librrd-dev',
     'libyajl-dev',
     'linux-headers-2.6.26-2-common',
-    'libcredis'
+    'libcredis',
+    'libvirt-dev'
 
   depends \
     'python',
@@ -44,7 +45,8 @@ class Collectd < DebianFormula
     'libperl5.10',
     'librrd4',
     'libyajl1',
-    'libcredis'
+    'libcredis',
+    'libvirt0'
 
   config_files '/etc/collectd/collectd.conf'
 
@@ -77,6 +79,7 @@ class Collectd < DebianFormula
       '--enable-iptables',
       '--enable-ipvs',
       '--enable-irq',
+      '--enable-libvirt',
       '--enable-load',
       '--enable-logfile',
       '--enable-match_empty_counter',
