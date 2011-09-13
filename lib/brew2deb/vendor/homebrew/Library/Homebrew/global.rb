@@ -10,12 +10,14 @@ ARGV.extend(HomebrewArgvExtension)
 HOMEBREW_VERSION = '0.8'
 HOMEBREW_WWW = 'http://mxcl.github.com/homebrew/'
 
-HOMEBREW_CACHE = if Process.uid == 0
-  # technically this is not the correct place, this cache is for *all users*
-  # so in that case, maybe we should always use it, root or not?
-  Pathname.new("/Library/Caches/Homebrew")
-else
-  Pathname.new("~/Library/Caches/Homebrew").expand_path
+if not defined? HOMEBREW_CACHE
+  HOMEBREW_CACHE = if Process.uid == 0
+    # technically this is not the correct place, this cache is for *all users*
+    # so in that case, maybe we should always use it, root or not?
+    Pathname.new("/Library/Caches/Homebrew")
+  else
+    Pathname.new("~/Library/Caches/Homebrew").expand_path
+  end
 end
 
 if not defined? HOMEBREW_BREW_FILE
