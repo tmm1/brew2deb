@@ -122,7 +122,7 @@ class DebianFormula < Formula
 
     built_file = f.builddir + ".built-#{f.name}-#{f.version.gsub(/[^\w]/,'_')}"
 
-    if File.exists?(built_file)
+    if File.exists?(built_file) && f.version != 'HEAD'
       f.skip_build = true
       f.send :ohai, 'Skipping build (`brew2deb clean` to rebuild)'
     end
