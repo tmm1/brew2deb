@@ -4,7 +4,7 @@ class Logstash < DebianFormula
   md5 'e63a179746bf09f5ec02da11341450f5'
 
   name 'logstash'
-  version '1.0.17+github2'
+  version '1.0.17+github3'
   section 'utilities'
   description 'a tool for managing events and logs'
 

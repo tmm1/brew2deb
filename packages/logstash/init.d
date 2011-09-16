@@ -118,7 +118,6 @@ case "$1" in
 		;;
 	restart|force-reload)
 		echo -n "Restarting $DESC: $NAME"
-		check_config "Not restarting logstash."
 		d_stop
 		sleep 1
 		d_start
