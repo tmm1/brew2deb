@@ -31,7 +31,7 @@ DAEMON=/usr/bin/logstash
 
 CONFIGFILE=/etc/logstash/logstash.conf
 PIDFILE=/var/run/logstash.pid
-PLUGIN_PATH=/usr/share/logstash
+PLUGIN_PATH=/usr/share
 LOGFILE=/var/log/logstash/logstash.log
 
 MAXWAIT=30
