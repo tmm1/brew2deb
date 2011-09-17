@@ -1,0 +1,17 @@
+#!/bin/sh
+#/ Usage: logstash [-Xmx1024m] agent -f /etc/logstash/logstash.conf
+set -e
+
+# show usage
+[ $# -eq 0 -o "$1" = "--help" ] && {
+    grep '^#/'< "$0" |
+    cut -c4-
+    exit 2
+}
+
+JAVA_OPTS="
+  -Xms512m
+  -Xmx1024m
+"
+
+exec java $JAVA_OPTS -jar /usr/share/logstash/logstash-1.0.17-monolithic.jar "$@"
