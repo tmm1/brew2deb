@@ -18,7 +18,7 @@ if ARGV.include? 'clean'
 end
 
 $:.unshift File.expand_path('../../lib', __FILE__)
-require 'common_fomrula'
+require 'common_formula'
 require 'debian_formula'
 require 'redhat_formula'
 
