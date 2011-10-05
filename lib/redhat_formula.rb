@@ -1,6 +1,6 @@
 require 'common_formula'
 
-class DebianFormula < Formula
+class RedHatFormula < Formula
   attr_rw :name, :description
   attr_rw :maintainer, :section, :arch
   attr_rw :pre_install, :post_install, :pre_uninstall, :post_uninstall
@@ -13,8 +13,9 @@ class DebianFormula < Formula
   attr_writer :installing
 
   build_depends \
-    'build-essential',
-    'libc6-dev',
+    'gcc',
+    'gcc-c++',
+    'kernel-devel',
     'patch',
     'curl'
 
@@ -30,7 +31,7 @@ class DebianFormula < Formula
   end
 
   def self.extra_sources
-    @extra_sources ||= (self == DebianFormula ? [] : superclass.extra_sources.dup)
+    @extra_sources ||= (self == RedHatFormula ? [] : superclass.extra_sources.dup)
   end
 
   def self.source(url, opts={})
@@ -101,13 +102,13 @@ class DebianFormula < Formula
   end
 
   def self.package!
-    raise 'Missing name/version' if self == DebianFormula and (!name or !version)
+    raise 'Missing name/version' if self == RedHatFormula and (!name or !version)
 
     f = new
 
     unless RUBY_PLATFORM =~ /darwin/
       # Check for build deps.
-      system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
+      system '/bin/rpm', '-q', f.class.build_depends.join(' '), '/dev/null'
       if $? != 0
         f.send :onoe, 'Missing build dependencies.'
         exit(1)
@@ -145,7 +146,7 @@ class DebianFormula < Formula
 
       ENV.replace(env)
 
-      f.send :ohai, 'Packaging into a .deb'
+      f.send :ohai, 'Packaging into a .rpm'
       f.package
     end
   end
@@ -161,7 +162,7 @@ class DebianFormula < Formula
       opts = [
         '-n', name,
         '-v', ver,
-        '-t', 'deb',
+        '-t', 'rpm',
         '-s', 'dir',
         '--url', self.class.homepage || self.class.url,
         '-C', destdir,
@@ -311,28 +312,27 @@ class DebianFormula < Formula
   end
 end
 
-class DebianSourceFormula < DebianFormula
-  build_depends \
-    'fakeroot',
-    'devscripts',
-    'dpkg-dev'
-
-  def build
-    ENV['DEBEMAIL'] = maintainer
-    if ver = self.class.version
-      safe_system 'dch', '-v', ver, 'brew2deb package'
-    end
-    safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
-  end
-
-  def install
-  end
-
-  def package
-    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
-    Dir[HOMEBREW_WORKDIR+'tmp-build'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
-      FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
-    end
-  end
-end
-
+#class RedHatSourceFormula < RedHatFormula
+#  build_depends \
+#    'fakeroot',
+#    'devscripts',
+#    'dpkg-dev'
+#
+#  def build
+#    ENV['DEBEMAIL'] = maintainer
+#    if ver = self.class.version
+#      safe_system 'dch', '-v', ver, 'brew2deb package'
+#    end
+#    safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
+#  end
+#
+#  def install
+#  end
+#
+#  def package
+#    FileUtils.mkdir_p(HOMEBREW_WORKDIR+'pkg')
+#    Dir[HOMEBREW_WORKDIR+'tmp-build'+'*.{dsc,gz,changes,deb,udeb}'].each do |file|
+#      FileUtils.cp file, HOMEBREW_WORKDIR+'pkg'
+#    end
+#  end
+#end
