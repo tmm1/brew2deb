@@ -108,7 +108,7 @@ class RedHatFormula < Formula
 
     unless RUBY_PLATFORM =~ /darwin/
       # Check for build deps.
-      system '/bin/rpm', '-q', f.class.build_depends.join(' '), '/dev/null'
+      system '/bin/rpm', '-q', f.class.build_depends.join(' '), '> /dev/null'
       if $? != 0
         f.send :onoe, 'Missing build dependencies.'
         exit(1)
