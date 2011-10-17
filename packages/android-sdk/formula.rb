@@ -11,7 +11,8 @@ class AndroidSDK < DebianFormula
 
   depends \
     'ant',
-    'sun-java6-jdk'
+    'sun-java6-jdk',
+    'ia32-libs'
 
   def build
   end
