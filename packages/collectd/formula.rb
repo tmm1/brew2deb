@@ -26,8 +26,7 @@ class Collectd < DebianFormula
     'librrd-dev',
     'libyajl-dev',
     'linux-headers-2.6.26-2-common',
-    'libcredis',
-    'libvirt-dev'
+    'libcredis'
 
   depends \
     'python',
@@ -45,8 +44,7 @@ class Collectd < DebianFormula
     'libperl5.10',
     'librrd4',
     'libyajl1',
-    'libcredis',
-    'libvirt0'
+    'libcredis'
 
   config_files '/etc/collectd/collectd.conf'
 
@@ -79,7 +77,6 @@ class Collectd < DebianFormula
       '--enable-iptables',
       '--enable-ipvs',
       '--enable-irq',
-      '--enable-libvirt',
       '--enable-load',
       '--enable-logfile',
       '--enable-match_empty_counter',
@@ -130,7 +127,7 @@ class Collectd < DebianFormula
       '--enable-vserver',
       '--enable-write_http',
       '--enable-write_redis',
-      '--disable-debug',
+      '--enable-debug',
       '--prefix=/usr',
       '--localstatedir=/var',
       '--sysconfdir=/etc/collectd'
