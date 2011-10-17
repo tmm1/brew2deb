@@ -4,7 +4,7 @@ class AndroidSDK < DebianFormula
   md5 'd80d7530a46c665644ae76084a9a0dc4'
 
   name 'android-sdk'
-  version 'r13'
+  version 'r13+github1'
   description 'Android SDK'
   section 'devel'
   arch 'all'
@@ -20,7 +20,7 @@ class AndroidSDK < DebianFormula
     (share/'android-sdk').install_p '.'
   end
 
-  def post_inst
+  def postinst
     "
       #!/bin/sh
       set -e
