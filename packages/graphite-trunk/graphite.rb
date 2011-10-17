@@ -51,6 +51,7 @@ class Graphite < DebianFormula
     sh 'python', 'setup.py', 'install', "--prefix=#{share/'graphite'}", "--install-lib=#{share/'graphite/webapp'}"
 
     (etc/'graphite').mkpath
+    (etc/'graphite').install_p 'conf/graphTemplates.conf.example', 'graphTemplates.conf'
     (etc/'init.d').install_p workdir/'init.d-graphite', 'graphite'
     (prefix/'bin').install workdir/'graphite-web'
     %w( log lib ).each do |dir|
