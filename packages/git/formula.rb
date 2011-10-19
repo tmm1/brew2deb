@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github6'
+  version '1:1.7.5.4-1+github8'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -32,6 +32,9 @@ class Git < DebianFormula
 
   def patches
     [
+      # fix race condition and hide warnings in pack-objects
+      'patches/pack-object-race.patch',
+
       # fire a hook on post-upload so we can track # of clones
       'patches/post-upload-pack-hook.patch',
 
