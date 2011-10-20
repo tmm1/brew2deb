@@ -1,12 +1,12 @@
 class ElasticSearch < DebianFormula
-  url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.17.1.tar.gz'
+  url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.17.8.tar.gz'
   homepage 'http://www.elasticsearch.org'
-  md5 '439002f5f0e7d213d2e27b166fb87d87'
+  md5 'fb02e4e15f27a395903b4a75bbd7e927'
 
   source 'https://github.com/mobz/elasticsearch-head.git'
 
   name 'elasticsearch'
-  version '0.17.1'
+  version '0.17.8'
   section 'database'
   description 'You know, for Search'
 
