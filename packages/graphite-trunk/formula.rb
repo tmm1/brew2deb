@@ -1,9 +1,13 @@
 class GraphiteTrunk < DebianFormula
+  SHA = 'f224e02'
+
   homepage 'http://launchpad.net/graphite'
-  url 'https://github.com/tmm1/graphite.git', :sha => 'f224e02'
+  url 'https://github.com/tmm1/graphite.git', :sha => SHA
+
+  source 'http://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.6.4.tar.gz'
 
   name 'graphite'
-  version '0.9.9+github3-f224e02'
+  version "0.9.9+github3-#{SHA}"
   section 'python'
   description 'Enterprise scalable realtime graphing'
 
@@ -57,27 +61,21 @@ class GraphiteTrunk < DebianFormula
     end
   end
 
-  source 'http://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.6.4.tar.gz', :md5 => '1072b66d53c24e019a8f1304ac9d9fc5'
-  def virtualenv(*args) safe_system 'python', builddir/'virtualenv-1.6.4/virtualenv.py', *args end
-
   def install
     venv = share/'graphite'
     pip = venv/'bin/pip'
 
     ENV['PIP_DOWNLOAD_CACHE'] = FileUtils.mkdir_p(workdir/'src'/'pip-download-cache')
 
-    inreplace 'requirements.txt' do |s|
-      s.gsub! 'py2cairo-1.8.10', 'pycairo-1.6.4'
-    end
+    safe_system 'python', builddir/'virtualenv-1.6.4/virtualenv.py', '--distribute', '--no-site-packages', venv
 
-    virtualenv '--distribute', '--no-site-packages', venv
+    inreplace 'requirements.txt', 'py2cairo-1.8.10', 'pycairo-1.6.4'
     safe_system pip, 'install', '-r', 'requirements.txt'
     safe_system pip, 'install', 'gunicorn'
     safe_system pip, 'install', './carbon'
+    ln_s '/usr/lib/python-support/python-rrdtool/python2.5/rrdtool.so', share/'graphite/lib/python2.5/site-packages/'
 
     (prefix/'bin').mkpath
-
-    ln_s '/usr/lib/python-support/python-rrdtool/python2.5/rrdtool.so', share/'graphite/lib/python2.5/site-packages/'
 
     install_whisper
     install_carbon
