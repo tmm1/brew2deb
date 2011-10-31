@@ -15,12 +15,14 @@ class MRI < Ruby
     'libreadline5-dev',
     'bison',
     'zlib1g-dev',
-    'libssl-dev'
+    'libssl-dev',
+    'libyaml-dev'
 
   depends \
     'libreadline5',
     'zlib1g',
-    'openssl'
+    'openssl',
+    'libyaml-0-1'
 
   def build
     ENV['CFLAGS'] = '-ggdb'
