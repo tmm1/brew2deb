@@ -24,10 +24,14 @@ class YARV < Ruby
     'openssl',
     'libyaml-0-1'
 
+  def prefix
+    current_pathname_for("opt/ruby-1.9.3")
+  end
+
   def build
     ENV['CFLAGS'] = '-ggdb'
 
-    configure :prefix => "/opt/ruby-1.9.3"
+    configure :prefix => prefix
     make
   end
 end
