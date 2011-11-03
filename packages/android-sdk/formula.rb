@@ -28,6 +28,7 @@ class AndroidSDK < DebianFormula
       set -e
 
       /usr/share/android-sdk/tools/android update sdk --force --no-ui
+      find /usr/share/android-sdk -type d -print0 | xargs -0 chmod 755
     ".ui
   end
 end
