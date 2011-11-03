@@ -1,10 +1,11 @@
 class AndroidSDK < DebianFormula
   homepage 'http://developer.android.com/sdk/index.html'
-  url 'http://dl.google.com/android/android-sdk_r13-linux_x86.tgz'
-  md5 'd80d7530a46c665644ae76084a9a0dc4'
+  url 'http://dl.google.com/android/android-sdk_r15-linux.tgz'
+  md5 'f529681fd1eda11c6e1e1d44b42c1432'
 
   name 'android-sdk'
-  version 'r13+github1'
+  version 'r15+github1'
+
   description 'Android SDK'
   section 'devel'
   arch 'all'
