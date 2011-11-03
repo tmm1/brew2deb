@@ -8,11 +8,11 @@ class GraphiteTrunk < DebianFormula
 
   name 'graphite'
   version "0.9.9+github3-#{SHA}"
-  section 'python'
+  section 'web'
   description 'Enterprise scalable realtime graphing'
 
   build_depends \
-    'python',
+    'python-dev',
     'python-rrdtool',
     'librrd-dev',
     'libcairo2-dev'
@@ -73,7 +73,11 @@ class GraphiteTrunk < DebianFormula
     safe_system pip, 'install', '-r', 'requirements.txt'
     safe_system pip, 'install', 'gunicorn'
     safe_system pip, 'install', './carbon'
-    ln_s '/usr/lib/python-support/python-rrdtool/python2.5/rrdtool.so', share/'graphite/lib/python2.5/site-packages/'
+
+    ver = `python --version 2>&1`[/(2\.\d)/, 1]
+    if rrdtool = %W[/usr/lib/python-support/python-rrdtool/python#{ver}/rrdtool.so /usr/lib/pyshared/python#{ver}/rrdtool.so].find{ |dir| Dir[dir].first }
+      ln_s rrdtool, share/"graphite/lib/python#{ver}/site-packages/"
+    end
 
     (prefix/'bin').mkpath
 
