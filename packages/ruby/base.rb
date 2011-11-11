@@ -14,7 +14,10 @@ class Ruby < DebianFormula
     # paths to installed bins
     ruby = prefix/'bin/ruby'
     gem = prefix/'bin/gem'
+    install_rubygems_and_bundler
+  end
 
+  def install_rubygems_and_bundler
     # setup RUBYLIB
     rubylib = `#{ruby} -e "puts $:.join(':')"`.strip
     raise unless $?.exitstatus == 0

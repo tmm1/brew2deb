@@ -34,4 +34,8 @@ class YARV < Ruby
     configure :prefix => prefix
     make
   end
+
+  def install_rubygems_and_bundler
+    # noop
+  end
 end
