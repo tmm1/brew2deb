@@ -3,10 +3,8 @@ class ElasticSearch < DebianFormula
   homepage 'http://www.elasticsearch.org'
   md5 'fb02e4e15f27a395903b4a75bbd7e927'
 
-  source 'https://github.com/mobz/elasticsearch-head.git'
-
   name 'elasticsearch'
-  version '0.17.8'
+  version '0.17.8+github1'
   section 'database'
   description 'You know, for Search'
 
@@ -17,6 +15,9 @@ class ElasticSearch < DebianFormula
     'sun-java6-jre'
 
   def build
+    sh 'bin/plugin -install mobz/elasticsearch-head'
+    sh 'bin/plugin -install lukas-vlcek/bigdesk'
+
     rm_f Dir["bin/*.bat"]
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
 
@@ -45,8 +46,7 @@ class ElasticSearch < DebianFormula
 
   def install
     (prefix/'bin').install Dir['bin/elasticsearch{,-plugin}']
-    (share/'elasticsearch').install Dir['{bin/elasticsearch.in.sh,lib,*.*}']
-    (share/'elasticsearch/web').install Dir[builddir/'elasticsearch-head.git/*']
+    (share/'elasticsearch').install Dir['{bin/elasticsearch.in.sh,lib,plugins,*.*}']
     ln_s '../../../etc/elasticsearch', share/'elasticsearch/config'
     (etc/'elasticsearch').install Dir['config/*']
 
