@@ -4,7 +4,7 @@ class ElasticSearch < DebianFormula
   md5 '4a641cfbaf4ec79b802171dc9f35b21e'
 
   name 'elasticsearch'
-  version '0.18.4+github1'
+  version '0.18.4+github2'
   section 'database'
   description 'You know, for Search'
 
@@ -13,6 +13,9 @@ class ElasticSearch < DebianFormula
 
   depends \
     'sun-java6-jre'
+
+  config_files \
+    '/etc/elasticsearch/elasticsearch.yml'
 
   def build
     sh 'bin/plugin -install mobz/elasticsearch-head'
