@@ -1,10 +1,10 @@
 class ElasticSearch < DebianFormula
-  url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.17.8.tar.gz'
+  url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.18.4.tar.gz'
   homepage 'http://www.elasticsearch.org'
-  md5 'fb02e4e15f27a395903b4a75bbd7e927'
+  md5 '4a641cfbaf4ec79b802171dc9f35b21e'
 
   name 'elasticsearch'
-  version '0.17.8+github1'
+  version '0.18.4+github1'
   section 'database'
   description 'You know, for Search'
 
@@ -17,6 +17,7 @@ class ElasticSearch < DebianFormula
   def build
     sh 'bin/plugin -install mobz/elasticsearch-head'
     sh 'bin/plugin -install lukas-vlcek/bigdesk'
+    sh 'bin/plugin -install river-twitter'
 
     rm_f Dir["bin/*.bat"]
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
