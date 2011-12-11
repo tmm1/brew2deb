@@ -19,7 +19,6 @@ class Postgresql < DebianFormula
     [
       ['--no-python', 'Build without Python support.'],
       ['--no-perl', 'Build without Perl support.'],
-      ['--enable-dtrace', 'Build with DTrace support.']
     ]
   end
   skip_clean :all
@@ -27,12 +26,9 @@ class Postgresql < DebianFormula
   def install
     make :install, 'DESTDIR' => destdir
 
-    ENV.libxml2 if MacOS.snow_leopard?
-
     args = ["--disable-debug",
       "--prefix=#{prefix}",
-    "--enable-thread-safety",
-      "--with-bonjour",
+      "--enable-thread-safety",
       "--with-gssapi",
       "--with-krb5",
       "--with-openssl",
@@ -40,16 +36,9 @@ class Postgresql < DebianFormula
 
     args << "--with-python" unless ARGV.include? '--no-python'
     args << "--with-perl" unless ARGV.include? '--no-perl'
-    args << "--enable-dtrace" if ARGV.include? '--enable-dtrace'
-
-    args << "--with-ossp-uuid"
 
     args << "--datadir=#{share}/#{name}"
     args << "--docdir=#{doc}"
-
-    ENV.append 'CFLAGS', `uuid-config --cflags`.strip
-    ENV.append 'LDFLAGS', `uuid-config --ldflags`.strip
-    ENV.append 'LIBS', `uuid-config --libs`.strip
 
     system "./configure", *args
     system "make install-world"
