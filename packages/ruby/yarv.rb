@@ -35,7 +35,7 @@ class YARV < Ruby
     make
   end
 
-  def install_rubygems_and_bundler
+  def install_rubygems
     # noop
   end
 end
