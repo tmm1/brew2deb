@@ -18,7 +18,9 @@ if ARGV.include? 'clean'
 end
 
 $:.unshift File.expand_path('../../lib', __FILE__)
+require 'common_formula'
 require 'debian_formula'
+require 'redhat_formula'
 
 Object.__send__ :remove_const, :HOMEBREW_CACHE
 HOMEBREW_WORKDIR = Pathname.new(Dir.pwd)
