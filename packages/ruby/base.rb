@@ -12,6 +12,11 @@ class Ruby < DebianFormula
     ENV['PATH'] = "#{prefix/'bin'}:#{ENV['PATH']}"
 
     # paths to installed bins
+    install_rubygems
+    install_bundler
+  end
+
+  def install_rubygems
     ruby = prefix/'bin/ruby'
     gem = prefix/'bin/gem'
 
@@ -26,6 +31,17 @@ class Ruby < DebianFormula
     chdir(builddir/'rubygems-1.6.2') do
       sh ruby, 'setup.rb', '--no-ri', '--no-rdoc'
     end
+  end
+
+  def install_bundler
+    ruby = prefix/'bin/ruby'
+    gem = prefix/'bin/gem'
+    # setup RUBYLIB
+    rubylib = `#{ruby} -e "puts $:.join(':')"`.strip
+    raise unless $?.exitstatus == 0
+
+    pre = prefix.to_s.gsub(destdir, '')
+    ENV['RUBYLIB'] = rubylib.gsub(pre, prefix)
 
     # install bundler
     sh ruby, gem, 'install', '--no-ri', '--no-rdoc', builddir/'bundler-1.0.15.gem'
