@@ -7,7 +7,7 @@ class YARV < Ruby
 
   name 'ruby-yarv'
   section 'interpreters'
-  version '1.9.3-p0+github1'
+  version '1.9.3-p0'
   description 'The MRI Ruby virtual machine'
 
   build_depends \
@@ -35,7 +35,7 @@ class YARV < Ruby
     make
   end
 
-  def install_rubygems_and_bundler
+  def install_rubygems
     # noop
   end
 end
