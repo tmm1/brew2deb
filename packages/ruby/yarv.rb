@@ -7,7 +7,7 @@ class YARV < Ruby
 
   name 'ruby-yarv'
   section 'interpreters'
-  version '1.9.3-p0'
+  version '1.9.3-p0+github1'
   description 'The MRI Ruby virtual machine'
 
   build_depends \
