@@ -15,7 +15,7 @@ class Nginx < DebianFormula
   build_depends \
     'libpcre3-dev',
     'zlib1g-dev',
-    'libssl-dev (<< 1.0.0)'
+    'libssl-dev'
 
   depends \
     'libpcre3',
@@ -36,6 +36,8 @@ class Nginx < DebianFormula
   end
 
   def build
+    ENV['CFLAGS'] = '-Wno-unused-but-set-variable'
+
     configure \
       '--with-http_stub_status_module',
       '--with-http_ssl_module',
