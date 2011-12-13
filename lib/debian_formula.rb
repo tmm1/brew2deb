@@ -2,6 +2,7 @@ $:.unshift File.expand_path('../../homebrew/Library/Homebrew', __FILE__)
 require 'tempfile'
 require 'global'
 require 'formula'
+require 'etc'
 
 class String
   # Useful for writing indented String and unindent on demand, based on the
@@ -298,7 +299,12 @@ class DebianFormula < Formula
     @maintainer ||= self.class.maintainer || begin
       username = `git config --get user.name`.strip
       useremail = `git config --get user.email`.strip
-      raise 'Set maintainer name/email via `git config --global user.name <name>`' if username.empty?
+
+      if username.empty?
+        username = Etc.getlogin
+        useremail = "#{username}@#{`hostname`.strip}"
+      end
+
       "#{username} <#{useremail}>"
     end
   end
