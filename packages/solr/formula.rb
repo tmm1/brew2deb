@@ -1,6 +1,6 @@
 class Solr < DebianFormula
   homepage 'http://lucene.apache.org/solr/'
-  url 'http://www.eng.lsu.edu/mirrors/apache/lucene/solr/3.3.0/apache-solr-3.3.0.tgz'
+  url 'http://www.apache.org/dist/lucene/solr/3.3.0/apache-solr-3.3.0.tgz'
   md5 '048e2aa7e16358600fa5fe3570b90018'
 
   name 'solr'
@@ -9,10 +9,10 @@ class Solr < DebianFormula
   description 'Enterprise search platform'
 
   build_depends \
-    'sun-java6-jdk'
+    'sun-java6-jdk | default-jdk'
 
   depends \
-    'sun-java6-jre'
+    'sun-java6-jre | default-jre'
 
   def build
     warfile = File.expand_path('example/webapps/solr.war')
