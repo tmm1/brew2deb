@@ -151,11 +151,38 @@ class DebianFormula < Formula
     f = new
 
     unless RUBY_PLATFORM =~ /darwin/
-      # Check for build deps.
-      system '/usr/bin/dpkg-checkbuilddeps', '-d', f.class.build_depends.join(', '), '/dev/null'
-      if $? != 0
-        f.send :onoe, 'Missing build dependencies.'
+      unless File.exists?('/usr/bin/dpkg-checkbuilddeps') and File.exists?('/usr/lib/pbuilder/pbuilder-satisfydepends')
+        f.send :onoe, "Development tools not found (apt-get install dpkg-dev pbuilder)"
         exit(1)
+      end
+
+      # Check for build deps.
+      f.send :ohai, 'Checking for dependenies.'
+      build_deps = f.class.build_depends.join(', ')
+
+      system '/usr/bin/dpkg-checkbuilddeps', '-d', build_deps, '/dev/null'
+      if $? != 0
+        File.open('/tmp/brew2deb-deps.control','w') do |control|
+          control.puts <<CONTROL
+Source: mypackage
+Maintainer: me@me.com
+Build-Depends: #{build_deps}
+
+Package: mypackage
+Architecture: any
+Description: ohai
+CONTROL
+        end
+
+        f.send :onoe, "Missing build dependencies. Run one of the following:"
+        deps = `/usr/bin/dpkg-checkbuilddeps -d #{build_deps.dump} /dev/null 2>&1`.strip
+        to_install = deps.split(':',3).last.gsub(/\([^)]*\)/,'').gsub(/\|\s[^\s]*/,'')
+        f.send :onoe, "  sudo apt-get install #{to_install.split.join(' ')}"
+        f.send :onoe, "  sudo /usr/lib/pbuilder/pbuilder-satisfydepends --control /tmp/brew2deb-deps.control"
+        exit(1)
+
+        # system 'sudo', '/usr/lib/pbuilder/pbuilder-satisfydepends', '--control', '/tmp/brew2deb-deps.control'
+        # exit(1) if $? != 0
       end
     end
 
