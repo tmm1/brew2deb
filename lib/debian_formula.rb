@@ -394,12 +394,23 @@ class DebianSourceFormula < DebianFormula
     'devscripts',
     'dpkg-dev'
 
+  def stage
+    FileUtils.rm_rf builddir if File.exists?(builddir)
+    super
+  end
+
   def build
     ENV['DEBEMAIL'] = maintainer
     if ver = self.class.version
       safe_system 'dch', '-v', ver, 'brew2deb package'
     end
     safe_system 'dpkg-buildpackage', '-rfakeroot', '-us', '-uc'
+  rescue RuntimeError => e
+    if e.message =~ /while executing/
+      onoe 'Build failed. Try: sudo /usr/lib/pbuilder/pbuilder-satisfydepends --control tmp-build/*/debian/control'
+    else
+      raise e
+    end
   end
 
   def install
