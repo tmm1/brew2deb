@@ -1,5 +1,5 @@
 class Git < DebianFormula
-  url 'http://kernel.org/pub/software/scm/git/git-1.7.5.4.tar.bz2'
+  url 'http://pkgs.fedoraproject.org/repo/pkgs/git/git-1.7.5.4.tar.bz2/4985b774db84d3bbcc2b8d90952552a3/git-1.7.5.4.tar.bz2'
   md5 '4985b774db84d3bbcc2b8d90952552a3'
   homepage 'http://git-scm.com'
 
@@ -17,7 +17,8 @@ class Git < DebianFormula
     'subversion',
     'libsvn-perl | libsvn-core-perl',
     'unzip',
-    'gettext'
+    'gettext',
+    'libssl-dev'
 
   depends \
     'perl-modules',
