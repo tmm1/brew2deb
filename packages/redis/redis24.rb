@@ -6,4 +6,8 @@ class Redis2
 
   name 'redis-server'
   version '2.4.4+github1'
+
+  def patches
+    nil
+  end
 end

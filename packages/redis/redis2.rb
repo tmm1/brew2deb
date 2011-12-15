@@ -14,6 +14,10 @@ class Redis2 < DebianFormula
   config_files \
     '/etc/redis/redis.conf'
 
+  def patches
+    'fix-link-ordering.patch'
+  end
+
   def build
     make
 
