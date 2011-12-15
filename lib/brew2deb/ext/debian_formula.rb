@@ -174,7 +174,6 @@ class DebianFormula < Formula
         '-C', destdir,
         '--maintainer', maintainer,
         '--category', self.class.section,
-        '--architecture', 'i386'
       ]
 
       opts += [
