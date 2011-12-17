@@ -1,14 +1,17 @@
 require 'base'
 
 class MRI < Ruby
-  url 'ftp://ftp.ruby-lang.org/pub/ruby/1.8/ruby-1.8.7-p330.tar.gz'
+  url 'ftp://ftp.ruby-lang.org/pub/ruby/1.8/ruby-1.8.7-p352.tar.gz'
   homepage 'http://www.ruby-lang.org/'
-  md5 '50a49edb787211598d08e756e733e42e'
+  md5 '0c33f663a10a540ea65677bb755e57a7'
 
-  name 'ruby-mri'
+  name 'rbenv-1.8.7-p352'
   section 'interpreters'
-  version '1.8.7-p330'
+  version '1.0.0'
   description 'The MRI Ruby virtual machine'
+
+  depends 'rbenv'
+  provides! 'rbenv-1.8', 'rbenv-1.8.7'
 
   build_depends \
     'autoconf',

@@ -2,13 +2,15 @@ require 'base'
 
 class Rubinius < Ruby
   homepage 'http://rubini.us/'
-  url 'http://asset.rubini.us/rubinius-1.2.3-20110315.tar.gz', :as => 'rubinius-1.2.3.tar.gz'
-  md5 '9782dab18c2dd440af6b76e8eb5bc0f0'
+  url 'http://asset.rubini.us/rubinius-1.2.4-20110705.tar.gz', :as => 'rubinius-1.2.4.tar.gz'
+  md5 '403c777d19b3553e9cb36701fe002c5e'
 
-  name 'ruby-rbx'
+  name 'rbenv-rbx-1.2.4'
   section 'interpreters'
-  version '1.2.3'
+  version '1.0.0'
   description 'The Rubinius Ruby virtual machine'
+
+  provides! 'rbenv-rbx'
 
   def build
     configure :prefix => prefix, :skip_system => true
@@ -16,7 +18,27 @@ class Rubinius < Ruby
   end
 
   def install
+    prefix.mkpath
     ENV['FAKEROOT'] = destdir
     sh 'rake', 'install'
   end
+
+  def install_rubygems
+    # bundled with rbx
+  end
+  alias install_rake install_rubygems
+
+  def install_bundler
+    # not working =(
+  end
+
+  # def rubylib
+  #   ENV['RUBYLIB'] = prefix/'lib'
+  #   ENV['RBX_RUNTIME'] = prefix/'runtime'
+  #   super
+  # end
+
+  # def install_gem(name)
+  #   sh prefix/'bin/rbx', '-S', 'gem', 'install', '--no-ri', '--no-rdoc', name
+  # end
 end

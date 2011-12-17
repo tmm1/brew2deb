@@ -2,7 +2,12 @@ class Ruby < DebianFormula
   section 'interpreters'
 
   source 'http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz'
-  source 'https://rubygems.org/downloads/bundler-1.0.15.gem'
+  source 'https://rubygems.org/downloads/bundler-1.0.21.gem'
+  source 'https://rubygems.org/downloads/rake-0.9.2.2.gem'
+
+  def prefix
+    current_pathname_for("usr/share/rbenv/versions/#{self.class.name.gsub('rbenv-','')}")
+  end
 
   def post_install
     # clean up environment
@@ -13,42 +18,62 @@ class Ruby < DebianFormula
 
     # paths to installed bins
     install_rubygems
+    install_rake
     install_bundler
   end
 
   def install_rubygems
-    ruby = prefix/'bin/ruby'
-    gem = prefix/'bin/gem'
-
-    # setup RUBYLIB
-    rubylib = `#{ruby} -e "puts $:.join(':')"`.strip
-    raise unless $?.exitstatus == 0
-
-    pre = prefix.to_s.gsub(destdir, '')
-    ENV['RUBYLIB'] = rubylib.gsub(pre, prefix)
+    setup_rubylib
 
     # install rubygems
     chdir(builddir/'rubygems-1.6.2') do
-      sh ruby, 'setup.rb', '--no-ri', '--no-rdoc'
+      sh prefix/'bin/ruby', 'setup.rb', '--no-ri', '--no-rdoc'
     end
+
+    fix_shebangs 'gem'
+  end
+
+  def install_rake
+    setup_rubylib
+
+    install_gem builddir/'rake-0.9.2.2.gem'
+    fix_shebangs 'rake'
   end
 
   def install_bundler
-    ruby = prefix/'bin/ruby'
-    gem = prefix/'bin/gem'
-    # setup RUBYLIB
-    rubylib = `#{ruby} -e "puts $:.join(':')"`.strip
-    raise unless $?.exitstatus == 0
+    setup_rubylib
 
-    pre = prefix.to_s.gsub(destdir, '')
-    ENV['RUBYLIB'] = rubylib.gsub(pre, prefix)
+    install_gem builddir/'bundler-1.0.21.gem'
+    fix_shebangs 'bundle'
+  end
 
-    # install bundler
-    sh ruby, gem, 'install', '--no-ri', '--no-rdoc', builddir/'bundler-1.0.15.gem'
+  def install_gem(name)
+    sh prefix/'bin/ruby', prefix/'bin/gem', 'install', '--no-ri', '--no-rdoc', name
+  end
 
-    # fix shebangs
-    %w[ gem bundle ].each do |exe|
+  def fix_shebangs(*args)
+    args.each do |exe|
       inreplace(prefix/'bin'/exe, destdir, '')
     end
+  end
+
+  def setup_rubylib
+    ENV.delete 'RUBYLIB'
+    pre = prefix.to_s.gsub(destdir, '')
+    ENV['RUBYLIB'] = rubylib.gsub(pre, prefix)
+  end
+
+  def rubylib
+    rubylib = `#{prefix/'bin/ruby'} -e "puts $:.join(':')"`.strip
+    raise unless $?.exitstatus == 0
+    rubylib
+  end
+
+  def postinst
+    "
+      #!/bin/sh
+      set -e
+      /usr/bin/rbenv rehash
+    ".ui
   end
 end
