@@ -15,13 +15,13 @@ class MRI < Ruby
 
   build_depends \
     'autoconf',
-    'libreadline5-dev',
+    'libreadline6-dev | libreadline5-dev',
     'bison',
     'zlib1g-dev',
     'libssl-dev'
 
   depends \
-    'libreadline5',
+    'libreadline6 | libreadline5',
     'zlib1g',
     'openssl'
 
