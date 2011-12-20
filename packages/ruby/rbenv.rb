@@ -13,7 +13,7 @@ class Rbenv < DebianFormula
   end
 
   def install
-    (share/'rbenv').install Dir['*']
+    (share/'rbenv').install Dir['*'].sort.reverse
     (destdir/'usr/local/bin/rbenv').mkpath
     (prefix/'bin').mkpath
     ln_s '../share/rbenv/bin/rbenv', prefix/'bin/rbenv'
