@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github8'
+  version '1:1.7.5.4-1+github9'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -41,6 +41,9 @@ class Git < DebianFormula
 
       # eliminate duplicate .have refs
       'patches/remove-duplicate-dot-have-lines.patch',
+
+      # allow turning off .have lines entirely
+      'patches/receive-pack-advertise-alternates.patch',
 
       # speed up git-fetch with large number of refs
       'patches/git-fetch-performance.patch',
