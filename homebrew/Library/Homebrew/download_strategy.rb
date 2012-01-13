@@ -1,3 +1,5 @@
+class DownloadError < StandardError; end
+
 class AbstractDownloadStrategy
   def initialize url, name, version, specs
     @url=url
@@ -86,7 +88,11 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
     case magic_bytes
     when /^PK\003\004/ # .zip archive
       quiet_safe_system '/usr/bin/unzip', {:quiet_flag => '-qq'}, @tarball_path
-      chdir
+      begin
+        chdir
+      rescue DownloadError
+        # some zip files don't have encompasing directory
+      end
     when /^\037\213/, /^BZh/, /^\037\235/  # gzip/bz2/compress compressed
       # TODO check if it's really a tar archive
       safe_system 'tar', 'xf', @tarball_path
@@ -134,7 +140,7 @@ private
             Dir.chdir(dir)
             true
           end
-        end or raise "Could not find source directory for #{File.basename @tarball_path}"
+        end or raise DownloadError, "Could not find source directory for #{File.basename @tarball_path}"
     end
   end
 
