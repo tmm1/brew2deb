@@ -12,6 +12,7 @@ set -e
 JAVA_OPTS="
   -Xms512m
   -Xmx1024m
+  -Djava.io.tmpdir=/var/tmp
 "
 
-exec java $JAVA_OPTS -jar /usr/share/logstash/logstash-1.0.17-monolithic.jar "$@"
+exec java $JAVA_OPTS -jar /usr/share/logstash/logstash-1.1.0-monolithic.jar "$@"
