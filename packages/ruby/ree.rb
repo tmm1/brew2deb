@@ -2,10 +2,10 @@ require 'mri'
 
 class REE < MRI
   homepage 'http://www.rubyenterpriseedition.com/'
-  url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2011.03.tar.gz'
-  md5 '038604ce25349e54363c5df9cd535ec8'
+  url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2012.01.tar.gz'
+  md5 'adb9e52da7175da8c6f1658a166d6f59'
 
-  name 'rbenv-ree-1.8.7-2011.03'
+  name 'rbenv-ree-1.8.7-2012.01'
   version '1.0.1'
   description 'The REE Ruby virtual machine'
 
