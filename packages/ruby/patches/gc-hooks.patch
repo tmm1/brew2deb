@@ -1,11 +1,20 @@
 diff --git a/gc.c b/gc.c
-index 4bfa65d..3b57950 100644
+index 6381eb1..487ee60 100644
 --- a/source/gc.c
 +++ b/source/gc.c
-@@ -192,6 +192,67 @@ static void run_final();
+@@ -192,6 +192,76 @@ static void run_final();
  static VALUE nomem_error;
  static void garbage_collect();
  
++/* likely */
++#if __GNUC__ >= 3
++#define LIKELY(x)   (__builtin_expect((x), 1))
++#define UNLIKELY(x) (__builtin_expect((x), 0))
++#else /* __GNUC__ >= 3 */
++#define LIKELY(x)   (x)
++#define UNLIKELY(x) (x)
++#endif /* __GNUC__ >= 3 */
++
 +typedef struct gc_event_hook {
 +    rb_gc_event_hook_func_t func;
 +    rb_gc_event_t events;
@@ -16,17 +25,17 @@ index 4bfa65d..3b57950 100644
 +
 +#define EXEC_GC_EVENT_HOOK(event, obj) \
 +    do { \
-+ rb_gc_event_hook_t *hook = gc_event_hooks; \
++	rb_gc_event_hook_t *hook = gc_event_hooks; \
 +        rb_gc_event_hook_func_t hook_func; \
 +        rb_gc_event_t events; \
-+ \
-+ while (hook) { \
++	\
++	while (hook) { \
 +            hook_func = hook->func; \
 +            events = hook->events; \
 +            hook = hook->next; \
-+     if (events & event) \
-+   (*hook_func)(event, obj); \
-+ } \
++	    if (events & event) \
++		(*hook_func)(event, obj); \
++	} \
 +    } while (0)
 +
 +void
@@ -52,98 +61,64 @@ index 4bfa65d..3b57950 100644
 +    prev = NULL;
 +    hook = gc_event_hooks;
 +    while (hook) {
-+ if (hook->func == func) {
-+     if (prev) {
-+   prev->next = hook->next;
-+     }
-+     else {
-+   gc_event_hooks = hook->next;
-+     }
-+     xfree(hook);
-+     return 0;
-+ }
-+ prev = hook;
-+ hook = hook->next;
++	if (hook->func == func) {
++	    if (prev) {
++		prev->next = hook->next;
++	    }
++	    else {
++		gc_event_hooks = hook->next;
++	    }
++	    xfree(hook);
++	    return 0;
++	}
++	prev = hook;
++	hook = hook->next;
 +    }
 +    return -1;
 +}
  
  NORETURN(void rb_exc_jump _((VALUE)));
  
-@@ -1005,6 +1066,7 @@ rb_newobj()
+@@ -1008,6 +1078,9 @@ rb_newobj()
  #endif
      live_objects++;
      allocated_objects++;
-+    EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_NEWOBJ, obj);
++    if (UNLIKELY(gc_event_hooks != NULL)) {
++      EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_NEWOBJ, obj);
++    }
      return obj;
  }
  
-@@ -1888,6 +1950,7 @@ static int
+@@ -1893,6 +1966,9 @@ static int
  obj_free(obj)
      VALUE obj;
  {
-+    EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_OBJFREE, obj);
++    if (UNLIKELY(gc_event_hooks != NULL)) {
++      EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_OBJFREE, obj);
++    }
      switch (BUILTIN_TYPE(obj)) {
        case T_NIL:
        case T_FIXNUM:
-@@ -2186,6 +2249,7 @@ garbage_collect()
+@@ -2191,6 +2267,9 @@ garbage_collect()
    /* This assumes that all registers are saved into the jmp_buf (and stack) */
    rb_setjmp(save_regs_gc_mark);
  
-+  EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_START, Qnil);
++  if (UNLIKELY(gc_event_hooks != NULL)) {
++    EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_START, Qnil);
++  }
  #if STACK_WIPE_SITES & 0x400
  # ifdef nativeAllocA
    if (__stack_past (top, stack_limit)) {
-@@ -2206,6 +2270,7 @@ garbage_collect()
+@@ -2211,6 +2290,9 @@ garbage_collect()
  #else
    garbage_collect_0(top);
  #endif
-+  EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_END, Qnil);
++  if (UNLIKELY(gc_event_hooks != NULL)) {
++    EXEC_GC_EVENT_HOOK(RUBY_GC_EVENT_END, Qnil);
++  }
  }
  
  void
-@@ -3036,6 +3101,33 @@ rb_gc_set_copy_on_write_friendly(VALUE self, VALUE val)
- }
- 
- /* call-seq:
-+ *  ObjectSpace.free_slots => number
-+ *
-+ * Returns the count of object slots available for new objects. This goes
-+ * after the garbage collector runs.
-+ */
-+static
-+VALUE os_free_slots(VALUE self)
-+{
-+  unsigned long free_slots = 0;
-+  int i;
-+
-+  for (i = 0; i < heaps_used; i++) {
-+    RVALUE *p, *pend;
-+    p = heaps[i].slot;
-+    pend = p + heaps[i].limit;
-+
-+    for (;p < pend; p++) {
-+      if (p->as.basic.flags == 0) {
-+        free_slots++;
-+      }
-+    }
-+  }
-+
-+  return ULONG2NUM(free_slots);
-+}
-+
-+/* call-seq:
-  *  ObjectSpace.live_objects => number
-  *
-  * Returns the count of objects currently allocated in the system. This goes
-@@ -3112,6 +3204,7 @@ Init_GC()
-     rb_define_module_function(rb_mObSpace, "remove_finalizer", rm_final, 1);
-     rb_define_module_function(rb_mObSpace, "finalizers", finals, 0);
-     rb_define_module_function(rb_mObSpace, "call_finalizer", call_final, 1);
-+    rb_define_module_function(rb_mObSpace, "free_slots", os_free_slots, 0);
-     rb_define_module_function(rb_mObSpace, "live_objects", os_live_objects, 0);
-     rb_define_module_function(rb_mObSpace, "allocated_objects", os_allocated_objects, 0);
- 
 diff --git a/node.h b/node.h
 index 3e60603..af7a3fd 100644
 --- a/source/node.h
@@ -168,4 +143,3 @@ index 3e60603..af7a3fd 100644
  #if defined(HAVE_GETCONTEXT) && defined(HAVE_SETCONTEXT)
  #include <ucontext.h>
  #define USE_CONTEXT
-

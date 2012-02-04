@@ -1,0 +1,71 @@
+diff --git a/gc.c b/gc.c
+index 4bfa65d..6381eb1 100644
+--- a/source/gc.c
++++ b/source/gc.c
+@@ -195,6 +195,7 @@ static void garbage_collect();
+ 
+ NORETURN(void rb_exc_jump _((VALUE)));
+ 
++static unsigned long free_slots = 0;
+ static unsigned long live_objects = 0;
+ unsigned long rb_os_live_objects()
+ { return live_objects; }
+@@ -976,6 +977,7 @@ add_heap()
+ 	p->as.free.next = freelist;
+ 	freelist = p;
+ 	p++;
++	free_slots++;
+     }
+ }
+ #define RANY(o) ((RVALUE*)(o))
+@@ -998,6 +1000,7 @@ rb_newobj()
+ 
+     obj = (VALUE)freelist;
+     freelist = freelist->as.free.next;
++    free_slots--;
+     MEMZERO((void*)obj, RVALUE, 1);
+ #ifdef GC_DEBUG
+     RANY(obj)->file = ruby_sourcefile;
+@@ -1631,6 +1634,7 @@ add_freelist(p)
+     if (p->as.free.next != freelist)
+ 	p->as.free.next = freelist;
+     freelist = p;
++    free_slots++;
+ }
+ 
+ static void
+@@ -1756,6 +1760,7 @@ gc_sweep()
+     }
+ 
+     freelist = 0;
++    free_slots = 0;
+     final_list = deferred_final_list;
+     deferred_final_list = 0;
+     for (i = 0; i < heaps_used; i++) {
+@@ -3036,6 +3041,18 @@ rb_gc_set_copy_on_write_friendly(VALUE self, VALUE val)
+ }
+ 
+ /* call-seq:
++ *  ObjectSpace.free_slots => number
++ *
++ * Returns the count of object slots available for new objects. This goes
++ * after the garbage collector runs.
++ */
++static
++VALUE os_free_slots(VALUE self)
++{
++  return ULONG2NUM(free_slots);
++}
++
++/* call-seq:
+  *  ObjectSpace.live_objects => number
+  *
+  * Returns the count of objects currently allocated in the system. This goes
+@@ -3112,6 +3129,7 @@ Init_GC()
+     rb_define_module_function(rb_mObSpace, "remove_finalizer", rm_final, 1);
+     rb_define_module_function(rb_mObSpace, "finalizers", finals, 0);
+     rb_define_module_function(rb_mObSpace, "call_finalizer", call_final, 1);
++    rb_define_module_function(rb_mObSpace, "free_slots", os_free_slots, 0);
+     rb_define_module_function(rb_mObSpace, "live_objects", os_live_objects, 0);
+     rb_define_module_function(rb_mObSpace, "allocated_objects", os_allocated_objects, 0);
+ 

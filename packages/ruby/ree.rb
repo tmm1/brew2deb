@@ -6,7 +6,7 @@ class REE < MRI
   md5 'adb9e52da7175da8c6f1658a166d6f59'
 
   name 'rbenv-ree-1.8.7-2012.01+github'
-  version '1.0.3'
+  version '1.0.6'
   description 'The REE Ruby virtual machine'
 
   build_depends \
@@ -19,7 +19,10 @@ class REE < MRI
   provides! 'rbenv-ree'
 
   def patches
-    'patches/gc-hooks.patch'
+    [
+      'patches/gc-free-slots.patch',
+      'patches/gc-hooks.patch'
+    ]
   end
 
   def build
