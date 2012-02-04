@@ -5,8 +5,8 @@ class REE < MRI
   url 'http://rubyenterpriseedition.googlecode.com/files/ruby-enterprise-1.8.7-2012.01.tar.gz'
   md5 'adb9e52da7175da8c6f1658a166d6f59'
 
-  name 'rbenv-ree-1.8.7-2012.01'
-  version '1.0.1'
+  name 'rbenv-ree-1.8.7-2012.01+github'
+  version '1.0.2'
   description 'The REE Ruby virtual machine'
 
   build_depends \
@@ -17,6 +17,10 @@ class REE < MRI
     'google-perftools (>= 1.8)'
 
   provides! 'rbenv-ree'
+
+  def patches
+    'patches/gc-hooks.patch'
+  end
 
   def build
   end
