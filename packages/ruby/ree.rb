@@ -6,7 +6,7 @@ class REE < MRI
   md5 'adb9e52da7175da8c6f1658a166d6f59'
 
   name 'rbenv-ree-1.8.7-2012.01+github'
-  version '1.0.2'
+  version '1.0.3'
   description 'The REE Ruby virtual machine'
 
   build_depends \
