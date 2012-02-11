@@ -282,10 +282,15 @@ CONTROL
         Dir.chdir tmpdir do
           FileUtils.mkdir_p 'debian'
           File.open('debian/control','w'){ |f| f.puts "Source: shlibs\nPackage: shlibs" }
-          safe_system 'dh_shlibdeps', "-P#{destdir}"
+          out = `dh_shlibdeps -P#{destdir} 2>&1`
+          if $?.exitstatus != 0
+            opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
+          end
 
-          File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
-            opts += ["--depends", dep]
+          if File.exists?('debian/substvars')
+            File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
+              opts += ["--depends", dep]
+            end
           end
         end
       ensure
