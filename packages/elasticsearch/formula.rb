@@ -1,10 +1,12 @@
 class ElasticSearch < DebianFormula
-  url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.18.4.tar.gz'
+  url 'http://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.19.0.RC2.tar.gz'
   homepage 'http://www.elasticsearch.org'
-  md5 '4a641cfbaf4ec79b802171dc9f35b21e'
+  md5 '47bda383a7ed66bcdb54b435d93b1f44'
+
+  source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
   name 'elasticsearch'
-  version '0.18.4+github2'
+  version '0.19.0+github1'
   section 'database'
   description 'You know, for Search'
 
@@ -53,6 +55,8 @@ class ElasticSearch < DebianFormula
     (share/'elasticsearch').install Dir['{bin/elasticsearch.in.sh,lib,plugins,*.*}']
     ln_s '../../../etc/elasticsearch', share/'elasticsearch/config'
     (etc/'elasticsearch').install Dir['config/*']
+
+    (share/'share/elasticsearch/lib/lucene-highlighter-3.5.0.jar').install builddir/'lucene-highlighter-3.6-SNAPSHOT.jar'
 
     %w( run log/elasticsearch lib/elasticsearch ).each { |path| (var+path).mkpath }
   end
