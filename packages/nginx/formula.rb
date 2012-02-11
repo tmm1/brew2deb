@@ -17,11 +17,6 @@ class Nginx < DebianFormula
     'zlib1g-dev',
     'libssl-dev'
 
-  depends \
-    'libpcre3',
-    'zlib1g',
-    'libssl0.9.8'
-
   provides  'nginx-full', 'nginx-common'
   replaces  'nginx-full', 'nginx-common'
   conflicts 'nginx-full', 'nginx-common'

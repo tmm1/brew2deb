@@ -276,6 +276,22 @@ CONTROL
         end
       end
 
+      # Calculate shared library dependencies.
+      begin
+        tmpdir = Dir.mktmpdir('brew2deb-shlibs')
+        Dir.chdir tmpdir do
+          FileUtils.mkdir_p 'debian'
+          File.open('debian/control','w'){ |f| f.puts "Source: shlibs\nPackage: shlibs" }
+          safe_system 'dh_shlibdeps', "-P#{destdir}"
+
+          File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
+            opts += ["--depends", dep]
+          end
+        end
+      ensure
+        FileUtils.rm_rf tmpdir
+      end
+
       opts << '.'
 
       safe_system File.expand_path('../../fpm/bin/fpm', __FILE__), *opts
@@ -392,7 +408,8 @@ class DebianSourceFormula < DebianFormula
   build_depends \
     'fakeroot',
     'devscripts',
-    'dpkg-dev'
+    'dpkg-dev',
+    'debhelper'
 
   def stage
     FileUtils.rm_rf builddir if File.exists?(builddir)
