@@ -6,9 +6,10 @@ class Nginx < DebianFormula
   source 'https://github.com/nickh/chunkin-nginx-module.git', :sha => '140d61c3'
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
   source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2.0'
+  source 'https://github.com/yaoweibin/nginx_syslog_patch.git', :sha => 'afeea6d'
 
   name 'nginx'
-  version '1.0.12+github1'
+  version '1.0.12+github2'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
@@ -28,7 +29,7 @@ class Nginx < DebianFormula
 
   def patches
     {:p0 => 'request_start_variable.patch',
-     :p1 => 'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch'}
+     :p1 => ['https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch', workdir/'src/nginx_syslog_patch.git/syslog_1.0.6.patch']}
   end
 
   def build
@@ -44,6 +45,7 @@ class Nginx < DebianFormula
       "--add-module=#{builddir/'chunkin-nginx-module.git'}",
       "--add-module=#{builddir/'headers-more-nginx-module.git'}",
       "--add-module=#{builddir/'nginx-upload-module.git'}",
+      "--add-module=#{builddir/'nginx_syslog_patch.git'}",
 
       :prefix => prefix,
 
