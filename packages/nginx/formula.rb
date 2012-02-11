@@ -1,14 +1,14 @@
 class Nginx < DebianFormula
   homepage 'http://nginx.org/'
-  url 'http://nginx.org/download/nginx-1.0.4.tar.gz'
-  md5 'd23f6e6b07b57ac061e790b1ed64bb98'
+  url 'http://nginx.org/download/nginx-1.0.12.tar.gz'
+  md5 'd0ceefeb2a68ecb19e78ee894a5b52a3'
 
   source 'https://github.com/agentzh/chunkin-nginx-module.git', :sha => '0654f34'
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
   source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2.0'
 
   name 'nginx'
-  version '1.0.4+github5'
+  version '1.0.12+github1'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
