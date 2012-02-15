@@ -59,6 +59,7 @@ class DebianFormula < Formula
 
   build_depends \
     'build-essential',
+    'debhelper',
     'libc6-dev',
     'patch',
     'curl'
@@ -413,8 +414,7 @@ class DebianSourceFormula < DebianFormula
   build_depends \
     'fakeroot',
     'devscripts',
-    'dpkg-dev',
-    'debhelper'
+    'dpkg-dev'
 
   def stage
     FileUtils.rm_rf builddir if File.exists?(builddir)
