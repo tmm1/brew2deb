@@ -1,10 +1,10 @@
 class Zeromq < DebianFormula
   homepage 'http://www.zeromq.org/'
-  url 'http://download.zeromq.org/zeromq-2.1.7.tar.gz'
-  md5 '7d3120f8a8fb913a7e55c57c6eb024f3'
+  url 'http://download.zeromq.org/zeromq-2.1.11.tar.gz'
+  md5 'f0f9fd62acb1f0869d7aa80379b1f6b7'
 
   name 'zeromq'
-  version '2.1.7'
+  version '2.1.11'
   section 'libs'
   description '0MQ: The Intelligent Transport Layer'
 
