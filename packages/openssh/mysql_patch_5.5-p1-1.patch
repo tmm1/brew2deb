@@ -438,7 +438,7 @@ new file mode 100644
 index 0000000..853f3cb
 --- /dev/null
 +++ b/mysql-keys.c
-@@ -0,0 +1,194 @@
+@@ -0,0 +1,196 @@
 +/*
 + * Author: Matt Palmer <mpalmer@engineyard.com>
 + * Copyright (C) 2008 Engineyard Inc.
@@ -502,6 +502,8 @@ index 0000000..853f3cb
 +	}
 +	
 +	opts->mysql_handle = mysql_init(NULL);
++       unsigned int connect_timeout = 1;
++       mysql_options(opts->mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
 +	
 +	if (!mysql_real_connect(opts->mysql_handle,
 +	                        opts->mysql_dbhost,
