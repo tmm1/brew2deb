@@ -59,6 +59,7 @@ class DebianFormula < Formula
 
   build_depends \
     'build-essential',
+    'fakeroot',
     'debhelper',
     'libc6-dev',
     'patch',
@@ -283,7 +284,7 @@ CONTROL
         Dir.chdir tmpdir do
           FileUtils.mkdir_p 'debian'
           File.open('debian/control','w'){ |f| f.puts "Source: shlibs\nPackage: shlibs" }
-          out = `dh_shlibdeps -P#{destdir} 2>&1`
+          out = `fakeroot dh_shlibdeps -P#{destdir} -pshlibs 2>&1`
           if $?.exitstatus != 0
             opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
           end
@@ -296,6 +297,7 @@ CONTROL
         end
       ensure
         FileUtils.rm_rf tmpdir
+        FileUtils.rm_rf destdir/'DEBIAN'
       end
 
       opts << '.'
@@ -412,7 +414,6 @@ end
 
 class DebianSourceFormula < DebianFormula
   build_depends \
-    'fakeroot',
     'devscripts',
     'dpkg-dev'
 
