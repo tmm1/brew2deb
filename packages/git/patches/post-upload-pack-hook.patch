@@ -24,10 +24,10 @@ index ce5cbbe..851558f 100644
  	return 0;
  }
  
-+static void run_post_upload_pack_hook(int create_full_pack)
++static void run_post_upload_pack_hook(int is_clone)
 +{
 +	const char *fetch_type;
-+	fetch_type = (create_full_pack) ? "clone" : "fetch";
++	fetch_type = (is_clone) ? "clone" : "fetch";
 +	run_hook(NULL, "post-upload-pack", fetch_type, NULL);
 +}
 +
@@ -39,7 +39,7 @@ index ce5cbbe..851558f 100644
  	if (use_sideband)
  		packet_flush(1);
 +
-+	run_post_upload_pack_hook(create_full_pack);
++	run_post_upload_pack_hook(!have_obj.nr);
  	return;
  
   fail:
