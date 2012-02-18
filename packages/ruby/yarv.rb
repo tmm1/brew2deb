@@ -15,9 +15,6 @@ class YARV < MRI
   build_depends \
     'libyaml-dev'
 
-  depends \
-    'libyaml-0-1'
-
   def configure(opts={})
     super opts.merge(:disable_install_rdoc => true)
   end
