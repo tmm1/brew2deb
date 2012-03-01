@@ -6,7 +6,7 @@ class GeoIPCityDB < DebianFormula
   md5 'aa55d9326bd13d81ae32ef361bdd2926'
 
   name 'geoip-city'
-  version VERSION.sub('GeoIP-','').gsub('_','.')
+  version VERSION.sub('GeoIP-','').gsub('_','.') + '+github1'
   description 'City Database for use with the GeoIP library'
 
   depends 'libgeoip-dev', 'libgeoip1'
@@ -15,8 +15,8 @@ class GeoIPCityDB < DebianFormula
   end
 
   def install
-    (share/'geoip').mkpath
-    (share/'geoip').install "../#{VERSION}"
-    (share/'geoip/GeoIPCity.dat').make_relative_symlink(share/"geoip/#{VERSION}/GeoIPCity.dat")
+    (share/'GeoIP').mkpath
+    (share/'GeoIP').install "../#{VERSION}"
+    (share/'GeoIP/GeoIPCity.dat').make_relative_symlink(share/"GeoIP/#{VERSION}/GeoIPCity.dat")
   end
 end
