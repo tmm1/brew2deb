@@ -283,14 +283,15 @@ CONTROL
         tmpdir = Dir.mktmpdir('brew2deb-shlibs')
         Dir.chdir tmpdir do
           FileUtils.mkdir_p 'debian'
-          File.open('debian/control','w'){ |f| f.puts "Source: shlibs\nPackage: shlibs" }
-          out = `fakeroot dh_shlibdeps -P#{destdir} -pshlibs 2>&1`
+          File.open('debian/control','w'){ |f| f.puts "Source: #{name}\nPackage: #{name}" }
+          out = `dpkg-gensymbols -P#{destdir} -p#{name} -v#{self.class.version} 2>&1 && fakeroot dh_shlibdeps -P#{destdir} -p#{name} 2>&1`
           if $?.exitstatus != 0
             opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
           end
 
           if File.exists?('debian/substvars')
             File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
+              next if dep =~ /^#{name} /
               opts += ["--depends", dep]
             end
           end
