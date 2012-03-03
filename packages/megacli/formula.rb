@@ -1,4 +1,5 @@
 class MegacliFormula < DebianFormula
+  homepage 'http://www.lsi.com/support/products/Pages/MegaRAIDSAS8480E.aspx'
   # download this manually (click through the EULA)
   url 'http://www.lsi.com/downloads/Public/MegaRAID%20Common%20Files/8.02.16_MegaCLI.zip'
   md5 '651f7250e0a64d94cafc08e4eb154740'
