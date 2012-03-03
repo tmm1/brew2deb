@@ -1,0 +1,67 @@
+--- a/configure.in	2012-02-27 10:02:18.000000000 -0800
++++ b/configure.in	2012-03-02 18:21:15.000000000 -0800
+@@ -380,7 +380,7 @@
+ 			    (yes|no) enable_libcoredumper=$withval;;
+ 			    (*) enable_libcoredumper=yes
+ 			      AM_CPPFLAGS="${AM_CPPFLAGS} -I${withval}/include"
+-			      AM_LDFLAGS="${AM_LDFLAGS} -I${withval}/lib"
++			      AM_LDFLAGS="${AM_LDFLAGS} -L${withval}/lib"
+ 			      libcoredumper_LD_LIBRARY_PATH="${withval}/lib"
+ 			    ;;
+ 			    esac], [enable_libunwind=no])
+@@ -396,7 +396,7 @@
+ 			    (yes|no) enable_libunwind=$withval;;
+ 			    (*) enable_libunwind=yes
+ 			      AM_CPPFLAGS="${AM_CPPFLAGS} -I${withval}/include"
+-			      AM_LDFLAGS="${AM_LDFLAGS} -I${withval}/lib"
++			      AM_LDFLAGS="${AM_LDFLAGS} -L${withval}/lib"
+ 			      libunwind_LD_LIBRARY_PATH="${withval}/lib"
+ 			    ;;
+ 			    esac], [enable_libunwind=no])
+@@ -533,7 +533,7 @@
+ dnl> End ARM
+ fi
+ 
+-AC_CHECK_LIB([sqlite3], [sqlite3_open])
++#AC_CHECK_LIB([sqlite3], [sqlite3_open])
+ 
+ dnl> Pattern matching
+ dnl>
+@@ -657,8 +657,8 @@
+ 
+ dnl> GeoIP (http://www.maxmind.com/)
+ GEOIP_TARGET=
+-AC_CHECK_LIB([GeoIP], [GeoIP_record_by_ipnum])
+-AC_HAVE_HEADERS(GeoIP.h)
++#AC_CHECK_LIB([GeoIP], [GeoIP_record_by_ipnum])
++#AC_HAVE_HEADERS(GeoIP.h)
+ 
+ if test ".${ac_cv_lib_GeoIP_GeoIP_record_by_ipnum}" = ".yes" &&
+    test ".${ac_cv_header_GeoIP_h}" = ".yes"; then
+@@ -688,7 +688,7 @@
+ fi
+ 
+ if test ".${ac_disable_python}" != ".yes"; then
+-  AC_CHECK_TOOL(PYTHON, python)
++#  AC_CHECK_TOOL(PYTHON, python)
+   if test "x$ac_cv_prog_ac_ct_PYTHON" = "xpython"; then
+     PYTHON_CONFIG_PATH=`which python-config`
+     if test "x$PYTHON_CONFIG_PATH" = "x"; then
+@@ -754,7 +754,7 @@
+ fi
+ 
+ PATH=$PATH:/usr/local/mysql/bin
+-AC_CHECK_TOOL(MYSQL, mysql_config)
++#AC_CHECK_TOOL(MYSQL, mysql_config)
+ dnl> echo "--> $ac_cv_prog_ac_ct_MYSQL"
+ if test "x$ac_cv_prog_ac_ct_MYSQL" = "xmysql_config"; then
+ #  MYSQLLIBS="`mysql_config --libs_r`|grep Usage"
+@@ -788,7 +788,7 @@
+ fi
+ 
+ PLUGINS=plugins
+-AC_DEFINE_UNQUOTED(ENABLE_PLUGINS, 1, [ Enable plugin support ])
++#AC_DEFINE_UNQUOTED(ENABLE_PLUGINS, 1, [ Enable plugin support ])
+ 
+ dnl>
+ AC_SUBST(VERSION)
