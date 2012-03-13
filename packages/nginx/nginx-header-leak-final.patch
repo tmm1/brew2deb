@@ -1,0 +1,118 @@
+commit c5ec40b337e9b317712a549f3e26d0205bfc2b6f
+Author: Aman Gupta <aman@tmm1.net>
+Date:   Mon Mar 12 20:14:52 2012 -0700
+
+    Fix information leak when proxied http header contains null byte.
+    
+    Given an upstream response header contains a null byte, such as:
+    
+      Locat\0ion: text\0AAAAAAAAAAAAAAA
+    
+    nginx will allocate enough memory to hold the header, but then uses
+    ngx_cpystrn() to copy data into h->key and h->value. Since ngx_cpystrn()
+    stops at the first null byte, the bytes in the destination after the
+    null byte remain uninitialized.
+    
+    With this patch, we only allocate ngx_strnlen() bytes for the key and
+    value, thus ignoring the null byte and everything after it.
+    
+    To replicate the broken behavior before this patch, configure an
+    upstream that returns the following response:
+    
+      HTTP/1.1 302 Found\r\n
+      Location: http://example.com/\000AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\r\n
+      \r\n
+    
+    Run nginx with a proxy_pass to this new upstream, and hit it with curl:
+    
+      $ curl -vv http://localhost/
+      * About to connect() to localhost port 80 (#0)
+      *   Trying 127.0.0.1... connected
+      * Connected to localhost (127.0.0.1) port 80 (#0)
+      > GET / HTTP/1.1
+      > User-Agent: curl/7.21.4 (universal-apple-darwin11.0) libcurl/7.21.4 OpenSSL/0.9.8r zlib/1.2.5
+      > Host: localhost
+      > Accept: */*
+      >
+      < HTTP/1.1 302 Found
+      < Server: nginx/1.0.13
+      < Date: Tue, 13 Mar 2012 02:12:31 GMT
+      < Transfer-Encoding: chunked
+      < Connection: keep-alive
+      < Location: http://example.com/??@??%LQ??PO?lo0P?
+    
+    The response will contain random data from other requests in place of
+    the AAAAAAA string.
+
+diff --git a/src/core/ngx_string.h b/src/core/ngx_string.h
+index 2b9c59a..d706cb3 100644
+--- a/src/core/ngx_string.h
++++ b/src/core/ngx_string.h
+@@ -58,6 +58,7 @@ void ngx_strlow(u_char *dst, u_char *src, size_t n);
+ 
+ #define ngx_strstr(s1, s2)  strstr((const char *) s1, (const char *) s2)
+ #define ngx_strlen(s)       strlen((const char *) s)
++#define ngx_strnlen(s, n)   strnlen((const char *) s, n)
+ 
+ #define ngx_strchr(s1, c)   strchr((const char *) s1, (int) c)
+ 
+diff --git a/src/http/modules/ngx_http_fastcgi_module.c b/src/http/modules/ngx_http_fastcgi_module.c
+index dd555d4..914ca2e 100644
+--- a/src/http/modules/ngx_http_fastcgi_module.c
++++ b/src/http/modules/ngx_http_fastcgi_module.c
+@@ -1431,8 +1431,8 @@ ngx_http_fastcgi_process_header(ngx_http_request_t *r)
+ 
+                 } else {
+ 
+-                    h->key.len = r->header_name_end - r->header_name_start;
+-                    h->value.len = r->header_end - r->header_start;
++                    h->key.len = ngx_strnlen(r->header_name_start, r->header_name_end - r->header_name_start);
++                    h->value.len = ngx_strnlen(r->header_start, r->header_end - r->header_start);
+ 
+                     h->key.data = ngx_pnalloc(r->pool,
+                                               h->key.len + 1 + h->value.len + 1
+diff --git a/src/http/modules/ngx_http_proxy_module.c b/src/http/modules/ngx_http_proxy_module.c
+index 64a853c..db4e8b7 100644
+--- a/src/http/modules/ngx_http_proxy_module.c
++++ b/src/http/modules/ngx_http_proxy_module.c
+@@ -1265,8 +1265,8 @@ ngx_http_proxy_process_header(ngx_http_request_t *r)
+ 
+             h->hash = r->header_hash;
+ 
+-            h->key.len = r->header_name_end - r->header_name_start;
+-            h->value.len = r->header_end - r->header_start;
++            h->key.len = ngx_strnlen(r->header_name_start, r->header_name_end - r->header_name_start);
++            h->value.len = ngx_strnlen(r->header_start, r->header_end - r->header_start);
+ 
+             h->key.data = ngx_pnalloc(r->pool,
+                                h->key.len + 1 + h->value.len + 1 + h->key.len);
+diff --git a/src/http/modules/ngx_http_scgi_module.c b/src/http/modules/ngx_http_scgi_module.c
+index 168f497..d97527e 100644
+--- a/src/http/modules/ngx_http_scgi_module.c
++++ b/src/http/modules/ngx_http_scgi_module.c
+@@ -885,8 +885,8 @@ ngx_http_scgi_process_header(ngx_http_request_t *r)
+ 
+             h->hash = r->header_hash;
+ 
+-            h->key.len = r->header_name_end - r->header_name_start;
+-            h->value.len = r->header_end - r->header_start;
++            h->key.len = ngx_strnlen(r->header_name_start, r->header_name_end - r->header_name_start);
++            h->value.len = ngx_strnlen(r->header_start, r->header_end - r->header_start);
+ 
+             h->key.data = ngx_pnalloc(r->pool,
+                                       h->key.len + 1 + h->value.len + 1
+diff --git a/src/http/modules/ngx_http_uwsgi_module.c b/src/http/modules/ngx_http_uwsgi_module.c
+index d608129..aeffb3f 100644
+--- a/src/http/modules/ngx_http_uwsgi_module.c
++++ b/src/http/modules/ngx_http_uwsgi_module.c
+@@ -933,8 +933,8 @@ ngx_http_uwsgi_process_header(ngx_http_request_t *r)
+ 
+             h->hash = r->header_hash;
+ 
+-            h->key.len = r->header_name_end - r->header_name_start;
+-            h->value.len = r->header_end - r->header_start;
++            h->key.len = ngx_strnlen(r->header_name_start, r->header_name_end - r->header_name_start);
++            h->value.len = ngx_strnlen(r->header_start, r->header_end - r->header_start);
+ 
+             h->key.data = ngx_pnalloc(r->pool,
+                                       h->key.len + 1 + h->value.len + 1

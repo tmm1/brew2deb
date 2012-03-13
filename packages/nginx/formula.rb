@@ -1,15 +1,15 @@
 class Nginx < DebianFormula
   homepage 'http://nginx.org/'
-  url 'http://nginx.org/download/nginx-1.0.12.tar.gz'
-  md5 'd0ceefeb2a68ecb19e78ee894a5b52a3'
+  url 'http://nginx.org/download/nginx-1.0.13.tar.gz'
+  md5 '58360774e4875e8fc4c4286448cb54d0'
 
   source 'https://github.com/nickh/chunkin-nginx-module.git', :sha => '140d61c3'
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
-  source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2.0'
+  source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2'
   source 'https://github.com/yaoweibin/nginx_syslog_patch.git', :sha => 'afeea6d'
 
   name 'nginx'
-  version '1.0.12+github3'
+  version '1.0.13+github3'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
@@ -29,12 +29,14 @@ class Nginx < DebianFormula
 
   def patches
     {:p0 => 'request_start_variable.patch',
-     :p1 => ['https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch', workdir/'src/nginx_syslog_patch.git/syslog_1.0.6.patch']}
+     :p1 => [
+       'nginx-header-leak-final.patch',
+       'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
+       workdir/'src/nginx_syslog_patch.git/syslog_1.0.6.patch'
+     ]}
   end
 
   def build
-    ENV['CFLAGS'] = '-Wno-unused-but-set-variable'
-
     configure \
       '--with-http_stub_status_module',
       '--with-http_ssl_module',
