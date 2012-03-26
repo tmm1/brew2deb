@@ -27,7 +27,8 @@ class AndroidSDK < DebianFormula
       #!/bin/sh
       set -e
 
-      /usr/share/android-sdk/tools/android update sdk --force --no-ui
+      /usr/share/android-sdk/tools/android update sdk --force --no-ui \
+        --filter platform,system-image,tool,platform-tool,doc,addon-google_apis-google-8,addon-google_apis-google-15
       find /usr/share/android-sdk -type d -print0 | xargs -0 chmod 755
     ".ui
   end
