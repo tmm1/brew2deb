@@ -1,18 +1,18 @@
 class BProbe < DebianFormula
   homepage 'https://boundary.com/'
-  url 'https://downloads.boundary.com/source/bprobe-1.0.0fi671.tar.gz'
-  md5 'c54ddcb36f2f51dd4d53ed2080e96c6d'
+  url 'https://downloads.boundary.com/source/bprobe-1.0.0fi736.tar.gz'
+  md5 '0fddff2144c8e2c91b54f71c71dd568c'
 
   source 'http://www.tcpdump.org/release/libpcap-1.2.1.tar.gz'
   source 'http://google-coredumper.googlecode.com/files/coredumper-1.2.1.tar.gz'
   source 'http://download.savannah.gnu.org/releases/libunwind/libunwind-1.0.1.tar.gz'
 
   name 'bprobe'
-  version '1.0.0-1fi671'
+  version '1.0.0-1fi736'
   description 'boundary IPFIX flow meter'
   section 'net'
 
-  build_depends 'autoconf', 'automake', 'autotools-dev', 'libtool', 'libssl-dev', 'libunwind7-dev (>= 0.99-0.2)'
+  build_depends 'autoconf', 'automake', 'autotools-dev', 'libtool', 'libssl-dev'
   config_files '/etc/default/bprobe', '/etc/bprobe/bprobe.defaults'
 
   def patches
@@ -30,7 +30,7 @@ class BProbe < DebianFormula
   end
 
   def build_bprobe
-    ENV['CFLAGS']  = "-ggdb3 -I#{unwind_root}/include -I#{coredumper_root}/include"
+    ENV['CFLAGS']  = "-ggdb3 -I#{pcap_root}/include -I#{unwind_root}/include -I#{coredumper_root}/include"
     ENV['LDFLAGS'] = "-Wl,-z,norelro -L#{unwind_root}/lib -L#{coredumper_root}/lib"
 
     sh './autogen.sh --noconfig'
