@@ -5,7 +5,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github10'
+  version '1:1.7.5.4-1+github28'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -59,6 +59,9 @@ class Git < DebianFormula
 
       # ignore invalid timezones
       'patches/tz-fsck-warning.patch',
+
+      # github/git#1: https://github.com/github/git/compare/git-stats.diff
+      'patches/git-stats.diff',
 
       # bug in git-patch-id with newline diff markers
       # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
