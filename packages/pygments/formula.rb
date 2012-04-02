@@ -1,13 +1,13 @@
 class Pygments < DebianFormula
-  url 'http://pypi.python.org/packages/source/P/Pygments/Pygments-1.4.tar.gz'
-  md5 'd77ac8c93a7fb27545f2522abe9cc462'
+  url 'http://pypi.python.org/packages/source/P/Pygments/Pygments-1.5.tar.gz'
+  md5 'ef997066cc9ee7a47d01fb4f3da0b5ff'
   homepage 'http://pygments.pocoo.org/'
   description 'syntax highlighting package written in Python'
   arch 'all'
 
   name 'python-pygments'
   section 'python'
-  version '1.4+github1'
+  version '1.5+github1'
 
   build_depends 'python', 'python-setuptools', 'python-dev'
   depends 'python', 'python-pkg-resources', 'python-support'
