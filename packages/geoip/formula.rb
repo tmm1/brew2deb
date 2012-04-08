@@ -1,9 +1,9 @@
 class GeoIPCityDB < DebianFormula
-  VERSION = "GeoIP-133_20120228"
+  VERSION = "GeoIP-133_20120327"
 
   homepage 'http://www.maxmind.com/app/city'
   url "#{VERSION}.tar.gz"
-  md5 'aa55d9326bd13d81ae32ef361bdd2926'
+  md5 '100f82fea1a6a12d5e8494dcb8c13305'
 
   name 'geoip-city'
   version VERSION.sub('GeoIP-','').gsub('_','.') + '+github1'
