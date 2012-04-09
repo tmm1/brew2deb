@@ -4,12 +4,13 @@ class Haproxy < DebianFormula
   md5 '0cd3b91812ff31ae09ec4ace6355e29e'
 
   name 'haproxy'
-  version '1.4.20+github5'
+  version '1.4.20+github6'
   section 'net'
   description 'The Reliable, High Performance TCP/HTTP Load Balancer'
 
   build_depends 'libpcre3-dev'
   config_files '/etc/haproxy/haproxy.cfg'
+  requires_user 'haproxy', :remove => false
 
   def patches
     'patches/send-proxy.patch'
