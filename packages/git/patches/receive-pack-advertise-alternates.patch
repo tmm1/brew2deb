@@ -64,9 +64,9 @@ index 0afb8b2..3f405df 100644
 +		sha1_array_for_each_unique(&sa, show_one_alternate_sha1, NULL);
 +		sha1_array_clear(&sa);
 +	}
+ 	sockstat_string("status", "show_ref");
  	for_each_ref(show_ref_cb, NULL);
  	if (!sent_capabilities)
- 		show_ref("capabilities^{}", null_sha1);
 -- 
 1.7.9.6.6.g6b3b56
 

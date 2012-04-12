@@ -39,9 +39,6 @@ class Git < DebianFormula
       # fire a hook on post-upload so we can track # of clones
       'patches/post-upload-pack-hook.patch',
 
-      # allow turning off .have lines entirely
-      'patches/receive-pack-advertise-alternates.patch',
-
       # fsckObjects doesn't show user warnings
       'patches/receive-pack-fsck-object-warnings-non-fatal.patch',
 
@@ -53,6 +50,9 @@ class Git < DebianFormula
 
       # github/git#1: statistics reporting
       'patches/git-stats.patch',
+
+      # allow turning off .have lines entirely
+      'patches/receive-pack-advertise-alternates.patch',
     ]
   end
 
