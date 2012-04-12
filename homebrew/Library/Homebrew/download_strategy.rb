@@ -82,7 +82,7 @@ class CurlDownloadStrategy < AbstractDownloadStrategy
       File.open(@tarball_path) { |f| magic_bytes = f.read(4) }
     end
 
-    ohai "Extracing source"
+    ohai "Extracting source"
 
     # magic numbers stolen from /usr/share/file/magic/
     case magic_bytes
