@@ -60,8 +60,8 @@ class Git < DebianFormula
       # ignore invalid timezones
       'patches/tz-fsck-warning.patch',
 
-      # github/git#1: https://github.com/github/git/compare/git-stats.diff
-      'patches/git-stats.diff',
+      # github/git#1: statistics reporting
+      'patches/git-stats.patch',
     ]
   end
 
