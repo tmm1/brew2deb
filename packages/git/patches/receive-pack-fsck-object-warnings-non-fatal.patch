@@ -1,4 +1,4 @@
-From 6e19a41032942f2cbe60bef41fa6e67027a55a2a Mon Sep 17 00:00:00 2001
+From 9793ca02e69c4b766dd0aff0781bb2c30f031bfb Mon Sep 17 00:00:00 2001
 From: Ryan Tomayko <rtomayko@gmail.com>
 Date: Thu, 9 Jun 2011 19:05:29 -0700
 Subject: [PATCH] receive-pack fsck object warnings are non-fatal
@@ -24,13 +24,13 @@ This change modifies the default callback to use the same behavior as the
 git-fsck command and also omits the error message output.
 ---
  fsck.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ 1 file changed, 3 insertions(+)
 
 diff --git a/fsck.c b/fsck.c
-index 60bd4bb..7a3313f 100644
+index 6c855f8..4b82789 100644
 --- a/fsck.c
 +++ b/fsck.c
-@@ -346,6 +346,9 @@ int fsck_object(struct object *obj, int strict, fsck_error error_func)
+@@ -348,6 +348,9 @@ int fsck_object(struct object *obj, int strict, fsck_error error_func)
  
  int fsck_error_function(struct object *obj, int type, const char *fmt, ...)
  {
@@ -41,5 +41,5 @@ index 60bd4bb..7a3313f 100644
  	struct strbuf sb = STRBUF_INIT;
  
 -- 
-1.7.5.4
+1.7.9.6.6.g6b3b56
 
