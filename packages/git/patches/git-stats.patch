@@ -1,4 +1,4 @@
-From 4a5f2d89ca542a854b96053457959ef5766e8f50 Mon Sep 17 00:00:00 2001
+From 90d067628b8943175f9dd5d77e0bf84d57886858 Mon Sep 17 00:00:00 2001
 From: Aman Gupta <aman@tmm1.net>
 Date: Wed, 11 Apr 2012 23:55:13 -0500
 Subject: [PATCH] git stats patch
@@ -218,7 +218,7 @@ index 7b07c09..c2b2aa1 100644
  		fprintf(stderr, "Total %"PRIu32" (delta %"PRIu32"),"
  			" reused %"PRIu32" (delta %"PRIu32")\n",
 diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
-index 0afb8b2..b0d76c9 100644
+index 0afb8b2..36fe28e 100644
 --- a/builtin/receive-pack.c
 +++ b/builtin/receive-pack.c
 @@ -1,6 +1,7 @@
@@ -290,7 +290,7 @@ index 0afb8b2..b0d76c9 100644
  				       0, &cmd))
  		set_connectivity_errors(commands);
  
-+	sockstat_string("status", "pre_recieve_hook");
++	sockstat_string("status", "pre_receive_hook");
  	if (run_receive_hook(commands, pre_receive_hook, 0)) {
  		for (cmd = commands; cmd; cmd = cmd->next) {
  			if (!cmd->error_string)
@@ -314,7 +314,7 @@ index 0afb8b2..b0d76c9 100644
  			unlink_or_warn(pack_lockfile);
  		if (report_status)
  			report(commands, unpack_status);
-+		sockstat_string("status", "post_recieve_hook");
++		sockstat_string("status", "post_receive_hook");
  		run_receive_hook(commands, post_receive_hook, 1);
 +		sockstat_string("status", "post_update_hook");
  		run_update_post_hook(commands);
