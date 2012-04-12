@@ -1,0 +1,19 @@
+#!/bin/sh
+
+if test $# -lt 2; then
+  echo >&2 'usage: patches-to-repo </path/to/repo> <base>'
+  exit 1
+fi
+
+repo=$1
+base=$2
+
+for i in patches/*; do
+  patch_file="$PWD/$i"
+  patch_name="${i#patches/}"
+  patch_name="${patch_name%.patch}"
+  (cd "$repo" &&
+   git checkout -B "brew2deb/$patch_name" "$base" &&
+   git am "$patch_file"
+  ) || exit 1
+done

@@ -1,0 +1,25 @@
+#!/bin/sh
+
+if test $# -lt 2; then
+  echo >&2 'usage: repo-to-patches </path/to/repo> <base>'
+  exit 1
+fi
+
+repo=$1
+base=$2
+dest=$PWD/patches
+
+topics() {
+    git for-each-ref --format='%(refname:short)' refs/heads/brew2deb
+}
+
+cd "$repo" &&
+for topic in `topics`; do
+  name=${topic#brew2deb/}
+  if test -z "`git rev-list "$base..$topic"`"; then
+    echo >&2 "warning: series $name is no longer needed"
+    rm -f "$dest/$name.patch"
+  else
+    git format-patch --stdout "$base..$topic" >"$dest/$name.patch"
+  fi
+done
