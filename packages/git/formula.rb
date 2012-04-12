@@ -62,12 +62,6 @@ class Git < DebianFormula
 
       # github/git#1: https://github.com/github/git/compare/git-stats.diff
       'patches/git-stats.diff',
-
-      # bug in git-patch-id with newline diff markers
-      # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
-
-      # git-upload-pack hangs w/ --depth
-      # 'patches/upload-pack-deadlock.patch', # in 1.7.5.1
     ]
   end
 
