@@ -16,7 +16,7 @@ index 90bc172..62f192b 100644
  Priority: optional
  Architecture: any
 -Depends: ${shlibs:Depends}, ${misc:Depends}, debconf (>= 1.2.0) | debconf-2.0, libpam-runtime (>= 0.76-14), libpam-modules (>= 0.72-9), adduser (>= 3.9), dpkg (>= 1.9.0), openssh-client (= ${binary:Version}), lsb-base (>= 3.2-13), libssl0.9.8 (>= 0.9.8g-9), procps
-+Depends: ${shlibs:Depends}, ${misc:Depends}, debconf (>= 1.2.0) | debconf-2.0, libpam-runtime (>= 0.76-14), libpam-modules (>= 0.72-9), adduser (>= 3.9), dpkg (>= 1.9.0), openssh-client (= ${binary:Version}), lsb-base (>= 3.2-13), libssl0.9.8 (>= 0.9.8g-9), procps, libmysqlclient16
++Depends: ${shlibs:Depends}, ${misc:Depends}, debconf (>= 1.2.0) | debconf-2.0, libpam-runtime (>= 0.76-14), libpam-modules (>= 0.72-9), adduser (>= 3.9), dpkg (>= 1.9.0), openssh-client (= ${binary:Version}), lsb-base (>= 3.2-13), libssl1.0.0 (>= 1.0.0), procps, libmysqlclient16
  Recommends: xauth, ssh-import-id
  Conflicts: ssh (<< 1:3.8.1p1-9), ssh-nonfree (<<2), ssh-socks, ssh2, sftp, rsh-client (<<0.16.1-1), ssh-krb5 (<< 1:4.3p2-7)
  Replaces: ssh, openssh-client (<< 1:3.8.1p1-11), ssh-krb5

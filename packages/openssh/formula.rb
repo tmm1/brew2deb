@@ -1,5 +1,5 @@
 class OpenSSH < DebianSourceFormula
-  url 'http://ftp.de.debian.org/debian/pool/main/o/openssh/openssh_5.1p1-5.dsc'
+  url 'http://www.jp.backports.org/pool/main/o/openssl/openssl_1.0.0d-3.dsc'
   md5 '338282d6bc34e9ea227862557a042818'
   version '1:5.1p1-5github3'
 
