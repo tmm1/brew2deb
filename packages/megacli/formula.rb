@@ -5,7 +5,7 @@ class MegacliFormula < DebianFormula
   md5 '651f7250e0a64d94cafc08e4eb154740'
 
   name 'megacli'
-  version '8.02.16'
+  version '8.02.16+github1'
   section 'alien'
   description 'MegaCli SAS RAID Management Utility.'
 
@@ -14,6 +14,9 @@ class MegacliFormula < DebianFormula
     'cpio',
     'unzip'
 
+  depends \
+    'srvadmin-storelib-sysfs'
+
   def build
     chdir 'LINUX' do
       safe_system 'unzip', 'MegaCliLin.zip'
@@ -21,11 +24,9 @@ class MegacliFormula < DebianFormula
   end
 
   def install
-    %w[ Lib_Utils-1.00-09.noarch.rpm  MegaCli-8.02.16-1.i386.rpm ].each do |rpm|
-      rpm_path = File.expand_path("LINUX/#{rpm}")
-      chdir destdir do
-        sh "rpm2cpio #{rpm_path} | cpio -d -i"
-      end
+    rpm_path = File.expand_path("LINUX/MegaCli-8.02.16-1.i386.rpm")
+    chdir destdir do
+      sh "rpm2cpio #{rpm_path} | cpio -d -i"
     end
 
     mv destdir/'opt/MegaRAID/MegaCli/MegaCli', destdir/'opt/MegaRAID/MegaCli/MegaCli32'
