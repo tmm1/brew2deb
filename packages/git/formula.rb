@@ -1,11 +1,11 @@
 class Git < DebianFormula
-  url 'http://pkgs.fedoraproject.org/repo/pkgs/git/git-1.7.5.4.tar.bz2/4985b774db84d3bbcc2b8d90952552a3/git-1.7.5.4.tar.bz2'
-  md5 '4985b774db84d3bbcc2b8d90952552a3'
+  url 'https://git-core.googlecode.com/files/git-1.7.10.tar.gz'
+  md5 'ab2716db51580037c7ebda4c8e9d56eb'
   homepage 'http://git-scm.com'
 
   section 'vcs'
   name 'git'
-  version '1:1.7.5.4-1+github28'
+  version '1:1.7.10-1+github1'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
@@ -39,20 +39,8 @@ class Git < DebianFormula
       # fire a hook on post-upload so we can track # of clones
       'patches/post-upload-pack-hook.patch',
 
-      # eliminate duplicate .have refs
-      'patches/remove-duplicate-dot-have-lines.patch',
-
-      # allow turning off .have lines entirely
-      'patches/receive-pack-advertise-alternates.patch',
-
-      # speed up git-fetch with large number of refs
-      'patches/git-fetch-performance.patch',
-
       # fsckObjects doesn't show user warnings
       'patches/receive-pack-fsck-object-warnings-non-fatal.patch',
-
-      # add .tar.gz to git-archive
-      'patches/archive-gz-external.patch',
 
       # hide refs/pull/* via receive.hiderefs
       'patches/receive-pack-hide-refs.patch',
@@ -60,14 +48,11 @@ class Git < DebianFormula
       # ignore invalid timezones
       'patches/tz-fsck-warning.patch',
 
-      # github/git#1: https://github.com/github/git/compare/git-stats.diff
-      'patches/git-stats.diff',
+      # github/git#1: statistics reporting
+      'patches/git-stats.patch',
 
-      # bug in git-patch-id with newline diff markers
-      # 'patches/patch-id-eof-fix.patch',     # in 1.7.4.2
-
-      # git-upload-pack hangs w/ --depth
-      # 'patches/upload-pack-deadlock.patch', # in 1.7.5.1
+      # allow turning off .have lines entirely
+      'patches/receive-pack-advertise-alternates.patch',
     ]
   end
 

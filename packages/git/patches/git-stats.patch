@@ -1,41 +1,49 @@
+From 90d067628b8943175f9dd5d77e0bf84d57886858 Mon Sep 17 00:00:00 2001
+From: Aman Gupta <aman@tmm1.net>
+Date: Wed, 11 Apr 2012 23:55:13 -0500
+Subject: [PATCH] git stats patch
+
+---
+ Makefile                 |    2 +
+ builtin/index-pack.c     |   27 ++-
+ builtin/pack-objects.c   |   25 +++
+ builtin/receive-pack.c   |   26 ++-
+ builtin/unpack-objects.c |    6 +
+ daemon.c                 |   19 +-
+ progress.c               |   41 ++++
+ progress.h               |    3 +
+ script/cibuild           |    2 +
+ sockstat.c               |  490 ++++++++++++++++++++++++++++++++++++++++++++++
+ sockstat.h               |   14 ++
+ upload-pack.c            |   19 ++
+ usage.c                  |   17 ++
+ 13 files changed, 682 insertions(+), 9 deletions(-)
+ create mode 100755 script/cibuild
+ create mode 100644 sockstat.c
+ create mode 100644 sockstat.h
+
 diff --git a/Makefile b/Makefile
-index d2e2ea1..cf45c0e 100644
+index be1957a..2015d7c 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -542,6 +542,7 @@ LIB_H += run-command.h
+@@ -615,6 +615,7 @@ LIB_H += sha1-array.h
  LIB_H += sha1-lookup.h
  LIB_H += sideband.h
  LIB_H += sigchain.h
 +LIB_H += sockstat.h
  LIB_H += strbuf.h
+ LIB_H += streaming.h
  LIB_H += string-list.h
- LIB_H += submodule.h
-@@ -549,6 +550,7 @@ LIB_H += tag.h
- LIB_H += transport.h
- LIB_H += tree.h
- LIB_H += tree-walk.h
-+LIB_H += unix-socket.h
- LIB_H += unpack-trees.h
- LIB_H += userdiff.h
- LIB_H += utf8.h
-@@ -647,6 +649,7 @@ LIB_OBJS += sha1_name.o
+@@ -735,6 +736,7 @@ LIB_OBJS += sha1_name.o
  LIB_OBJS += shallow.o
  LIB_OBJS += sideband.o
  LIB_OBJS += sigchain.o
 +LIB_OBJS += sockstat.o
  LIB_OBJS += strbuf.o
+ LIB_OBJS += streaming.o
  LIB_OBJS += string-list.o
- LIB_OBJS += submodule.o
-@@ -658,6 +661,7 @@ LIB_OBJS += transport-helper.o
- LIB_OBJS += tree-diff.o
- LIB_OBJS += tree.o
- LIB_OBJS += tree-walk.o
-+LIB_OBJS += unix-socket.o
- LIB_OBJS += unpack-trees.o
- LIB_OBJS += url.o
- LIB_OBJS += usage.o
 diff --git a/builtin/index-pack.c b/builtin/index-pack.c
-index 31f001f..f34651b 100644
+index dd1c5c9..b9758ef 100644
 --- a/builtin/index-pack.c
 +++ b/builtin/index-pack.c
 @@ -9,6 +9,7 @@
@@ -45,8 +53,8 @@ index 31f001f..f34651b 100644
 +#include "sockstat.h"
  
  static const char index_pack_usage[] =
- "git index-pack [-v] [-o <index-file>] [ --keep | --keep=<msg> ] [--strict] (<pack-file> | --stdin [--fix-thin] [<pack-file>])";
-@@ -144,8 +145,11 @@ static void flush(void)
+ "git index-pack [-v] [-o <index-file>] [--keep | --keep=<msg>] [--verify] [--strict] (<pack-file> | --stdin [--fix-thin] [<pack-file>])";
+@@ -149,8 +150,11 @@ static void *fill(int min)
  			die_errno("read error on input");
  		}
  		input_len += ret;
@@ -59,7 +67,7 @@ index 31f001f..f34651b 100644
  	} while (input_len < min);
  	return input_buffer;
  }
-@@ -604,6 +608,14 @@ static void parse_pack_objects(unsigned char *sha1)
+@@ -699,6 +703,14 @@ static void parse_pack_objects(unsigned char *sha1)
  		progress = start_progress(
  				from_stdin ? "Receiving objects" : "Indexing objects",
  				nr_objects);
@@ -74,7 +82,7 @@ index 31f001f..f34651b 100644
  	for (i = 0; i < nr_objects; i++) {
  		struct object_entry *obj = &objects[i];
  		void *data = unpack_raw_entry(obj, &delta->base);
-@@ -616,6 +628,8 @@ static void parse_pack_objects(unsigned char *sha1)
+@@ -711,6 +723,8 @@ static void parse_pack_objects(unsigned char *sha1)
  			sha1_object(data, obj->size, obj->type, obj->idx.sha1);
  		free(data);
  		display_progress(progress, i+1);
@@ -83,7 +91,7 @@ index 31f001f..f34651b 100644
  	}
  	objects[i].idx.offset = consumed_bytes;
  	stop_progress(&progress);
-@@ -651,6 +665,10 @@ static void parse_pack_objects(unsigned char *sha1)
+@@ -746,6 +760,10 @@ static void parse_pack_objects(unsigned char *sha1)
  	 */
  	if (verbose)
  		progress = start_progress("Resolving deltas", nr_deltas);
@@ -93,37 +101,37 @@ index 31f001f..f34651b 100644
 +	}
  	for (i = 0; i < nr_objects; i++) {
  		struct object_entry *obj = &objects[i];
- 		struct base_data base_obj;
-@@ -661,6 +679,8 @@ static void parse_pack_objects(unsigned char *sha1)
- 		base_obj.data = NULL;
- 		find_unresolved_deltas(&base_obj, NULL);
+ 		struct base_data *base_obj = alloc_base_data();
+@@ -756,6 +774,8 @@ static void parse_pack_objects(unsigned char *sha1)
+ 		base_obj->data = NULL;
+ 		find_unresolved_deltas(base_obj);
  		display_progress(progress, nr_resolved_deltas);
 +		if (from_stdin)
 +			sockstat_unsigned("resolving_deltas", nr_resolved_deltas);
  	}
  }
  
-@@ -767,6 +787,8 @@ static void fix_unresolved_deltas(struct sha1file *f, int nr_unresolved)
- 					base_obj.data, base_obj.size, type);
- 		find_unresolved_deltas(&base_obj, NULL);
+@@ -862,6 +882,8 @@ static void fix_unresolved_deltas(struct sha1file *f, int nr_unresolved)
+ 					base_obj->data, base_obj->size, type);
+ 		find_unresolved_deltas(base_obj);
  		display_progress(progress, nr_resolved_deltas);
 +		if (from_stdin)
 +			sockstat_unsigned("resolving_deltas", nr_resolved_deltas);
  	}
  	free(sorted_by_pos);
  }
-@@ -965,6 +987,9 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
- 		keep_name = keep_name_buf;
- 	}
+@@ -1191,6 +1213,9 @@ int cmd_index_pack(int argc, const char **argv, const char *prefix)
+ 	if (strict)
+ 		opts.flags |= WRITE_IDX_STRICT;
  
 +	if (from_stdin)
 +		sockstat_init("index-pack");
 +
  	curr_pack = open_pack_file(pack_name);
  	parse_pack_header();
- 	objects = xmalloc((nr_objects + 1) * sizeof(struct object_entry));
+ 	objects = xcalloc(nr_objects + 1, sizeof(struct object_entry));
 diff --git a/builtin/pack-objects.c b/builtin/pack-objects.c
-index f402a84..40eecb5 100644
+index 7b07c09..c2b2aa1 100644
 --- a/builtin/pack-objects.c
 +++ b/builtin/pack-objects.c
 @@ -17,6 +17,7 @@
@@ -132,11 +140,11 @@ index f402a84..40eecb5 100644
  #include "thread-utils.h"
 +#include "sockstat.h"
  
- static const char pack_usage[] =
-   "git pack-objects [ -q | --progress | --all-progress ]\n"
-@@ -442,8 +443,13 @@ static void write_pack_file(void)
- 	uint32_t nr_remaining = nr_result;
+ static const char *pack_usage[] = {
+ 	"git pack-objects --stdout [options...] [< ref-list | < object-list]",
+@@ -637,8 +638,13 @@ static void write_pack_file(void)
  	time_t last_mtime = 0;
+ 	struct object_entry **write_order;
  
 +	sockstat_string("status", "writing");
 +	sockstat_unsigned("writing_objects_total", nr_result);
@@ -146,10 +154,10 @@ index f402a84..40eecb5 100644
 +	else if (1) /* measure throughput for sockstat without printing progress */
 +		progress_state = start_progress_silent("Writing objects", nr_result);
  	written_list = xmalloc(nr_objects * sizeof(*written_list));
+ 	write_order = compute_write_order();
  
- 	do {
-@@ -471,6 +477,11 @@ static void write_pack_file(void)
- 			if (!write_one(f, objects + i, &offset))
+@@ -660,6 +666,11 @@ static void write_pack_file(void)
+ 			if (write_one(f, e, &offset) == WRITE_ONE_BREAK)
  				break;
  			display_progress(progress_state, written);
 +			if (i > 0) {
@@ -160,7 +168,7 @@ index f402a84..40eecb5 100644
  		}
  
  		/*
-@@ -706,6 +717,7 @@ static int add_object_entry(const unsigned char *sha1, enum object_type type,
+@@ -887,6 +898,7 @@ static int add_object_entry(const unsigned char *sha1, enum object_type type,
  	else
  		object_ix[-1 - ix] = nr_objects;
  
@@ -168,7 +176,7 @@ index f402a84..40eecb5 100644
  	display_progress(progress_state, nr_objects);
  
  	if (name && no_try_delta(name))
-@@ -1422,6 +1434,7 @@ static void find_deltas(struct object_entry **list, unsigned *list_size,
+@@ -1608,6 +1620,7 @@ static void find_deltas(struct object_entry **list, unsigned *list_size,
  		(*list_size)--;
  		if (!entry->preferred_base) {
  			(*processed)++;
@@ -176,7 +184,7 @@ index f402a84..40eecb5 100644
  			display_progress(progress_state, *processed);
  		}
  		progress_unlock();
-@@ -1828,6 +1841,10 @@ static void prepare_pack(int window, int depth)
+@@ -2014,6 +2027,10 @@ static void prepare_pack(int window, int depth)
  
  	if (nr_deltas && n > 1) {
  		unsigned nr_done = 0;
@@ -187,7 +195,7 @@ index f402a84..40eecb5 100644
  		if (progress)
  			progress_state = start_progress("Compressing objects",
  							nr_deltas);
-@@ -2333,6 +2350,9 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
+@@ -2473,6 +2490,9 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
  
  	prepare_packed_git();
  
@@ -197,7 +205,7 @@ index f402a84..40eecb5 100644
  	if (progress)
  		progress_state = start_progress("Counting objects", 0);
  	if (!use_internal_rev_list)
-@@ -2351,6 +2371,11 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
+@@ -2491,6 +2511,11 @@ int cmd_pack_objects(int argc, const char **argv, const char *prefix)
  	if (nr_result)
  		prepare_pack(window, depth);
  	write_pack_file();
@@ -210,7 +218,7 @@ index f402a84..40eecb5 100644
  		fprintf(stderr, "Total %"PRIu32" (delta %"PRIu32"),"
  			" reused %"PRIu32" (delta %"PRIu32")\n",
 diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
-index e1ba4dc..067d03b 100644
+index 0afb8b2..36fe28e 100644
 --- a/builtin/receive-pack.c
 +++ b/builtin/receive-pack.c
 @@ -1,6 +1,7 @@
@@ -221,23 +229,23 @@ index e1ba4dc..067d03b 100644
  #include "pkt-line.h"
  #include "sideband.h"
  #include "run-command.h"
-@@ -121,6 +122,7 @@ static int show_ref(const char *path, const unsigned char *sha1, int flag, void
- 
- static void write_head_info(void)
- {
+@@ -162,6 +163,7 @@ static void write_head_info(void)
+ 	for_each_alternate_ref(collect_one_alternate_ref, &sa);
+ 	sha1_array_for_each_unique(&sa, show_one_alternate_sha1, NULL);
+ 	sha1_array_clear(&sa);
 +	sockstat_string("status", "show_ref");
- 	for_each_ref(show_ref, NULL);
+ 	for_each_ref(show_ref_cb, NULL);
  	if (!sent_capabilities)
- 		show_ref("capabilities^{}", null_sha1, 0, NULL);
-@@ -335,6 +337,7 @@ static void refuse_unconfigured_deny_delete_current(void)
+ 		show_ref("capabilities^{}", null_sha1);
+@@ -418,6 +420,7 @@ static const char *update(struct command *cmd)
  	unsigned char *old_sha1 = cmd->old_sha1;
  	unsigned char *new_sha1 = cmd->new_sha1;
  	struct ref_lock *lock;
 +	struct strbuf *sockstat_json;
  
  	/* only refs/... are allowed */
- 	if (prefixcmp(name, "refs/") || check_ref_format(name + 5)) {
-@@ -387,7 +390,7 @@ static void refuse_unconfigured_deny_delete_current(void)
+ 	if (prefixcmp(name, "refs/") || check_refname_format(name + 5, 0)) {
+@@ -473,7 +476,7 @@ static const char *update(struct command *cmd)
  		}
  	}
  
@@ -246,7 +254,7 @@ index e1ba4dc..067d03b 100644
  	    !is_null_sha1(old_sha1) &&
  	    !prefixcmp(name, "refs/heads/")) {
  		struct object *old_object, *new_object;
-@@ -411,11 +414,18 @@ static void refuse_unconfigured_deny_delete_current(void)
+@@ -497,11 +500,18 @@ static const char *update(struct command *cmd)
  				break;
  		free_commit_list(bases);
  		if (!ent) {
@@ -268,7 +276,7 @@ index e1ba4dc..067d03b 100644
  	if (run_update_hook(cmd)) {
  		rp_error("hook declined to update %s", name);
  		return "hook declined";
-@@ -438,7 +448,8 @@ static void refuse_unconfigured_deny_delete_current(void)
+@@ -529,7 +539,8 @@ static const char *update(struct command *cmd)
  			rp_error("failed to lock %s", name);
  			return "failed to lock";
  		}
@@ -278,15 +286,15 @@ index e1ba4dc..067d03b 100644
  			return "failed to write"; /* error() already called */
  		}
  		return NULL; /* good */
-@@ -556,6 +567,7 @@ static void execute_commands(struct command *commands, const char *unpacker_erro
- 		return;
- 	}
+@@ -708,6 +719,7 @@ static void execute_commands(struct command *commands, const char *unpacker_erro
+ 				       0, &cmd))
+ 		set_connectivity_errors(commands);
  
-+	sockstat_string("status", "pre_recieve_hook");
- 	if (run_receive_hook(commands, pre_receive_hook)) {
- 		for (cmd = commands; cmd; cmd = cmd->next)
- 			cmd->error_string = "pre-receive hook declined";
-@@ -575,6 +587,7 @@ static void execute_commands(struct command *commands, const char *unpacker_erro
++	sockstat_string("status", "pre_receive_hook");
+ 	if (run_receive_hook(commands, pre_receive_hook, 0)) {
+ 		for (cmd = commands; cmd; cmd = cmd->next) {
+ 			if (!cmd->error_string)
+@@ -736,6 +748,7 @@ static struct command *read_head_info(void)
  {
  	struct command *commands = NULL;
  	struct command **p = &commands;
@@ -294,7 +302,7 @@ index e1ba4dc..067d03b 100644
  	for (;;) {
  		static char line[1000];
  		unsigned char old_sha1[20], new_sha1[20];
-@@ -782,6 +795,7 @@ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
+@@ -948,6 +961,7 @@ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
  	if (is_repository_shallow())
  		die("attempt to push into a shallow repository");
  
@@ -302,18 +310,18 @@ index e1ba4dc..067d03b 100644
  	git_config(receive_pack_config, NULL);
  
  	if (0 <= transfer_unpack_limit)
-@@ -810,7 +824,9 @@ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
+@@ -971,7 +985,9 @@ int cmd_receive_pack(int argc, const char **argv, const char *prefix)
  			unlink_or_warn(pack_lockfile);
  		if (report_status)
  			report(commands, unpack_status);
-+		sockstat_string("status", "post_recieve_hook");
- 		run_receive_hook(commands, post_receive_hook);
++		sockstat_string("status", "post_receive_hook");
+ 		run_receive_hook(commands, post_receive_hook, 1);
 +		sockstat_string("status", "post_update_hook");
  		run_update_post_hook(commands);
  		if (auto_gc) {
  			const char *argv_gc_auto[] = {
 diff --git a/builtin/unpack-objects.c b/builtin/unpack-objects.c
-index f63973c..50af9b3 100644
+index 14e04e6..8d014f5 100644
 --- a/builtin/unpack-objects.c
 +++ b/builtin/unpack-objects.c
 @@ -11,6 +11,7 @@
@@ -349,10 +357,10 @@ index f63973c..50af9b3 100644
  	unpack_all();
  	git_SHA1_Update(&ctx, buffer, offset);
 diff --git a/daemon.c b/daemon.c
-index 4c8346d..b4033a4 100644
+index ab21e66..44a1a35 100644
 --- a/daemon.c
 +++ b/daemon.c
-@@ -441,9 +441,22 @@ static void parse_host_arg(char *extra_args, int buflen)
+@@ -450,9 +450,22 @@ static void parse_host_arg(char *extra_args, int buflen)
  	int vallen;
  	char *end = extra_args + buflen;
  
@@ -377,7 +385,7 @@ index 4c8346d..b4033a4 100644
  			val = extra_args + 5;
  			vallen = strlen(val) + 1;
  			if (*val) {
-@@ -462,7 +475,7 @@ static void parse_host_arg(char *extra_args, int buflen)
+@@ -471,7 +484,7 @@ static void parse_host_arg(char *extra_args, int buflen)
  			/* On to the next one */
  			extra_args = val + vallen;
  		}
@@ -386,29 +394,6 @@ index 4c8346d..b4033a4 100644
  			die("Invalid request");
  	}
  
-diff --git a/git-compat-util.h b/git-compat-util.h
-index 40498b3..7c49937 100644
---- a/git-compat-util.h
-+++ b/git-compat-util.h
-@@ -130,6 +130,7 @@
- #include <arpa/inet.h>
- #include <netdb.h>
- #include <pwd.h>
-+#include <sys/un.h>
- #ifndef NO_INTTYPES_H
- #include <inttypes.h>
- #else
-@@ -215,6 +216,10 @@
- #define is_dir_sep(c) ((c) == '/')
- #endif
- 
-+#ifndef find_last_dir_sep
-+#define find_last_dir_sep(path) strrchr(path, '/')
-+#endif
-+
- #if __HP_cc >= 61000
- #define NORETURN __attribute__((noreturn))
- #define NORETURN_PTR
 diff --git a/progress.c b/progress.c
 index 3971f49..a72a70e 100644
 --- a/progress.c
@@ -1036,160 +1021,19 @@ index 0000000..e130eb4
 +void sockstat_flush();
 +
 +#endif /* SOCKSTATS_H */
-diff --git a/unix-socket.c b/unix-socket.c
-new file mode 100644
-index 0000000..01f119f
---- /dev/null
-+++ b/unix-socket.c
-@@ -0,0 +1,122 @@
-+#include "cache.h"
-+#include "unix-socket.h"
-+
-+static int unix_stream_socket(void)
-+{
-+	int fd = socket(AF_UNIX, SOCK_STREAM, 0);
-+	if (fd < 0)
-+		die_errno("unable to create socket");
-+	return fd;
-+}
-+
-+static int chdir_len(const char *orig, int len)
-+{
-+	char *path = xmemdupz(orig, len);
-+	int r = chdir(path);
-+	free(path);
-+	return r;
-+}
-+
-+struct unix_sockaddr_context {
-+	char orig_dir[PATH_MAX];
-+};
-+
-+static void unix_sockaddr_cleanup(struct unix_sockaddr_context *ctx)
-+{
-+	if (!ctx->orig_dir[0])
-+		return;
-+	/*
-+	 * If we fail, we can't just return an error, since we have
-+	 * moved the cwd of the whole process, which could confuse calling
-+	 * code.  We are better off to just die.
-+	 */
-+	if (chdir(ctx->orig_dir) < 0)
-+		die("unable to restore original working directory");
-+}
-+
-+static int unix_sockaddr_init(struct sockaddr_un *sa, const char *path,
-+			      struct unix_sockaddr_context *ctx)
-+{
-+	int size = strlen(path) + 1;
-+
-+	ctx->orig_dir[0] = '\0';
-+	if (size > sizeof(sa->sun_path)) {
-+		const char *slash = find_last_dir_sep(path);
-+		const char *dir;
-+
-+		if (!slash) {
-+			errno = ENAMETOOLONG;
-+			return -1;
-+		}
-+
-+		dir = path;
-+		path = slash + 1;
-+		size = strlen(path) + 1;
-+		if (size > sizeof(sa->sun_path)) {
-+			errno = ENAMETOOLONG;
-+			return -1;
-+		}
-+
-+		if (!getcwd(ctx->orig_dir, sizeof(ctx->orig_dir))) {
-+			errno = ENAMETOOLONG;
-+			return -1;
-+		}
-+		if (chdir_len(dir, slash - dir) < 0)
-+			return -1;
-+	}
-+
-+	memset(sa, 0, sizeof(*sa));
-+	sa->sun_family = AF_UNIX;
-+	memcpy(sa->sun_path, path, size);
-+	return 0;
-+}
-+
-+int unix_stream_connect(const char *path)
-+{
-+	int fd, saved_errno;
-+	struct sockaddr_un sa;
-+	struct unix_sockaddr_context ctx;
-+
-+	if (unix_sockaddr_init(&sa, path, &ctx) < 0)
-+		return -1;
-+	fd = unix_stream_socket();
-+	if (connect(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-+		goto fail;
-+	unix_sockaddr_cleanup(&ctx);
-+	return fd;
-+
-+fail:
-+	saved_errno = errno;
-+	unix_sockaddr_cleanup(&ctx);
-+	close(fd);
-+	errno = saved_errno;
-+	return -1;
-+}
-+
-+int unix_stream_listen(const char *path)
-+{
-+	int fd, saved_errno;
-+	struct sockaddr_un sa;
-+	struct unix_sockaddr_context ctx;
-+
-+	if (unix_sockaddr_init(&sa, path, &ctx) < 0)
-+		return -1;
-+	fd = unix_stream_socket();
-+
-+	unlink(path);
-+	if (bind(fd, (struct sockaddr *)&sa, sizeof(sa)) < 0)
-+		goto fail;
-+
-+	if (listen(fd, 5) < 0)
-+		goto fail;
-+
-+	unix_sockaddr_cleanup(&ctx);
-+	return fd;
-+
-+fail:
-+	saved_errno = errno;
-+	unix_sockaddr_cleanup(&ctx);
-+	close(fd);
-+	errno = saved_errno;
-+	return -1;
-+}
-diff --git a/unix-socket.h b/unix-socket.h
-new file mode 100644
-index 0000000..e271aee
---- /dev/null
-+++ b/unix-socket.h
-@@ -0,0 +1,7 @@
-+#ifndef UNIX_SOCKET_H
-+#define UNIX_SOCKET_H
-+
-+int unix_stream_connect(const char *path);
-+int unix_stream_listen(const char *path);
-+
-+#endif /* UNIX_SOCKET_H */
 diff --git a/upload-pack.c b/upload-pack.c
-index ce5cbbe..7f330b4 100644
+index bb08e2e..1c19794 100644
 --- a/upload-pack.c
 +++ b/upload-pack.c
-@@ -10,6 +10,7 @@
- #include "revision.h"
+@@ -11,6 +11,7 @@
  #include "list-objects.h"
  #include "run-command.h"
+ #include "sigchain.h"
 +#include "sockstat.h"
  
  static const char upload_pack_usage[] = "git upload-pack [--strict] [--timeout=<n>] <dir>";
  
-@@ -57,6 +58,12 @@ static int strip(char *line, int len)
+@@ -58,6 +59,12 @@ static int strip(char *line, int len)
  
  static ssize_t send_client_data(int fd, const char *data, ssize_t sz)
  {
@@ -1202,18 +1046,20 @@ index ce5cbbe..7f330b4 100644
  	if (use_sideband)
  		return send_sideband(1, fd, data, sz, use_sideband);
  	if (fd == 3)
-@@ -680,20 +687,29 @@ static void upload_pack(void)
+@@ -768,20 +775,31 @@ static void upload_pack(void)
  {
  	if (advertise_refs || !stateless_rpc) {
  		reset_timeout();
 +		sockstat_string("status", "send_ref");
- 		head_ref(send_ref, NULL);
- 		for_each_ref(send_ref, NULL);
+ 		head_ref_namespaced(send_ref, NULL);
+ 		for_each_namespaced_ref(send_ref, NULL);
  		packet_flush(1);
  	} else {
 +		sockstat_string("status", "mark_our_ref");
- 		head_ref(mark_our_ref, NULL);
- 		for_each_ref(mark_our_ref, NULL);
+ 		head_ref_namespaced(mark_our_ref, NULL);
+ 		for_each_namespaced_ref(mark_our_ref, NULL);
++		head_ref(mark_our_ref, NULL);
++		for_each_ref(mark_our_ref, NULL);
  	}
  	if (advertise_refs)
  		return;
@@ -1232,7 +1078,7 @@ index ce5cbbe..7f330b4 100644
  	}
  }
  
-@@ -748,6 +764,7 @@ int main(int argc, char **argv)
+@@ -838,6 +856,7 @@ int main(int argc, char **argv)
  		die("attempt to fetch/clone from a shallow repository");
  	if (getenv("GIT_DEBUG_SEND_PACK"))
  		debug_fd = atoi(getenv("GIT_DEBUG_SEND_PACK"));
@@ -1241,18 +1087,18 @@ index ce5cbbe..7f330b4 100644
  	return 0;
  }
 diff --git a/usage.c b/usage.c
-index b5e67e3..83fa8bd 100644
+index a2a6678..24aec52 100644
 --- a/usage.c
 +++ b/usage.c
-@@ -4,6 +4,7 @@
-  * Copyright (C) Linus Torvalds, 2005
+@@ -5,6 +5,7 @@
   */
  #include "git-compat-util.h"
+ #include "cache.h"
 +#include "sockstat.h"
  
  void vreportf(const char *prefix, const char *err, va_list params)
  {
-@@ -65,6 +66,10 @@ void NORETURN die(const char *err, ...)
+@@ -83,6 +84,10 @@ void NORETURN die(const char *err, ...)
  	va_list params;
  
  	va_start(params, err);
@@ -1263,7 +1109,7 @@ index b5e67e3..83fa8bd 100644
  	die_routine(err, params);
  	va_end(params);
  }
-@@ -93,6 +98,10 @@ void NORETURN die_errno(const char *fmt, ...)
+@@ -111,6 +116,10 @@ void NORETURN die_errno(const char *fmt, ...)
  	snprintf(fmt_with_err, sizeof(fmt_with_err), "%s: %s", fmt, str_error);
  
  	va_start(params, fmt);
@@ -1274,7 +1120,7 @@ index b5e67e3..83fa8bd 100644
  	die_routine(fmt_with_err, params);
  	va_end(params);
  }
-@@ -102,6 +111,10 @@ int error(const char *err, ...)
+@@ -120,6 +129,10 @@ int error(const char *err, ...)
  	va_list params;
  
  	va_start(params, err);
@@ -1285,7 +1131,7 @@ index b5e67e3..83fa8bd 100644
  	error_routine(err, params);
  	va_end(params);
  	return -1;
-@@ -112,6 +125,10 @@ void warning(const char *warn, ...)
+@@ -130,6 +143,10 @@ void warning(const char *warn, ...)
  	va_list params;
  
  	va_start(params, warn);
@@ -1296,3 +1142,6 @@ index b5e67e3..83fa8bd 100644
  	warn_routine(warn, params);
  	va_end(params);
  }
+-- 
+1.7.9.6.6.g6b3b56
+

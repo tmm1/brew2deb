@@ -1,4 +1,4 @@
-From b50d247cf28e0862265ae1f5b835769cb133a269 Mon Sep 17 00:00:00 2001
+From b00c855c378f0c594a37e563e5c1e3a1ce41b8bb Mon Sep 17 00:00:00 2001
 From: Ryan Tomayko <rtomayko@gmail.com>
 Date: Sat, 25 Jun 2011 03:02:31 -0700
 Subject: [PATCH 1/2] naive hiderefs support for refs/pull/* hierarchy
@@ -19,15 +19,15 @@ from receive-pack results in push --mirror not trying to delete
 them.
 ---
  builtin/receive-pack.c |    3 +++
- 1 files changed, 3 insertions(+), 0 deletions(-)
+ 1 file changed, 3 insertions(+)
 
 diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
-index e1ba4dc..e7b60cf 100644
+index 0afb8b2..df41925 100644
 --- a/builtin/receive-pack.c
 +++ b/builtin/receive-pack.c
-@@ -108,6 +108,9 @@ static int receive_pack_config(const char *var, const char *value, void *cb)
+@@ -118,6 +118,9 @@ static int receive_pack_config(const char *var, const char *value, void *cb)
  
- static int show_ref(const char *path, const unsigned char *sha1, int flag, void *cb_data)
+ static void show_ref(const char *path, const unsigned char *sha1)
  {
 +	if (strncmp(path, "refs/pull/", strlen("refs/pull/")) == 0)
 +		return 0;
@@ -36,10 +36,10 @@ index e1ba4dc..e7b60cf 100644
  		packet_write(1, "%s %s\n", sha1_to_hex(sha1), path);
  	else
 -- 
-1.7.5.4
+1.7.9.6.6.g6b3b56
 
 
-From 4316db861bece57cd2e1d144662127208d773f46 Mon Sep 17 00:00:00 2001
+From a616b3931659f63c706f600f19b30524fac75dca Mon Sep 17 00:00:00 2001
 From: Ryan Tomayko <rtomayko@gmail.com>
 Date: Sat, 25 Jun 2011 03:20:58 -0700
 Subject: [PATCH 2/2] receive.hiderefs config option - takes single prefix
@@ -49,21 +49,21 @@ a single ref prefix. It should probably be broadened to allow a list
 of ref prefixes or glob patterns.
 ---
  builtin/receive-pack.c |    8 +++++++-
- 1 files changed, 7 insertions(+), 1 deletions(-)
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
 diff --git a/builtin/receive-pack.c b/builtin/receive-pack.c
-index e7b60cf..4bc7814 100644
+index df41925..b22670c 100644
 --- a/builtin/receive-pack.c
 +++ b/builtin/receive-pack.c
-@@ -34,6 +34,7 @@ static int prefer_ofs_delta = 1;
- static int auto_update_server_info;
+@@ -39,6 +39,7 @@ static int auto_update_server_info;
  static int auto_gc = 1;
  static const char *head_name;
+ static void *head_name_to_free;
 +static const char *hide_refs;
  static int sent_capabilities;
  
  static enum deny_action parse_deny_action(const char *var, const char *value)
-@@ -103,12 +104,17 @@ static int receive_pack_config(const char *var, const char *value, void *cb)
+@@ -113,12 +114,17 @@ static int receive_pack_config(const char *var, const char *value, void *cb)
  		return 0;
  	}
  
@@ -75,7 +75,7 @@ index e7b60cf..4bc7814 100644
  	return git_default_config(var, value, cb);
  }
  
- static int show_ref(const char *path, const unsigned char *sha1, int flag, void *cb_data)
+ static void show_ref(const char *path, const unsigned char *sha1)
  {
 -	if (strncmp(path, "refs/pull/", strlen("refs/pull/")) == 0)
 +	if (hide_refs && strncmp(path, hide_refs, strlen(hide_refs)) == 0)
@@ -83,5 +83,5 @@ index e7b60cf..4bc7814 100644
  
  	if (sent_capabilities)
 -- 
-1.7.5.4
+1.7.9.6.6.g6b3b56
 
