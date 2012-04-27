@@ -1,15 +1,21 @@
 class S3cmd < DebianFormula
-  url 'http://sourceforge.net/projects/s3tools/files/s3cmd/1.1.0-beta3/s3cmd-1.1.0-beta3.tar.gz/download'
-  md5 'b27d9a5d5b5e32798947a3661e67e537'
+  url 'https://github.com/s3tools/s3cmd.git'
 
   name 's3cmd'
   section 'utils'
-  version '1.1.0-beta3+github'
+  version '1.1.0-master+github1'
   description 'command-line Amazon S3 client'
 
   build_depends 'python'
   depends 'python'
   conflicts 'python-django'
+
+  def patches
+    [
+      # https://github.com/s3tools/s3cmd/pull/38
+      'patches/38.patch'
+    ]
+  end
 
   def build
     sh 'python', 'setup.py', 'build'
