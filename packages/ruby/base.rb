@@ -1,8 +1,8 @@
 class Ruby < DebianFormula
   section 'interpreters'
 
-  source 'http://production.cf.rubygems.org/rubygems/rubygems-1.6.2.tgz'
-  source 'https://rubygems.org/downloads/bundler-1.0.21.gem'
+  source 'http://production.cf.rubygems.org/rubygems/rubygems-1.8.23.tgz'
+  source 'https://rubygems.org/downloads/bundler-1.1.3.gem'
   source 'https://rubygems.org/downloads/rake-0.9.2.2.gem'
 
   def prefix
@@ -26,7 +26,7 @@ class Ruby < DebianFormula
     setup_rubylib
 
     # install rubygems
-    chdir(builddir/'rubygems-1.6.2') do
+    chdir(builddir/'rubygems-1.8.23') do
       sh prefix/'bin/ruby', 'setup.rb', '--no-ri', '--no-rdoc'
     end
 
@@ -43,7 +43,7 @@ class Ruby < DebianFormula
   def install_bundler
     setup_rubylib
 
-    install_gem builddir/'bundler-1.0.21.gem'
+    install_gem builddir/'bundler-1.1.3.gem'
     fix_shebangs 'bundle'
   end
 

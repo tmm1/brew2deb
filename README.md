@@ -31,7 +31,7 @@ $ tree
 ```
 $ ../../bin/brew2deb
 ==> Downloading http://kernel.org/pub/software/scm/git/git-1.7.5.4.tar.bz2
-==> Extracing source
+==> Extracting source
 ==> Downloading patches
 ==> Patching
 patching file upload-pack.c
