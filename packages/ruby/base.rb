@@ -4,6 +4,7 @@ class Ruby < DebianFormula
   source 'http://production.cf.rubygems.org/rubygems/rubygems-1.8.23.tgz'
   source 'https://rubygems.org/downloads/bundler-1.1.3.gem'
   source 'https://rubygems.org/downloads/rake-0.9.2.2.gem'
+  source 'https://rubygems.org/downloads/rbenv-autohash-0.1.0.gem'
 
   def prefix
     current_pathname_for("usr/share/rbenv/versions/#{self.class.name.gsub('rbenv-','')}")
@@ -20,6 +21,7 @@ class Ruby < DebianFormula
     install_rubygems
     install_rake
     install_bundler
+    install_rbenv_autohash
   end
 
   def install_rubygems
@@ -45,6 +47,12 @@ class Ruby < DebianFormula
 
     install_gem builddir/'bundler-1.1.3.gem'
     fix_shebangs 'bundle'
+  end
+
+  def install_rbenv_autohash
+    setup_rubylib
+
+    install_gem builddir/'rbenv-autohash-0.1.0'
   end
 
   def install_gem(name)
