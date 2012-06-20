@@ -1,11 +1,11 @@
 class Postgresql < DebianFormula
-  url 'http://ftp.postgresql.org/pub/source/v9.1.1/postgresql-9.1.1.tar.bz2'
-  md5 '061a9f17323117c9358ed60f33ecff78'
+  url 'http://ftp.postgresql.org/pub/source/v9.1.4/postgresql-9.1.4.tar.bz2'
+  md5 'a8035688dba988b782725ac1aec60186'
   homepage 'http://www.postgresql.org/'
 
   section 'interpreters'
   name 'postgresql9'
-  version '9.1.1+github1'
+  version '9.1.4+github1'
   description 'Elephant DB'
 
   build_depends \
