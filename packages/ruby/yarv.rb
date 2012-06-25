@@ -1,11 +1,11 @@
 require 'mri'
 
 class YARV < MRI
-  url 'http://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p0.tar.gz'
+  url 'http://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p194.tar.gz'
   homepage 'http://www.ruby-lang.org/'
-  md5 '8e2fef56185cfbaf29d0c8329fc77c05'
+  md5 'bc0c715c69da4d1d8bd57069c19f6c0e'
 
-  name 'rbenv-1.9.3-p0'
+  name 'rbenv-1.9.3-p194'
   section 'interpreters'
   version '1.0.0'
   description 'The YARV Ruby virtual machine'
