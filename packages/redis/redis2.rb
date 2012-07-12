@@ -6,13 +6,21 @@ class Redis2 < DebianFormula
 
   name 'redis2-server'
   section 'database'
-  version '2.2.5+github1'
+  version '2.2.5+github2'
   description 'An advanced key-value store.'
 
   conflicts 'redis-server'
 
   config_files \
     '/etc/redis/redis.conf'
+
+  requires_user 'redis',
+    :home => '/var/lib/redis',
+    :remove => false,
+    :chown => [
+      '/var/log/redis',
+      '/var/lib/redis',
+    ]
 
   def patches
     'fix-link-ordering.patch'

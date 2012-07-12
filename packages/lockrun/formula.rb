@@ -1,10 +1,10 @@
 class Lockrun < DebianFormula
-  homepage 'http://unixwiz.net/tools/lockrun.html'
-  url 'https://raw.github.com/gist/17e978b7af98d0a112c8/eba757278acb425c0157d5d781f48a801905e7dc/lockrun.c', :get => :curl
-  md5 '7670ecfd1f9bf79462baed43e27af12f'
+  homepage 'https://github.com/jakedouglas/lockrun/blob/784e3339ec0f9d205a79ff9b3091e1b1add1272b/README.markdown'
+  url 'https://raw.github.com/jakedouglas/lockrun/784e3339ec0f9d205a79ff9b3091e1b1add1272b/lockrun.c', :get => :curl
+  md5 '0aeb2b56edac70178a48f57ef5602f09'
 
   name 'lockrun'
-  version '1.0+github3'
+  version '1.0+github4'
   description 'Run cron job with overrun protection'
 
   def build
