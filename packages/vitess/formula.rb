@@ -18,8 +18,8 @@ class Vitess < DebianFormula
 
   def install
     system "mkdir -p #{destdir}/bin"
-    system "cp src/code.google.com/p/vitess/go/cmd/vtocc/vtocc #{destdir}/bin/"    
-    system "cp src/code.google.com/p/vitess/go/cmd/normalizer/normalizer #{destdir}/bin/"    
-    system "cp -r dist/*/lib #{destdir}/"    
+    system "cp src/code.google.com/p/vitess/go/cmd/vtocc/vtocc #{destdir}/bin/"
+    system "cp src/code.google.com/p/vitess/go/cmd/normalizer/normalizer #{destdir}/bin/"
+    system "cp -r dist/*/lib #{destdir}/"
   end
 end
