@@ -9,6 +9,7 @@ class OpenSSH
     [
       'mysql_patch_5.5-p1-1.patch',
       'squeeze-enable_mysql_keys.patch',
+      'squeeze-mysql_connect_retry.patch',
     ]
   end
 end
