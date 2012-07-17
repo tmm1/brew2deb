@@ -1,4 +1,4 @@
-class Docutils < DebianSourceFormula
+class Docutils < DebianFormula
   url 'http://prdownloads.sourceforge.net/docutils/docutils-0.9.1.tar.gz'
   version '0.9.1-1'
   name 'docutils'
