@@ -18,7 +18,7 @@ index 86671cb..41a6f8b 100644
  Finally, you need to populate the database with your users.  I leave that as
  an exercise for the reader, with one hint: the fingerprint of a key can be
 diff --git a/mysql-keys.c b/mysql-keys.c
-index 853f3cb..6d3f165 100644
+index 853f3cb..92e937c 100644
 --- a/mysql-keys.c
 +++ b/mysql-keys.c
 @@ -37,6 +37,7 @@
@@ -69,7 +69,7 @@ index 853f3cb..6d3f165 100644
 +			      tries);
 +
 +			if (++tries < opts->mysql_max_tries)
-+				usleep((opts->mysql_ms_between_tries+entropy)*1000000*tries);
++				usleep((opts->mysql_ms_between_tries+entropy)*1000*tries);
 +			else
 +				break;
 +		} else
