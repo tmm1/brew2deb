@@ -11,6 +11,7 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 $ apt-get install dpkg-dev pbuilder
 $ apt-get install ruby rubygems libjson-ruby
 $ apt-get install git
+$ apt-get install curl
 $ git clone git://github.com/tmm1/brew2deb
 ```
 
