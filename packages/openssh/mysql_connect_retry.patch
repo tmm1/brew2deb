@@ -1,5 +1,5 @@
 diff --git a/README.mysql-keys b/README.mysql-keys
-index 86671cb..41a6f8b 100644
+index 86671cb..07aaeee 100644
 --- a/README.mysql-keys
 +++ b/README.mysql-keys
 @@ -133,7 +133,13 @@ MySQLUsername (string): The username to login to the MySQL server with.  No
@@ -10,7 +10,7 @@ index 86671cb..41a6f8b 100644
 +MySQLDatabase (string): The name of the database to use.  No default.
 +
 +MySQLMaxTries (int): Number of tries to attempt connecting to the database.
-+	Default: 1
++	Default: 3
 +
 +MySQLMSBetweenTries (int): Minimum number of milliseconds to sleep
 +	 between database connection attempts (max 2000). Default: 100
@@ -89,14 +89,14 @@ index 853f3cb..801b8c8 100644
  		if (mysql_ping(opts->mysql_handle) != 0) {
  			logit("[MyK] Connection to the database server failed: %s", mysql_error(opts->mysql_handle));
 diff --git a/mysql-keys.h b/mysql-keys.h
-index ec876ed..aa0e0e7 100644
+index ec876ed..3617e38 100644
 --- a/mysql-keys.h
 +++ b/mysql-keys.h
 @@ -34,6 +34,9 @@
  #include "log.h"
  #include "servconf.h"
  
-+#define DEFAULT_MYSQL_MAX_TRIES 1
++#define DEFAULT_MYSQL_MAX_TRIES 3
 +#define DEFAULT_MYSQL_MS_BETWEEN_TRIES 100
 +
  typedef struct mysql_key_s {
@@ -189,7 +189,7 @@ index d1badaa..14d1ed0 100644
  }       ServerOptions;
  
 diff --git a/sshd_config.5 b/sshd_config.5
-index 465afef..b73f43f 100644
+index 465afef..a9976f4 100644
 --- a/sshd_config.5
 +++ b/sshd_config.5
 @@ -1085,6 +1085,11 @@ The username to use to login to the MySQL server for public key lookups.
@@ -200,7 +200,7 @@ index 465afef..b73f43f 100644
 +Number of tries to attempt connecting to the database.
 +.It Cm MySQLMSBetweenTries
 +Minimum number of milliseconds to sleep between database connection
-+attempts. (max 4000)
++attempts. (max 2000)
  .El
  .Sh TIME FORMATS
  .Xr sshd 8
