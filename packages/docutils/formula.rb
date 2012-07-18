@@ -1,6 +1,6 @@
 class Docutils < DebianFormula
   url 'http://prdownloads.sourceforge.net/docutils/docutils-0.9.1.tar.gz'
-  version '0.9.1-1'
+  version '0.9.1-2'
   name 'docutils'
   arch 'all'
 
