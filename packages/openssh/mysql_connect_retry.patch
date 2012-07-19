@@ -29,7 +29,7 @@ index 853f3cb..801b8c8 100644
  
  /* Return an "empty" result set, so that callers don't get too upset */
  #define MYSQL_KEYS_ERROR_RETURN  key_list = xmalloc(sizeof(mysql_key_t));	\
-@@ -53,24 +54,36 @@
+@@ -53,26 +54,38 @@
   */
  void mysql_keys_init(ServerOptions *opts)
  {
@@ -44,6 +44,8 @@ index 853f3cb..801b8c8 100644
 -	
 +
  	opts->mysql_handle = mysql_init(NULL);
+ 	unsigned int connect_timeout = 1;
+ 	mysql_options(opts->mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
 -	
 -	if (!mysql_real_connect(opts->mysql_handle,
 -	                        opts->mysql_dbhost,
@@ -56,12 +58,12 @@ index 853f3cb..801b8c8 100644
 -		      mysql_error(opts->mysql_handle));
 +
 +	while (1) {
-+		if (!mysql_real_connect(opts->mysql_handle ,
-+	        	                opts->mysql_dbhost,
-+	                	        opts->mysql_dbuser,
-+	                        	opts->mysql_dbpass,
++		if (!mysql_real_connect(opts->mysql_handle,
++		                        opts->mysql_dbhost,
++		                        opts->mysql_dbuser,
++		                        opts->mysql_dbpass,
 +		                        opts->mysql_dbname,
-+	        	                0, NULL, 0)) {
++		                        0, NULL, 0)) {
 +			logit("[MyK] Failed to connect to MySQL server %s: %s (tries=%d)",
 +			      opts->mysql_dbhost,
 +			      mysql_error(opts->mysql_handle),
