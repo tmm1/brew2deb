@@ -30,7 +30,7 @@ index 4014444..4a4a056 100644
 +		verify_key = dlsym(dl, "verify_key");
 +		if (verify_key == NULL) {
 +			dlclose(dl);
-+			error("[sjg] failed to load authorize() from plugin: %s",
++			error("[sjg] failed to load verify_key() from plugin: %s",
 +			      dlerror());
 +			goto skip_plugin;
 +		} 
@@ -65,15 +65,13 @@ index 4014444..4a4a056 100644
  	f = auth_openkeyfile(file, pw, options.strict_modes);
  
 diff --git a/servconf.c b/servconf.c
-index 66ce390..1cdb033 100644
+index 66ce390..44e8464 100644
 --- a/servconf.c
 +++ b/servconf.c
-@@ -57,7 +57,8 @@ initialize_server_options(ServerOptions *options)
- 	memset(options, 0, sizeof(*options));
+@@ -58,6 +58,7 @@ initialize_server_options(ServerOptions *options)
  
  	/* Portable-specific options */
--	options->use_pam = -1;
-+	options->use_pam = -1;
+ 	options->use_pam = -1;
 +	options->key_verification_plugin = NULL;
  
  	/* Standard Options */
