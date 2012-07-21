@@ -1,0 +1,127 @@
+diff --git a/auth2-pubkey.c b/auth2-pubkey.c
+index 4014444..4a4a056 100644
+--- a/auth2-pubkey.c
++++ b/auth2-pubkey.c
+@@ -33,6 +33,7 @@
+ #include <stdio.h>
+ #include <stdarg.h>
+ #include <unistd.h>
++#include <dlfcn.h>
+ 
+ #include "xmalloc.h"
+ #include "ssh.h"
+@@ -191,6 +192,53 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
+ 	/* Temporarily use the user's uid. */
+ 	temporarily_use_uid(pw);
+ 
++	if (options.key_verification_plugin) {
++		u_char *key_blob;
++		char key_options[16384];
++		u_int key_blob_len, auth_ok = 0;
++		int (*verify_key)(const char *, const char *, const char *, char *) = NULL;
++
++		void *dl = dlopen(options.key_verification_plugin, RTLD_NOW | RTLD_LOCAL);
++		if (dl == NULL) {
++			error("[sjg] failed to open plugin '%s': %s",
++			      options.key_verification_plugin, dlerror());
++			goto skip_plugin;
++		}
++
++		verify_key = dlsym(dl, "verify_key");
++		if (verify_key == NULL) {
++			dlclose(dl);
++			error("[sjg] failed to load authorize() from plugin: %s",
++			      dlerror());
++			goto skip_plugin;
++		} 
++
++		fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX); 
++		if (key_to_blob(key, &key_blob, &key_blob_len) == 0) {
++			error("[sjg] failed to get key blob");
++		} else if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
++			error("[sjg] failed to get key fingerprint");
++		} else if (verify_key(pw->pw_name, fp, key_blob, key_options) == 0) {
++			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
++				auth_ok = 1;
++			} else {
++				error("[sjg] failed to parse options: %s", key_options);
++			}
++		} else {
++			logit("[sjg] no keys found for key fingerprint %s", fp);
++		}
++		xfree(fp);
++		xfree(key_blob);
++		dlclose(dl);
++
++		if (auth_ok) {
++			restore_uid();
++			return 1;
++		}
++	}
++
++
++ skip_plugin:
+ 	debug("trying public key file %s", file);
+ 	f = auth_openkeyfile(file, pw, options.strict_modes);
+ 
+diff --git a/servconf.c b/servconf.c
+index 66ce390..1cdb033 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -57,7 +57,8 @@ initialize_server_options(ServerOptions *options)
+ 	memset(options, 0, sizeof(*options));
+ 
+ 	/* Portable-specific options */
+-	options->use_pam = -1;
++	options->use_pam = -1;
++	options->key_verification_plugin = NULL;
+ 
+ 	/* Standard Options */
+ 	options->num_ports = 0;
+@@ -288,6 +289,7 @@ typedef enum {
+ 	sBadOption,		/* == unknown option */
+ 	/* Portable-specific options */
+ 	sUsePAM,
++	sKeyVerificationPlugin,
+ 	/* Standard Options */
+ 	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
+ 	sPermitRootLogin, sLogFacility, sLogLevel,
+@@ -333,6 +335,7 @@ static struct {
+ 	{ "usepam", sUnsupported, SSHCFG_GLOBAL },
+ #endif
+ 	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
++	{ "keyverificationplugin", sKeyVerificationPlugin, SSHCFG_GLOBAL },
+ 	/* Standard Options */
+ 	{ "port", sPort, SSHCFG_GLOBAL },
+ 	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
+@@ -1313,6 +1316,17 @@ process_server_config_line(ServerOptions *options, char *line,
+ 			*charptr = xstrdup(arg);
+ 		break;
+ 
++	case sKeyVerificationPlugin:
++		charptr = &options->key_verification_plugin;
++
++		arg = strdelim(&cp);
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing file name.",
++			    filename, linenum);
++		if (*activep && *charptr == NULL)
++			*charptr = xstrdup(arg);
++		break;
++
+ 	case sDeprecated:
+ 		logit("%s line %d: Deprecated option %s",
+ 		    filename, linenum, arg);
+diff --git a/servconf.h b/servconf.h
+index cb91b76..358c46b 100644
+--- a/servconf.h
++++ b/servconf.h
+@@ -147,6 +147,8 @@ typedef struct {
+ 
+ 	int	use_pam;		/* Enable auth via PAM */
+ 
++	char   *key_verification_plugin;
++
+ 	int	permit_tun;
+ 
+ 	int	num_permitted_opens;

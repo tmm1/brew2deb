@@ -5,9 +5,7 @@ class OpenSSH < DebianSourceFormula
 
   def patches
     [
-      'mysql_patch_5.2-p1-1.patch',
-      'enable_mysql_keys.patch',
-      'mysql_connect_retry.patch',
+      'sjg-key-verification-plugin.patch'
     ]
   end
 end

@@ -7,8 +7,7 @@ class OpenSSH
 
   def patches
     [
-      'mysql_patch_5.8-p1-1.patch',
-      'ubuntu-enable_mysql_keys.patch',
+      'sjg-key-verification-plugin.patch',
     ]
   end
 end

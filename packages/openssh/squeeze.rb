@@ -7,9 +7,7 @@ class OpenSSH
 
   def patches
     [
-      'mysql_patch_5.5-p1-1.patch',
-      'squeeze-enable_mysql_keys.patch',
-      'mysql_connect_retry.patch',
+      'sjg-key-verification-plugin.patch',
     ]
   end
 end
