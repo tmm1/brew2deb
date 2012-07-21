@@ -8,6 +8,7 @@ class OpenSSH
   def patches
     [
       'sjg-key-verification-plugin.patch',
+      'sjg-ignore-mysql-options.patch',
     ]
   end
 end
