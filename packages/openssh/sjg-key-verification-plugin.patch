@@ -10,7 +10,7 @@ index 4014444..4a4a056 100644
  
  #include "xmalloc.h"
  #include "ssh.h"
-@@ -191,6 +192,53 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
+@@ -191,6 +192,54 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
  	/* Temporarily use the user's uid. */
  	temporarily_use_uid(pw);
  
@@ -35,19 +35,20 @@ index 4014444..4a4a056 100644
 +			goto skip_plugin;
 +		} 
 +
-+		fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX); 
-+		if (key_to_blob(key, &key_blob, &key_blob_len) == 0) {
++		if (key_to_blob(key, &key_blob, &key_blob_len) <= 0) {
 +			error("[sjg] failed to get key blob");
 +		} else if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
 +			error("[sjg] failed to get key fingerprint");
-+		} else if (verify_key(pw->pw_name, fp, key_blob, key_options) == 0) {
-+			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
-+				auth_ok = 1;
-+			} else {
-+				error("[sjg] failed to parse options: %s", key_options);
-+			}
 +		} else {
-+			logit("[sjg] no keys found for key fingerprint %s", fp);
++			logit("[sjg] auth request: user='%s' fingerprint='%s' key_blob='%s'", pw->pw_name, fp, key_blob);
++			if (verify_key(pw->pw_name, fp, key_blob, key_options) == 0) {
++				if (auth_parse_options(pw, key_options, file, linenum) == 1) {
++					auth_ok = 1;
++				} else {
++					error("[sjg] failed to parse options: %s", key_options);
++				}
++			} else
++				logit("[sjg] no keys found for key fingerprint %s", fp);
 +		}
 +		xfree(fp);
 +		xfree(key_blob);
