@@ -49,8 +49,6 @@ index 853f3cb..801b8c8 100644
  	opts->mysql_handle = mysql_init(NULL);
 -	unsigned int connect_timeout = 1;
 -	mysql_options(opts->mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT, &connect_timeout);
-+	mysql_options(opts->mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT,
-+	              &opts->mysql_connect_timeout);
 -	
 -	if (!mysql_real_connect(opts->mysql_handle,
 -	                        opts->mysql_dbhost,
@@ -63,6 +61,8 @@ index 853f3cb..801b8c8 100644
 -		      mysql_error(opts->mysql_handle));
 +
 +	while (1) {
++		mysql_options(opts->mysql_handle, MYSQL_OPT_CONNECT_TIMEOUT,
++	        	      &opts->mysql_connect_timeout);
 +		if (!mysql_real_connect(opts->mysql_handle,
 +		                        opts->mysql_dbhost,
 +		                        opts->mysql_dbuser,
@@ -133,7 +133,7 @@ index d074904..0dff5d3 100644
 +	if (options->mysql_ms_between_tries == -1)
 +		options->mysql_ms_between_tries = DEFAULT_MYSQL_MS_BETWEEN_TRIES;
 +	if (options->mysql_connect_timeout == -1)
-+		options->mysql_ms_between_tries = DEFAULT_MYSQL_CONNECT_TIMEOUT;
++		options->mysql_connect_timeout = DEFAULT_MYSQL_CONNECT_TIMEOUT;
  	if (options->mysql_enabled == 1
  	    && (!options->mysql_dbhost
  	        || !options->mysql_dbuser
