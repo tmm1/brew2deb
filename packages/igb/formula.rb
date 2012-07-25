@@ -1,7 +1,7 @@
 require 'formula'
 
 class Igb < DebianFormula
-  url 'https://github.com/github/igb.git', :sha => 'master'
+  url 'https://github.com/github/igb.git', :sha => 'dbac09b5be22b59053bc790ab136e0c1c983e679'
 
   name 'igb'
   version '3.4.8+github1'

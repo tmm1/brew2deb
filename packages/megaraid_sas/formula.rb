@@ -1,7 +1,7 @@
 require 'formula'
 
 class Megaraid_sas < DebianFormula
-  url 'https://github.com/github/megaraid_sas.git', :sha => 'master'
+  url 'https://github.com/github/megaraid_sas.git', :sha => '4fb0dce821e0b1e179a9a2cf152676c442cd39f0'
 
   name 'megaraid-sas'
   version '5.34-rc1+github1'
