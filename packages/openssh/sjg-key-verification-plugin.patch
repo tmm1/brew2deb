@@ -1,23 +1,25 @@
 diff --git a/auth2-pubkey.c b/auth2-pubkey.c
-index 4014444..4a4a056 100644
+index 4014444..2ed50ff 100644
 --- a/auth2-pubkey.c
 +++ b/auth2-pubkey.c
-@@ -33,6 +33,7 @@
+@@ -33,7 +33,10 @@
  #include <stdio.h>
  #include <stdarg.h>
  #include <unistd.h>
 +#include <dlfcn.h>
++#include <string.h>
  
++#include "uuencode.h"
  #include "xmalloc.h"
  #include "ssh.h"
-@@ -191,6 +192,54 @@ user_key_allowed2(struct passwd *pw, Key *key, char *file)
+ #include "ssh2.h"
+@@ -191,6 +194,85 @@
  	/* Temporarily use the user's uid. */
  	temporarily_use_uid(pw);
  
 +	if (options.key_verification_plugin) {
-+		u_char *key_blob;
-+		char key_options[16384];
-+		u_int key_blob_len, auth_ok = 0;
++		char key_options[16384], *key_str = NULL;
++		u_int auth_ok = 0;
 +		int (*verify_key)(const char *, const char *, const char *, char *) = NULL;
 +
 +		void *dl = dlopen(options.key_verification_plugin, RTLD_NOW | RTLD_LOCAL);
@@ -35,25 +37,57 @@ index 4014444..4a4a056 100644
 +			goto skip_plugin;
 +		} 
 +
-+		if (key_to_blob(key, &key_blob, &key_blob_len) <= 0) {
-+			error("[sjg] failed to get key blob");
-+		} else if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
++		if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
++			dlclose(dl);
 +			error("[sjg] failed to get key fingerprint");
-+		} else {
-+			logit("[sjg] auth request: user='%s' fingerprint='%s' key_blob='%s'", pw->pw_name, fp, key_blob);
-+			if (verify_key(pw->pw_name, fp, key_blob, key_options) == 0) {
-+				if (auth_parse_options(pw, key_options, file, linenum) == 1) {
-+					auth_ok = 1;
-+				} else {
-+					error("[sjg] failed to parse options: %s", key_options);
-+				}
-+			} else
-+				logit("[sjg] no keys found for key fingerprint %s", fp);
++			goto skip_plugin;
 +		}
-+		xfree(fp);
-+		xfree(key_blob);
-+		dlclose(dl);
 +
++		/* Get string representation of pubkey */
++                if ((key->type == KEY_DSA && key->dsa != NULL) ||
++		    (key->type == KEY_RSA && key->rsa != NULL)) {
++			u_char *blob;
++			u_int len;
++			int n;
++			char *uu;
++			
++			key_to_blob(key, &blob, &len);
++			uu = xmalloc(2*len);
++			n = uuencode(blob, len, uu, 2*len);
++			if (n > 0) {
++				const char *key_type_str = key_ssh_name(key);
++				int key_str_len = strlen(uu) + 1 + strlen(key_type_str);
++				uu[n] = 0;
++				key_str = xmalloc(key_str_len + 1);
++				int m = snprintf(key_str, key_str_len + 1, "%s %s", key_type_str, uu);
++				if (m > key_str_len) {
++					xfree(key_str);
++					key_str = NULL;
++				}
++			}
++			xfree(blob);
++			xfree(uu);
++		}
++
++
++		if (key_str == NULL) {
++			error("[sjg] failed to generate pubkey string for %s", fp);
++		} else if (verify_key(pw->pw_name, fp, key_str, key_options) == 0) {
++			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
++				auth_ok = 1;
++			} else {
++				error("[sjg] failed to parse options: %s", key_options);
++			}
++		} else
++			logit("[sjg] no keys found for key fingerprint %s", fp);
++
++		if (fp)
++			xfree(fp);
++		if (key_str)
++			xfree(key_str);
++		if (dl)
++			dlclose(dl);
++		
 +		if (auth_ok) {
 +			restore_uid();
 +			return 1;
@@ -69,7 +103,7 @@ diff --git a/servconf.c b/servconf.c
 index 66ce390..44e8464 100644
 --- a/servconf.c
 +++ b/servconf.c
-@@ -58,6 +58,7 @@ initialize_server_options(ServerOptions *options)
+@@ -58,6 +58,7 @@
  
  	/* Portable-specific options */
  	options->use_pam = -1;
@@ -77,7 +111,7 @@ index 66ce390..44e8464 100644
  
  	/* Standard Options */
  	options->num_ports = 0;
-@@ -288,6 +289,7 @@ typedef enum {
+@@ -288,6 +289,7 @@
  	sBadOption,		/* == unknown option */
  	/* Portable-specific options */
  	sUsePAM,
@@ -85,7 +119,7 @@ index 66ce390..44e8464 100644
  	/* Standard Options */
  	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
  	sPermitRootLogin, sLogFacility, sLogLevel,
-@@ -333,6 +335,7 @@ static struct {
+@@ -333,6 +335,7 @@
  	{ "usepam", sUnsupported, SSHCFG_GLOBAL },
  #endif
  	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
@@ -93,7 +127,7 @@ index 66ce390..44e8464 100644
  	/* Standard Options */
  	{ "port", sPort, SSHCFG_GLOBAL },
  	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
-@@ -1313,6 +1316,17 @@ process_server_config_line(ServerOptions *options, char *line,
+@@ -1313,6 +1316,17 @@
  			*charptr = xstrdup(arg);
  		break;
  
@@ -115,7 +149,7 @@ diff --git a/servconf.h b/servconf.h
 index cb91b76..358c46b 100644
 --- a/servconf.h
 +++ b/servconf.h
-@@ -147,6 +147,8 @@ typedef struct {
+@@ -147,6 +147,8 @@
  
  	int	use_pam;		/* Enable auth via PAM */
  
