@@ -16,4 +16,14 @@ class Igb < DebianFormula
     system "mkdir -p #{destdir}/lib/modules/2.6.32-5-amd64/updates/kernel/drivers/net/igb"
     system "cp src/*.ko #{destdir}/lib/modules/2.6.32-5-amd64/updates/kernel/drivers/net/igb/"
   end
+
+  def postinst
+    "
+      #!/bin/sh
+      set -e
+      
+      update-initramfs -u -k 2.6.32-5-amd64
+    ".ui
+  end
 end
+

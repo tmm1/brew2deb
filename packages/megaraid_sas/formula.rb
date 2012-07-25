@@ -16,4 +16,13 @@ class Megaraid_sas < DebianFormula
     system "mkdir -p #{destdir}/lib/modules/2.6.32-5-amd64/updates/kernel/drivers/scsi/megaraid/"
     system "cp src/*.ko #{destdir}/lib/modules/2.6.32-5-amd64/updates/kernel/drivers/scsi/megaraid/"
   end
+
+  def postinst
+    "
+      #!/bin/sh
+      set -e
+      
+      update-initramfs -u -k 2.6.32-5-amd64
+    ".ui
+  end
 end
