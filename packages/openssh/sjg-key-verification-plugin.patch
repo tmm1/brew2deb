@@ -1,0 +1,160 @@
+diff --git a/auth2-pubkey.c b/auth2-pubkey.c
+index 4014444..2ed50ff 100644
+--- a/auth2-pubkey.c
++++ b/auth2-pubkey.c
+@@ -33,7 +33,10 @@
+ #include <stdio.h>
+ #include <stdarg.h>
+ #include <unistd.h>
++#include <dlfcn.h>
++#include <string.h>
+ 
++#include "uuencode.h"
+ #include "xmalloc.h"
+ #include "ssh.h"
+ #include "ssh2.h"
+@@ -191,6 +194,85 @@
+ 	/* Temporarily use the user's uid. */
+ 	temporarily_use_uid(pw);
+ 
++	if (options.key_verification_plugin) {
++		char key_options[16384], *key_str = NULL;
++		u_int auth_ok = 0;
++		int (*verify_key)(const char *, const char *, const char *, char *) = NULL;
++
++		void *dl = dlopen(options.key_verification_plugin, RTLD_NOW | RTLD_LOCAL);
++		if (dl == NULL) {
++			error("[sjg] failed to open plugin '%s': %s",
++			      options.key_verification_plugin, dlerror());
++			goto skip_plugin;
++		}
++
++		verify_key = dlsym(dl, "verify_key");
++		if (verify_key == NULL) {
++			dlclose(dl);
++			error("[sjg] failed to load verify_key() from plugin: %s",
++			      dlerror());
++			goto skip_plugin;
++		} 
++
++		if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
++			dlclose(dl);
++			error("[sjg] failed to get key fingerprint");
++			goto skip_plugin;
++		}
++
++		/* Get string representation of pubkey */
++                if ((key->type == KEY_DSA && key->dsa != NULL) ||
++		    (key->type == KEY_RSA && key->rsa != NULL)) {
++			u_char *blob;
++			u_int len;
++			int n;
++			char *uu;
++			
++			key_to_blob(key, &blob, &len);
++			uu = xmalloc(2*len);
++			n = uuencode(blob, len, uu, 2*len);
++			if (n > 0) {
++				const char *key_type_str = key_ssh_name(key);
++				int key_str_len = strlen(uu) + 1 + strlen(key_type_str);
++				uu[n] = 0;
++				key_str = xmalloc(key_str_len + 1);
++				int m = snprintf(key_str, key_str_len + 1, "%s %s", key_type_str, uu);
++				if (m > key_str_len) {
++					xfree(key_str);
++					key_str = NULL;
++				}
++			}
++			xfree(blob);
++			xfree(uu);
++		}
++
++
++		if (key_str == NULL) {
++			error("[sjg] failed to generate pubkey string for %s", fp);
++		} else if (verify_key(pw->pw_name, fp, key_str, key_options) == 0) {
++			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
++				auth_ok = 1;
++			} else {
++				error("[sjg] failed to parse options: %s", key_options);
++			}
++		} else
++			logit("[sjg] no keys found for key fingerprint %s", fp);
++
++		if (fp)
++			xfree(fp);
++		if (key_str)
++			xfree(key_str);
++		if (dl)
++			dlclose(dl);
++		
++		if (auth_ok) {
++			restore_uid();
++			return 1;
++		}
++	}
++
++
++ skip_plugin:
+ 	debug("trying public key file %s", file);
+ 	f = auth_openkeyfile(file, pw, options.strict_modes);
+ 
+diff --git a/servconf.c b/servconf.c
+index 66ce390..44e8464 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -58,6 +58,7 @@
+ 
+ 	/* Portable-specific options */
+ 	options->use_pam = -1;
++	options->key_verification_plugin = NULL;
+ 
+ 	/* Standard Options */
+ 	options->num_ports = 0;
+@@ -288,6 +289,7 @@
+ 	sBadOption,		/* == unknown option */
+ 	/* Portable-specific options */
+ 	sUsePAM,
++	sKeyVerificationPlugin,
+ 	/* Standard Options */
+ 	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
+ 	sPermitRootLogin, sLogFacility, sLogLevel,
+@@ -333,6 +335,7 @@
+ 	{ "usepam", sUnsupported, SSHCFG_GLOBAL },
+ #endif
+ 	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
++	{ "keyverificationplugin", sKeyVerificationPlugin, SSHCFG_GLOBAL },
+ 	/* Standard Options */
+ 	{ "port", sPort, SSHCFG_GLOBAL },
+ 	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
+@@ -1313,6 +1316,17 @@
+ 			*charptr = xstrdup(arg);
+ 		break;
+ 
++	case sKeyVerificationPlugin:
++		charptr = &options->key_verification_plugin;
++
++		arg = strdelim(&cp);
++		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing file name.",
++			    filename, linenum);
++		if (*activep && *charptr == NULL)
++			*charptr = xstrdup(arg);
++		break;
++
+ 	case sDeprecated:
+ 		logit("%s line %d: Deprecated option %s",
+ 		    filename, linenum, arg);
+diff --git a/servconf.h b/servconf.h
+index cb91b76..358c46b 100644
+--- a/servconf.h
++++ b/servconf.h
+@@ -147,6 +147,8 @@
+ 
+ 	int	use_pam;		/* Enable auth via PAM */
+ 
++	char   *key_verification_plugin;
++
+ 	int	permit_tun;
+ 
+ 	int	num_permitted_opens;

@@ -1,0 +1,19 @@
+diff --git a/servconf.c b/servconf.c
+index 44e8464..1d9aef4 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -336,6 +336,14 @@ static struct {
+ #endif
+ 	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
+ 	{ "keyverificationplugin", sKeyVerificationPlugin, SSHCFG_GLOBAL },
++	{ "UseMySQL", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLServer", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLUsername", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLPassword", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLDatabase", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLMaxTries", sDeprecated, SSHCFG_GLOBAL },
++	{ "MySQLConnectTimeout", sDeprecated, SSHCFG_GLOBAL },
++
+ 	/* Standard Options */
+ 	{ "port", sPort, SSHCFG_GLOBAL },
+ 	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },

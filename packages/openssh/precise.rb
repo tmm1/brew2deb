@@ -7,8 +7,7 @@ class OpenSSH
 
   def patches
     [
-      'mysql_patch_5.9-p1-5.patch',
-      'precise-enable_mysql_keys.patch',
+      'sjg-key-verification-plugin.patch'
     ]
   end
 
