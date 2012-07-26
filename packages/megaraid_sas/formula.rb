@@ -4,9 +4,13 @@ class Megaraid_sas < DebianFormula
   url 'https://github.com/github/megaraid_sas.git', :sha => '4fb0dce821e0b1e179a9a2cf152676c442cd39f0'
 
   name 'megaraid-sas'
-  version '5.34-rc1+github1'
+  version '5.34-rc1+github4'
   section 'main'
   description 'GitHub\'s custom brewed MegaRAID SAS driver. Tastes like strawberries.'
+
+  depends \
+    'linux-image-2.6.32-5-amd64',
+    'initramfs-tools'
 
   def build
     system "make"
@@ -21,8 +25,9 @@ class Megaraid_sas < DebianFormula
     "
       #!/bin/sh
       set -e
-      
-      update-initramfs -u -k 2.6.32-5-amd64
+
+      /sbin/depmod -a
+      /usr/sbin/update-initramfs -u -k all
     ".ui
   end
 end
