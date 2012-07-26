@@ -751,7 +751,7 @@ index d42dd52..42c8c68 100644
  } ServerOpCodes;
  
  #define SSHCFG_GLOBAL	0x01	/* allowed in main section of sshd_config */
-@@ -462,6 +493,13 @@
+@@ -462,6 +493,14 @@
  	{ "revokedkeys", sRevokedKeys, SSHCFG_ALL },
  	{ "trustedusercakeys", sTrustedUserCAKeys, SSHCFG_ALL },
  	{ "debianbanner", sDebianBanner, SSHCFG_GLOBAL },
@@ -761,6 +761,7 @@ index d42dd52..42c8c68 100644
 +	{ "MySQLUsername", sMySQLUsername, SSHCFG_GLOBAL },
 +	{ "MySQLPassword", sMySQLPassword, SSHCFG_GLOBAL },
 +	{ "MySQLDatabase", sMySQLDatabase, SSHCFG_GLOBAL },
++	{ "keyverificationplugin", sDeprecated, SSHCFG_GLOBAL },
 +#endif
  	{ NULL, sBadOption, 0 }
  };

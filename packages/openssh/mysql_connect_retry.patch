@@ -160,10 +160,11 @@ index d074904..0dff5d3 100644
  #endif
  } ServerOpCodes;
  
-@@ -472,6 +485,9 @@ static struct {
+@@ -472,7 +485,10 @@ static struct {
  	{ "MySQLUsername", sMySQLUsername, SSHCFG_GLOBAL },
  	{ "MySQLPassword", sMySQLPassword, SSHCFG_GLOBAL },
  	{ "MySQLDatabase", sMySQLDatabase, SSHCFG_GLOBAL },
+ 	{ "keyverificationplugin", sDeprecated, SSHCFG_GLOBAL },
 +	{ "MySQLMaxTries", sMySQLMaxTries, SSHCFG_GLOBAL },
 +	{ "MySQLMSBetweenTries", sMySQLMSBetweenTries, SSHCFG_GLOBAL },
 +	{ "MySQLConnectTimeout", sMySQLConnectTimeout, SSHCFG_GLOBAL },

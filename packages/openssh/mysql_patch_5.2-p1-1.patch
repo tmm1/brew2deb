@@ -739,7 +739,7 @@ diff -urN openssh-5.2p1-pre-mysql/servconf.c openssh-5.2p1/servconf.c
  } ServerOpCodes;
  
  #define SSHCFG_GLOBAL	0x01	/* allowed in main section of sshd_config */
-@@ -424,6 +455,13 @@
+@@ -424,6 +455,14 @@
  	{ "permitopen", sPermitOpen, SSHCFG_ALL },
  	{ "forcecommand", sForceCommand, SSHCFG_ALL },
  	{ "chrootdirectory", sChrootDirectory, SSHCFG_ALL },
@@ -749,6 +749,7 @@ diff -urN openssh-5.2p1-pre-mysql/servconf.c openssh-5.2p1/servconf.c
 +	{ "MySQLUsername", sMySQLUsername, SSHCFG_GLOBAL },
 +	{ "MySQLPassword", sMySQLPassword, SSHCFG_GLOBAL },
 +	{ "MySQLDatabase", sMySQLDatabase, SSHCFG_GLOBAL },
++	{ "keyverificationplugin", sDeprecated, SSHCFG_GLOBAL },
 +#endif
  	{ NULL, sBadOption, 0 }
  };
