@@ -44,7 +44,7 @@ index 4014444..2ed50ff 100644
 +		}
 +
 +		/* Get string representation of pubkey */
-+                if ((key->type == KEY_DSA && key->dsa != NULL) ||
++		if ((key->type == KEY_DSA && key->dsa != NULL) ||
 +		    (key->type == KEY_RSA && key->rsa != NULL)) {
 +			u_char *blob;
 +			u_int len;
