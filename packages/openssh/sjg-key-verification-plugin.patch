@@ -175,7 +175,7 @@ index cb91b76..358c46b 100644
  
  	int	num_permitted_opens;
 diff --git a/session.c b/session.c
-index 93babf9..ff6a321 100644
+index 93babf9..1e29926 100644
 --- a/session.c
 +++ b/session.c
 @@ -127,6 +127,7 @@
@@ -186,12 +186,13 @@ index 93babf9..ff6a321 100644
  
  /* original command from peer. */
  const char *original_command = NULL;
-@@ -1936,7 +1937,7 @@
+@@ -1936,7 +1937,8 @@
  	Session *s = session_new();
  	debug("session_open: channel %d", chanid);
  	if (s == NULL) {
 -		error("no more sessions");
-+		error("[sjg] no more sessions (last_fingerprint='%s')", last_fingerprint);
++		error("[sjg] no more sessions for %s (last_fingerprint='%s')",
++		      get_remote_ipaddr(), last_fingerprint);
  		return 0;
  	}
  	s->authctxt = authctxt;
