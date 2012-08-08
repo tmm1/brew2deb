@@ -1,10 +1,10 @@
 class Logstash < DebianFormula
   homepage 'http://logstash.net/'
-  url 'http://semicomplete.com/files/logstash/logstash-1.1.0-monolithic.jar', :using => :nounzip
-  md5 '357c01ae09aa4611e31347238d762729'
+  url 'http://semicomplete.com/files/logstash/logstash-1.1.1-monolithic.jar', :using => :nounzip
+  md5 'cecabd2dda920e1ce4325cd7b22c2cca'
 
   name 'logstash'
-  version '1.1.0+github4'
+  version '1.1.1+github1'
   section 'utilities'
   description 'a tool for managing events and logs'
 
