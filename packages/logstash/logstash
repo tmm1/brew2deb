@@ -15,4 +15,4 @@ JAVA_OPTS="
   -Djava.io.tmpdir=/var/tmp
 "
 
-exec java $JAVA_OPTS -jar /usr/share/logstash/logstash-1.1.0-monolithic.jar "$@"
+exec java $JAVA_OPTS -jar /usr/share/logstash/logstash-1.1.1-monolithic.jar "$@"
