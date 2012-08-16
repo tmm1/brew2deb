@@ -16,10 +16,7 @@ class Astyanax < DebianFormula
   end
 
   def install
-    base = Pathname.new(@url).basename
-
-    home = share/'astyanax'
-    home.install base
-    (home/'astyanax.jar').make_relative_symlink(home/"#{base}")
+    astyanax_home = share/'astyanax'
+    astyanax_home.install Pathname.new(@url).basename
   end
 end
