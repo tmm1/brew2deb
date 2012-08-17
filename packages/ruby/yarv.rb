@@ -4,12 +4,12 @@ class YARV < MRI
   url 'http://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p194.tar.gz'
   homepage 'http://www.ruby-lang.org/'
   md5 'bc0c715c69da4d1d8bd57069c19f6c0e'
-  
-  source 'https://rubygems.org/downloads/bundler-1.2.0.pre.gem'
-  
+
+  source 'https://rubygems.org/downloads/bundler-1.2.0.rc.gem'
+
   name 'rbenv-1.9.3-p194'
   section 'interpreters'
-  version '1.0.1'
+  version '1.0.2'
   description 'The YARV Ruby virtual machine'
 
   provides! 'rbenv-1.9', 'rbenv-1.9.3'
@@ -29,7 +29,7 @@ class YARV < MRI
   def install_bundler
     setup_rubylib
 
-    install_gem builddir/'bundler-1.2.0.pre.gem'
+    install_gem builddir/'bundler-1.2.0.rc.gem'
     fix_shebangs 'bundle'
   end
 
