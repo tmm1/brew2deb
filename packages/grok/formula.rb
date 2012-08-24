@@ -1,10 +1,10 @@
 class Grok < DebianFormula
   homepage 'http://code.google.com/p/semicomplete/wiki/Grok'
-  url 'http://semicomplete.googlecode.com/files/grok-1.20110708.1.tar.gz'
-  md5 '609982f22b7919eb9280a06092a296f7'
+  url 'http://semicomplete.googlecode.com/files/grok-1.20110630.1.tar.gz'
+  md5 'cb91edadab0f5cf452c53b15bdfc2589'
 
   name 'grok'
-  version '1.20110708.1+github1'
+  version '1.20110630.1+github1'
   section 'libs'
   description 'A powerful pattern-matching/reacting tool.'
 
@@ -12,12 +12,12 @@ class Grok < DebianFormula
     'bison',
     'ctags',
     'flex',
-    'gperf' 
+    'gperf',
+    'libevent-dev',
+    'libtokyocabinet-dev',
+    'libpcre3-dev'
 
   depends \
-    'libevent-dev',
-    'libpcre3-dev',
-    'libtokyocabinet-dev',
     'libtokyocabinet8'
 
   def build
