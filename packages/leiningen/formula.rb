@@ -1,17 +1,17 @@
 class Leiningen < DebianFormula
   homepage 'https://github.com/technomancy/leiningen'
 
-  url 'https://github.com/downloads/technomancy/leiningen/leiningen-1.7.0-standalone.jar'
+  url 'https://github.com/downloads/technomancy/leiningen/leiningen-1.7.1-standalone.jar'
 
   arch 'all'
   name 'leiningen'
   section 'devel'
-  version '1.7.1+github1'
+  version '1.7.1+github2'
   description 'A build tool for Clojure projects'
 
   depends \
     'ant',
-    'clojure1.2',
+    'clojure1.2.1+github1',
     'libbackport-util-concurrent-java',
     'libclassworlds-java',
     'libclucy-clojure',
@@ -23,17 +23,15 @@ class Leiningen < DebianFormula
     'librobert-hooke-clojure',
     'libwagon-java',
     'sun-java6-jre | sun-java6-jdk | openjdk-6-jre | openjdk-7-jre',
-    'rlwrap',
-    'wget'
+    'rlwrap'
 
   def build
+    FileUtils.cp HOMEBREW_WORKDIR+'lein', 'lein'
+    sh "chmod a+x lein"
   end
 
   def install
-    # Grab a temp file that will become /bin/lein.
-    sh "wget -O lein https://raw.github.com/technomancy/leiningen/stable/bin/lein"
-    sh "chmod a+x lein"
-
-    FileUtils.cp 'lein', 'pkg'
+    (prefix/'bin').install 'lein'
+    (prefix/'share/java').install 'leiningen-1.7.1-standalone.jar'
   end
 end

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+CLOJURE_JAR="/usr/share/java/clojure-1.2.1+github1.jar"
+TRAMPOLINE_FILE="/tmp/lein-trampoline-$$"
+CLASSPATH="$CLASSPATH:test/:src/:resources/:/usr/share/java/leiningen-1.7.1-standalone.jar"
+
+/usr/bin/rlwrap -b '"(){}[],^%0@";:'\''"' java \
+-Xbootclasspath/a:$CLOJURE_JAR \
+-client $JAVA_OPTS \
+-XX:+TieredCompilation \
+-Dleiningen.original.pwd="$PWD" \
+-Dleiningen.trampoline-file=$TRAMPOLINE_FILE \
+-cp "$CLASSPATH" \
+clojure.main \
+-e "(use 'leiningen.core)(-main)" \
+/dev/null "$@"
