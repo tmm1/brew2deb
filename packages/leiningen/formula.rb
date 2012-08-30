@@ -6,12 +6,12 @@ class Leiningen < DebianFormula
   arch 'all'
   name 'leiningen'
   section 'devel'
-  version '1.7.1+github2'
+  version '1.7.1+github3'
   description 'A build tool for Clojure projects'
 
   depends \
     'ant',
-    'clojure1.2.1+github1',
+    'clojure',
     'libbackport-util-concurrent-java',
     'libclassworlds-java',
     'libclucy-clojure',
