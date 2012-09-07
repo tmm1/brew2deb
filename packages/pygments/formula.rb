@@ -7,25 +7,16 @@ class Pygments < DebianFormula
 
   name 'python-pygments'
   section 'python'
-  version '1.5+github1'
+  version '1.5+github2'
 
-  build_depends 'python', 'python-setuptools', 'python-dev'
-  depends 'python', 'python-pkg-resources', 'python-support'
+  build_depends 'python', 'python-dev'
+  depends 'python'
 
   def build
     sh 'python', 'setup.py', 'build'
   end
 
   def install
-    sh 'python', 'setup.py', 'install', "--prefix=#{prefix}"
-  end
-
-
-  def install
-    bin.install 'pygmentize'
-    man1.install 'docs/pygmentize.1'
-    doc.install Dir['docs/build/*']
-    (share/"python-support"/"python-pygments").install Dir['build/lib/*']
-    (share/"python-support"/"python-pygments").install Dir['Pygments.egg-info']
+    sh 'python', 'setup.py', 'install', '--install-layout=deb', "--root=#{destdir}"
   end
 end
