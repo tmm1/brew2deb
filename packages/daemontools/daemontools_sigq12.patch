@@ -1,0 +1,74 @@
+diff -u daemontools-0.76/debian/changelog daemontools-0.76/debian/changelog
+--- daemontools-0.76/debian/changelog
++++ daemontools-0.76/debian/changelog
+@@ -1,3 +1,9 @@
++daemontools (1:0.76-3anchor1) unstable; urgency=low
++
++  * Patch svc to send USR1, USR2, and QUIT signals.
++
++ -- Matt Palmer <mpalmer@debian.org>  Tue, 02 Feb 2010 21:38:55 +1100
++
+ daemontools (1:0.76-3) unstable; urgency=low
+ 
+   * debian/daemontools-run.postinst: don't exec into the kill program, so
+diff -u daemontools-0.76/debian/daemontools-man/svc.8 daemontools-0.76/debian/daemontools-man/svc.8
+--- daemontools-0.76/debian/daemontools-man/svc.8
++++ daemontools-0.76/debian/daemontools-man/svc.8
+@@ -72,6 +72,21 @@
+ .I service
+ a KILL signal. 
+ .TP
++.B \-q
++Quit. Send the
++.I service
++a QUIT signal. 
++.TP
++.B \-1
++Send the
++.I service
++a USR1 signal. 
++.TP
++.B \-2
++Send the
++.I service
++a USR2 signal. 
++.TP
+ .B \-x
+ Exit.
+ .BR supervise (8)
+only in patch2:
+unchanged:
+--- daemontools-0.76.orig/daemontools-0.76/src/supervise.c
++++ daemontools-0.76/daemontools-0.76/src/supervise.c
+@@ -187,6 +187,15 @@
+ 	case 'i':
+ 	  if (pid) kill(pid,SIGINT);
+ 	  break;
++	case 'q':
++	  if (pid) kill(pid,SIGQUIT);
++	  break;
++	case '1':
++	  if (pid) kill(pid,SIGUSR1);
++	  break;
++	case '2':
++	  if (pid) kill(pid,SIGUSR2);
++	  break;
+ 	case 'p':
+ 	  flagpaused = 1;
+ 	  announce();
+only in patch2:
+unchanged:
+--- daemontools-0.76.orig/daemontools-0.76/src/svc.c
++++ daemontools-0.76/daemontools-0.76/src/svc.c
+@@ -27,9 +27,9 @@
+ 
+   sig_ignore(sig_pipe);
+ 
+-  while ((opt = getopt(argc,argv,"udopchaitkx")) != opteof)
++  while ((opt = getopt(argc,argv,"udopchaitkxq12")) != opteof)
+     if (opt == '?')
+-      strerr_die1x(100,"svc options: u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill");
++      strerr_die1x(100,"svc options: u up, d down, o once, x exit, p pause, c continue, h hup, a alarm, i interrupt, t term, k kill, q quit, 1 usr1, 2 usr2");
+     else
+       if (datalen < sizeof data)
+         if (byte_chr(data,datalen,opt) == datalen)
