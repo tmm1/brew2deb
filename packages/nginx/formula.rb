@@ -9,7 +9,7 @@ class Nginx < DebianFormula
   source 'https://github.com/yaoweibin/nginx_syslog_patch.git', :sha => 'afeea6d'
 
   name 'nginx'
-  version '1.0.13+github3'
+  version '1.0.13+github4'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
