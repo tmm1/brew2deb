@@ -1,0 +1,31 @@
+From 80e7fa36821a30f06c88e40c042c9102e16edb6c Mon Sep 17 00:00:00 2001
+From: Vicent Marti <tanoku@gmail.com>
+Date: Thu, 13 Sep 2012 01:46:56 +0200
+Subject: [PATCH] Always disable OpenSSL compression. Always.
+
+---
+ src/event/ngx_event_openssl.c |    9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/src/event/ngx_event_openssl.c b/src/event/ngx_event_openssl.c
+index 6b9dba1..8dd73bd 100644
+--- a/src/event/ngx_event_openssl.c
++++ b/src/event/ngx_event_openssl.c
+@@ -180,6 +180,15 @@ ngx_ssl_create(ngx_ssl_t *ssl, ngx_uint_t protocols, void *data)
+ 
+ #ifdef SSL_OP_NO_COMPRESSION
+     SSL_CTX_set_options(ssl->ctx, SSL_OP_NO_COMPRESSION);
++#else
++	{ /* we *really* need to disable compression; if we are using an old
++	   version of OpenSSL without the SSL_OP_NO_COMPRESSION flag,
++	   	    load the compression methods list and forcefully clear it out */
++		    	 STACK_OF(SSL_COMP)* comp_methods = SSL_COMP_get_compression_methods();
++			 		     if (comp_methods != NULL) {
++					     		      sk_SSL_COMP_zero(comp_methods);
++								}
++								}
+ #endif
+ 
+ #ifdef SSL_MODE_RELEASE_BUFFERS
+-- 
+1.7.9.4
