@@ -1,10 +1,10 @@
 class Git < DebianFormula
-  url 'https://github.com/github/git.git', :tag => 'github-1.7.10-10'
+  url 'https://github.com/github/git.git', :tag => 'github-1.7.10-11'
   homepage 'http://git-scm.com'
 
   section 'vcs'
   name 'git'
-  version '1:1.7.10-1+github10'
+  version '1:1.7.10-1+github11'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
