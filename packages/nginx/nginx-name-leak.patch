@@ -1,0 +1,27 @@
+From c4cfde2eb144bd17f61fec23ee3476cd35f33aa4 Mon Sep 17 00:00:00 2001
+From: Vicent Marti <tanoku@gmail.com>
+Date: Thu, 13 Sep 2012 04:48:07 +0200
+Subject: [PATCH] Do not leak Nginx on the headers
+
+---
+ src/http/ngx_http_header_filter_module.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/src/http/ngx_http_header_filter_module.c b/src/http/ngx_http_header_filter_module.c
+index 8a6080f..942f6ff 100644
+--- a/src/http/ngx_http_header_filter_module.c
++++ b/src/http/ngx_http_header_filter_module.c
+@@ -46,8 +46,8 @@ ngx_module_t  ngx_http_header_filter_module = {
+ };
+ 
+ 
+-static char ngx_http_server_string[] = "Server: nginx" CRLF;
+-static char ngx_http_server_full_string[] = "Server: " NGINX_VER CRLF;
++static char ngx_http_server_string[] = "Server: GitHub.com" CRLF;
++static char ngx_http_server_full_string[] = "Server: GitHub.com" CRLF;
+ 
+ 
+ static ngx_str_t ngx_http_status_lines[] = {
+-- 
+1.7.9.4
+

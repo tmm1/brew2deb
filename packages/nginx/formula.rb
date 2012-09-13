@@ -34,6 +34,7 @@ class Nginx < DebianFormula
        'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
        workdir/'src/nginx_syslog_patch.git/syslog_1.0.6.patch',
        'nginx-disable-ssl-compression.patch',
+       'nginx-name-leak.patch',
        'nginx-msec-backport.patch',
      ]}
   end
