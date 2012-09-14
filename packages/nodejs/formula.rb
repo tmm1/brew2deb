@@ -6,7 +6,7 @@ class NodeJS < DebianFormula
 
   section 'interpreters'
   name 'nodejs'
-  version '0.8.9+github1'
+  version '0.8.9+github2'
   description 'Evented I/O for V8 JavaScript'
 
   build_depends \
