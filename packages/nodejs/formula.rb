@@ -17,6 +17,10 @@ class NodeJS < DebianFormula
   depends \
     'openssl'
 
+  replaces 'npm'
+  provides 'npm'
+  conflicts 'npm'
+
   def build
     inreplace 'wscript' do |s|
       s.gsub! '/usr/local', '/usr'
