@@ -1,5 +1,5 @@
 class NPM < DebianFormula
-  head 'git://github.com/isaacs/npm.git', :tag => 'v1.0.18'
+  head 'git://github.com/isaacs/npm.git', :tag => 'v1.1.61'
   homepage 'http://npmjs.org'
 
   build_depends 'nodejs'
@@ -7,7 +7,7 @@ class NPM < DebianFormula
 
   name 'npm'
   section 'devel'
-  version '1.0.18+github2'
+  version '1.1.61+github1'
   description 'A package manager for node'
 
   def build

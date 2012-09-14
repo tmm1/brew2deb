@@ -1,12 +1,12 @@
 class NodeJS < DebianFormula
-  url 'http://nodejs.org/dist/node-v0.4.10.tar.gz'
+  url 'http://nodejs.org/dist/v0.8.9/node-v0.8.9.tar.gz'
   head 'https://github.com/joyent/node.git'
   homepage 'http://nodejs.org/'
-  md5 '2e8b82a9788308727e285d2d4a129c29'
+  md5 '5470b3951a3b2684cfa71027801bd19d'
 
   section 'interpreters'
   name 'nodejs'
-  version '0.4.10+github1'
+  version '0.8.9+github1'
   description 'Evented I/O for V8 JavaScript'
 
   build_depends \
@@ -18,11 +18,6 @@ class NodeJS < DebianFormula
     'openssl'
 
   def build
-    inreplace 'wscript' do |s|
-      s.gsub! '/usr/local', '/usr'
-      s.gsub! '/opt/local/lib', '/usr/lib'
-    end
-
     configure \
       :prefix => prefix,
       :debug => true
