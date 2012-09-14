@@ -19,8 +19,7 @@ class NodeJS < DebianFormula
 
   def build
     configure \
-      :prefix => prefix,
-      :debug => true
+      :prefix => prefix
     make
   end
 
