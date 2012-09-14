@@ -1,0 +1,42 @@
+From 160b94d3f82da7401e7d6f130da7bffec01835d4 Mon Sep 17 00:00:00 2001
+From: "Scott J. Goldman" <scottjg@github.com>
+Date: Fri, 14 Sep 2012 00:43:24 -0700
+Subject: [PATCH] Disable asserts
+
+The lanplus module appears to have a number of erroneous asserts, and
+since they crash the program anyway, i'm not sure we really need them
+enabled.
+---
+ configure    |    2 +-
+ configure.in |    2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/configure b/configure
+index 81947e9..0dc809a 100755
+--- a/configure
++++ b/configure
+@@ -5724,7 +5724,7 @@ fi
+ done
+ 
+ 
+-CFLAGS="$CFLAGS -fno-strict-aliasing"
++CFLAGS="$CFLAGS -fno-strict-aliasing -DNDEBUG=1"
+ 
+ # Check whether --enable-shared or --disable-shared was given.
+ if test "${enable_shared+set}" = set; then
+diff --git a/configure.in b/configure.in
+index 1dd3499..10666d2 100644
+--- a/configure.in
++++ b/configure.in
+@@ -33,7 +33,7 @@ AC_CHECK_FUNCS([alarm gethostbyname socket select])
+ AC_CHECK_FUNCS([memmove memset strchr strdup strerror])
+ AC_CHECK_FUNCS([getpassphrase])
+ 
+-CFLAGS="$CFLAGS -fno-strict-aliasing"
++CFLAGS="$CFLAGS -fno-strict-aliasing -DNDEBUG=1"
+ 
+ AM_PROG_LIBTOOL
+ LIBTOOL="$LIBTOOL --silent"
+-- 
+1.7.10
+
