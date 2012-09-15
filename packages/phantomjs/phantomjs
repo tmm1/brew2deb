@@ -1,0 +1,3 @@
+#!/bin/sh
+export LD_LIBRARY_PATH=/usr/share/phantomjs/lib
+exec $(dirname $(readlink -f $0))/phantomjs.bin $@
