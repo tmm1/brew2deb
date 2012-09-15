@@ -17,6 +17,10 @@ class NodeJS < DebianFormula
   depends \
     'openssl'
 
+  replaces 'npm'
+  provides 'npm'
+  conflicts 'npm'
+
   def build
     configure \
       :prefix => prefix
