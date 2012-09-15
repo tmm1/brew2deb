@@ -1,27 +1,30 @@
 class PhantomJS < DebianFormula
   homepage 'http://www.phantomjs.org/'
-  url 'http://phantomjs.googlecode.com/files/phantomjs-1.6.1-linux-x86_64-dynamic.tar.bz2'
-  md5 'fbfc540dd9abfa9dbbc75d942671eeaf'
+  url 'https://phantomjs.googlecode.com/files/phantomjs-1.6.1-source.zip'
+  md5 'd169130eb9e7b483e6d3e927be07c8b3'
 
-  name 'phantomjs16'
-  version '1.6.1+github1'
+  name 'phantomjs'
+  version '1.6.1+github2'
   section 'utilities'
   description 'headless webkit and shit'
 
-  def configure
-    # noop
-  end
+  build_depends 'libfontconfig1-dev'
+
+  replaces 'phantomjs16'
+  provides 'phantomjs16'
+  conflicts 'phantomjs16'
 
   def build
-    # noop
+    sh './build.sh --jobs 1'
   end
 
   def install
-    build_prefix = workdir + 'tmp-build/phantomjs-1.6.1-linux-x86_64-dynamic'
-    phantom_prefix = workdir + 'tmp-install/opt/phantomjs'
-
-    system "mkdir -p #{phantom_prefix}"
-    system "cp -r #{build_prefix}/bin #{phantom_prefix}"
-    system "cp -r #{build_prefix}/lib #{phantom_prefix}"
+    chdir 'deploy' do
+      sh './package.sh --bundle-libs'
+      bin.install workdir/'phantomjs'
+      bin.install Dir['phantomjs-1.6.1-*/bin/phantomjs.bin']
+      (share/'phantomjs/lib').mkpath
+      (share/'phantomjs/lib').install Dir['phantomjs-1.6.1-*/lib/libQ*']
+    end
   end
 end
