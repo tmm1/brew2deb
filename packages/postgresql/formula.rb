@@ -10,7 +10,12 @@ class Postgresql < DebianFormula
 
   build_depends \
     'libreadline5-dev',
-    'zlib1g-dev'
+    'zlib1g-dev',
+    'libssl-dev',
+    'libgss-dev',
+    'libkrb5-dev',
+    'libxml2-dev',
+    'libxslt-dev'
 
   depends \
     'libreadline5',
