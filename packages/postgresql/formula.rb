@@ -21,6 +21,13 @@ class Postgresql < DebianFormula
     'libreadline5',
     'openssl'
 
+  replaces \
+    'libpq5',
+    'libpq5-dev',
+    'postgresql-client-9.1',
+    'postgresql-client-common',
+    'postgresql-common'
+
   def options
     [
       ['--no-python', 'Build without Python support.'],
