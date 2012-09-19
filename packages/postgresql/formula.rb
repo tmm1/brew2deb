@@ -1,6 +1,6 @@
 class Postgresql < DebianFormula
   url 'http://ftp.postgresql.org/pub/source/v9.1.5/postgresql-9.1.5.tar.bz2'
-  md5 'a8035688dba988b782725ac1aec60186'
+  md5 'c784decb60615aa94c6a31601bc6ffd2'
   homepage 'http://www.postgresql.org/'
 
   section 'interpreters'
