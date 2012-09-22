@@ -8,6 +8,7 @@ class OpenSSH
   def patches
     [
       'sjg-key-verification-plugin.patch',
+      'sjg-timestamp-sshd-accept.patch',
     ]
   end
 end

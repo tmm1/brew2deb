@@ -6,6 +6,7 @@ class OpenSSH < DebianSourceFormula
   def patches
     [
       'sjg-key-verification-plugin.patch',
+      'sjg-timestamp-sshd-accept.patch',
     ]
   end
 end

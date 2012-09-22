@@ -1,0 +1,18 @@
+diff --git a/sshd.c b/sshd.c
+index 9e03cf3..b51c642 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -1209,6 +1209,13 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
+ 				 * We break out of the loop to handle
+ 				 * the connection.
+ 				 */
++				struct timeval tv;
++				char t[32];
++				gettimeofday(&tv, NULL);
++				snprintf(t, 32, "%ld%ld", tv.tv_sec, tv.tv_usec/1000);
++				t[31] = '\0';
++				setenv("SSHD_ACCEPT_TIME", t, 1);
++
+ 				platform_post_fork_child();
+ 				startup_pipe = startup_p[1];
+ 				close_startup_pipes();
