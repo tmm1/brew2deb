@@ -65,6 +65,12 @@ class DebianFormula < Formula
     'patch',
     'curl'
 
+  %w(squeeze lenny).each do |codename|
+    define_method(:"#{codename}?") do
+      `lsb_release -c | cut -f 2` == codename
+    end
+  end
+
   def self.requires_user(name, opts={})
     @create_user ||= {}
     @create_user.update(opts)
