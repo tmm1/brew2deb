@@ -1,7 +1,7 @@
 class ElasticSearch < DebianFormula
   url 'https://github.com/downloads/elasticsearch/elasticsearch/elasticsearch-0.19.9.tar.gz'
   homepage 'http://www.elasticsearch.org'
-  md5 'f826d993c754ad63454080dc17e50f3'
+  md5 'fbf1ca717239ee477f4742b47393b63f'
 
   source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
