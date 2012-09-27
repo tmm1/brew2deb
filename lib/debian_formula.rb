@@ -65,9 +65,11 @@ class DebianFormula < Formula
     'patch',
     'curl'
 
-  %w(squeeze lenny).each do |codename|
-    define_method(:"#{codename}?") do
-      `lsb_release -c | cut -f 2` == codename
+  class << self
+    %w(squeeze lenny).each do |codename|
+      define_method(:"#{codename}?") do
+        `lsb_release -c | cut -f 2` == codename
+      end
     end
   end
 
