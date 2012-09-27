@@ -6,15 +6,17 @@ class ElasticSearch < DebianFormula
   source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
   name 'elasticsearch'
-  version '0.19.9+github1'
+  version '0.19.9+github2'
   section 'database'
   description 'You know, for Search'
 
-  build_depends \
-    'openjdk-6-jdk'
-
-  depends \
-    'openjdk-6-jre'
+  if squeeze?
+    build_depends 'openjdk-6-jdk'
+    depends 'openjdk-6-jre'
+  elsif lenny?
+    build_depends 'sun-java6-jdk'
+    depends 'sun-java6-jre'
+  end
 
   config_files \
     '/etc/elasticsearch/elasticsearch.yml'
