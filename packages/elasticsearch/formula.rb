@@ -10,19 +10,11 @@ class ElasticSearch < DebianFormula
   section 'database'
   description 'You know, for Search'
 
-  if lenny?
-    build_depends \
-      'sun-java6-jdk'
+  build_depends \
+    'openjdk-6-jdk'
 
-    depends \
-      'sun-java6-jre'
-  elsif squeeze?
-    build_depends \
-      'openjdk-6-jdk'
-
-    depends \
-      'openjdk-6-jre'
-  end
+  depends \
+    'openjdk-6-jre'
 
   config_files \
     '/etc/elasticsearch/elasticsearch.yml'
