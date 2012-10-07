@@ -7,4 +7,8 @@ class Lshw < DebianFormula
   section 'utils'
   version '0.2.16+github1'
   description 'information about hardware configuration'
+
+  def build
+    make
+  end
 end
