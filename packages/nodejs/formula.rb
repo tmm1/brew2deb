@@ -1,28 +1,29 @@
 class NodeJS < DebianFormula
-  url 'http://nodejs.org/dist/node-v0.4.10.tar.gz'
+  url 'http://nodejs.org/dist/v0.8.11/node-v0.8.11.tar.gz'
   head 'https://github.com/joyent/node.git'
   homepage 'http://nodejs.org/'
-  md5 '2e8b82a9788308727e285d2d4a129c29'
+  md5 '23cb6d6a5c3949ac73df3c6b330e834d'
 
   section 'interpreters'
-  name 'nodejs'
-  version '0.4.10+github1'
+  name 'nvm-0.8.11'
+  version '1.0.0'
   description 'Evented I/O for V8 JavaScript'
 
   build_depends \
     'libssl-dev',
     'g++',
-    'python'
+    'python',
+    'python-json'
 
   depends \
     'openssl'
 
-  def build
-    inreplace 'wscript' do |s|
-      s.gsub! '/usr/local', '/usr'
-      s.gsub! '/opt/local/lib', '/usr/lib'
-    end
+  def prefix
+    current_pathname_for("usr/share/nvm/#{self.class.name.gsub('nvm-','')}")
+  end
 
+  def build
+    inreplace 'tools/install.py', 'import json', 'import simplejson as json'
     configure \
       :prefix => prefix,
       :debug => true
