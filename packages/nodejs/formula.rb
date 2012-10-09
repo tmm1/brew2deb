@@ -13,7 +13,7 @@ class NodeJS < DebianFormula
     'libssl-dev',
     'g++',
     'python',
-    'python-json'
+    'python-simplejson'
 
   depends \
     'openssl'
