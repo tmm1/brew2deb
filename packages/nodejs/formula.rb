@@ -25,8 +25,7 @@ class NodeJS < DebianFormula
   def build
     inreplace 'tools/install.py', 'import json', 'import simplejson as json'
     configure \
-      :prefix => prefix,
-      :debug => true
+      :prefix => prefix
     make
   end
 

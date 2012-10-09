@@ -1,19 +1,32 @@
 class Postgresql < DebianFormula
-  url 'http://ftp.postgresql.org/pub/source/v9.1.4/postgresql-9.1.4.tar.bz2'
-  md5 'a8035688dba988b782725ac1aec60186'
+  url 'http://ftp.postgresql.org/pub/source/v9.1.5/postgresql-9.1.5.tar.bz2'
+  md5 'c784decb60615aa94c6a31601bc6ffd2'
   homepage 'http://www.postgresql.org/'
 
   section 'interpreters'
-  name 'postgresql9'
-  version '9.1.4+github1'
+  name 'postgresql-9.1'
+  version '9.1.5+github2'
   description 'Elephant DB'
 
   build_depends \
-    'libreadline5-dev'
+    'libreadline5-dev',
+    'zlib1g-dev',
+    'libssl-dev',
+    'libgss-dev',
+    'libkrb5-dev',
+    'libxml2-dev',
+    'libxslt-dev'
 
   depends \
     'libreadline5',
     'openssl'
+
+  replaces \
+    'libpq5',
+    'libpq5-dev',
+    'postgresql-client-9.1',
+    'postgresql-client-common',
+    'postgresql-common'
 
   def options
     [
