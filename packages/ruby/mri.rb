@@ -26,8 +26,6 @@ class MRI < Ruby
     'openssl'
 
   def build
-    ENV['CFLAGS'] = '-ggdb'
-
     configure :prefix => prefix
     make
   end

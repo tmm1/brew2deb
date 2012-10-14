@@ -9,7 +9,7 @@ class YARV < MRI
 
   name 'rbenv-1.9.3-p194'
   section 'interpreters'
-  version '1.0.2'
+  version '1.0.3'
   description 'The YARV Ruby virtual machine'
 
   provides! 'rbenv-1.9', 'rbenv-1.9.3'
