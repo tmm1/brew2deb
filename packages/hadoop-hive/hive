@@ -1,0 +1,4 @@
+#!/bin/sh
+
+export HIVE_HOME=/usr/lib/hive
+$HIVE_HOME/bin/hive -i $HIVE_HOME/bin/hiverc $*

@@ -1,0 +1,4 @@
+add jar /usr/lib/hive/lib/hive-cassandra-handler-0.8.1.jar;
+add jar /usr/lib/hive/lib/cassandra-all-1.0.7.jar;
+add jar /usr/lib/hive/lib/cassandra-thrift-1.0.7.jar;
+add jar /usr/lib/hive/lib/guava-r08.jar;
