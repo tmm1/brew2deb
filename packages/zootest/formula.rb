@@ -1,7 +1,7 @@
 require 'formula'
 
 class Zootest < DebianFormula
-  url 'https://github.com/github/zootest.git', :sha => '1e850da21b33e03f0c005d7ced2eaddbbce7f3e2'
+  url 'https://github.com/tnm/zootest.git', :sha => '2f32f40383ad217d81eda0acf87239debc59d955'
 
   name 'zootest'
   version '0.0.1-github'
