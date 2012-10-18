@@ -17,10 +17,6 @@ class ElasticSearch < DebianFormula
     '/etc/elasticsearch/elasticsearch.yml'
 
   def build
-    sh 'bin/plugin -install mobz/elasticsearch-head'
-    sh 'bin/plugin -install lukas-vlcek/bigdesk'
-    sh 'bin/plugin -install river-twitter'
-
     rm_f Dir["bin/*.bat"]
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
 
