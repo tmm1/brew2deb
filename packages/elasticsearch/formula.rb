@@ -21,7 +21,7 @@ class ElasticSearch < DebianFormula
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
 
     inreplace %w[ bin/elasticsearch bin/elasticsearch-plugin ] do |s|
-      s.gsub! %{ES_HOME=`dirname "$SCRIPT"`/..}, 'ES_HOME=/usr/share/elasticsearch/'
+      s.gsub! %{ES_HOME=`dirname "$SCRIPT"`/..}, ': ${ES_HOME:=/usr/share/elasticsearch/}'
     end
 
     inreplace 'bin/elasticsearch.in.sh' do |s|
