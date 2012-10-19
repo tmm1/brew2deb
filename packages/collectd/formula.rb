@@ -1,16 +1,16 @@
 class Collectd < DebianFormula
   homepage 'http://collectd.org/'
-  url 'http://collectd.org/files/collectd-5.0.0.tar.bz2'
-  md5 '7bfea6e82d35b36f16d1da2c71397213'
+  url 'https://github.com/collectd/collectd/tarball/bd84c0f1'
+  md5 '587be0059d76254e7df0cc56ec5e38ba'
 
   name 'collectd'
   section 'utils'
-  version '5.0.0+github3'
+  version '5.1.0+github1'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
     'python-dev',
-    'libmysqlclient15-dev',
+    'libmysqlclient15-dev | libmysqlclient-dev',
     'libcurl4-openssl-dev | libcurl4-gnutls-dev',
     'pkg-config',
     'libdbi0-dev',
@@ -18,6 +18,7 @@ class Collectd < DebianFormula
     'libgcrypt11-dev',
     'libiptcdata0-dev',
     'libmemcached-dev',
+    'iproute-dev',
     'libsnmp-dev',
     'libopenipmi-dev',
     'liboping-dev',
@@ -25,32 +26,33 @@ class Collectd < DebianFormula
     'libperl-dev',
     'librrd-dev',
     'libyajl-dev',
-    'linux-headers-2.6.26-2-common',
-    'libcredis'
+    'iptables-dev',
+    'linux-headers-2.6.32-5-common | linux-headers-2.6.26-2-common'
 
   depends \
     'python',
-    'libmysqlclient15off',
+    'libmysqlclient15off | libmysqlclient16',
     'libcurl3',
     'libdbi0',
     'libesmtp5',
     'libgcrypt11',
     'libiptcdata0',
-    'libmemcached3',
+    'libmemcached3 | libmemcached5',
     'libsnmp15',
     'libopenipmi0',
     'liboping0',
     'libpcap0.8',
     'libperl5.10',
     'librrd4',
-    'libyajl1',
-    'libcredis'
+    'libyajl1'
 
   config_files '/etc/collectd/collectd.conf'
 
   def build
+    kernel = `uname -r`.chomp.sub(/-amd64/, '-common')
+    sh './build.sh'
     configure \
-      'KERNEL_DIR=/usr/src/linux-headers-2.6.26-2-common',
+      "KERNEL_DIR=/usr/src/linux-headers-#{kernel}-common",
       '--enable-apache',
       '--enable-battery',
       '--enable-bind',
@@ -89,6 +91,8 @@ class Collectd < DebianFormula
       '--enable-memcached',
       '--enable-memory',
       '--enable-mysql',
+      '--enable-netlink',
+      '--with-libnetlink=/usr',
       '--enable-network',
       '--enable-nfs',
       '--enable-nginx',
@@ -101,7 +105,7 @@ class Collectd < DebianFormula
       '--enable-processes',
       '--enable-protocols',
       '--enable-python',
-      '--enable-redis',
+      '--disable-redis',
       '--enable-rrdtool',
       '--enable-sensors',
       '--enable-serial',
@@ -126,7 +130,6 @@ class Collectd < DebianFormula
       '--enable-vmem',
       '--enable-vserver',
       '--enable-write_http',
-      '--enable-write_redis',
       '--enable-debug',
       '--prefix=/usr',
       '--localstatedir=/var',
@@ -138,6 +141,5 @@ class Collectd < DebianFormula
   def install
     super
     (etc/'init.d').install_p(workdir/'init.d', 'collectd')
-    (prefix/'lib/perl/5.10.0/perllocal.pod').unlink
   end
 end
