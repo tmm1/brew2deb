@@ -15,7 +15,8 @@ class Postgresql < DebianFormula
     'libgss-dev',
     'libkrb5-dev',
     'libxml2-dev',
-    'libxslt-dev'
+    'libxslt-dev',
+    'libperl-dev'
 
   depends \
     'libreadline5',
