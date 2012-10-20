@@ -5,7 +5,7 @@ class Postgresql < DebianFormula
 
   section 'interpreters'
   name 'postgresql-9.1'
-  version '9.1.5+github2'
+  version '9.1.5+github3'
   description 'Elephant DB'
 
   build_depends \
