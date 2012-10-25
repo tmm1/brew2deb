@@ -1,10 +1,10 @@
 class PhantomJS < DebianFormula
   homepage 'http://www.phantomjs.org/'
-  url 'https://phantomjs.googlecode.com/files/phantomjs-1.6.1-source.zip'
-  md5 'd169130eb9e7b483e6d3e927be07c8b3'
+  url 'https://phantomjs.googlecode.com/files/phantomjs-1.7.0-source.zip'
+  md5 'f2cf1d9e98dfb84c159748d34dea5f82'
 
   name 'phantomjs'
-  version '1.6.1+github2'
+  version '1.7.0+github2'
   section 'utilities'
   description 'headless webkit and shit'
 
@@ -22,9 +22,9 @@ class PhantomJS < DebianFormula
     chdir 'deploy' do
       sh './package.sh --bundle-libs'
       bin.install workdir/'phantomjs'
-      bin.install Dir['phantomjs-1.6.1-*/bin/phantomjs.bin']
+      bin.install Dir['phantomjs-1.7.0-*/bin/phantomjs.bin']
       (share/'phantomjs/lib').mkpath
-      (share/'phantomjs/lib').install Dir['phantomjs-1.6.1-*/lib/libQ*']
+      (share/'phantomjs/lib').install Dir['phantomjs-1.7.0-*/lib/libQ*']
     end
   end
 end
