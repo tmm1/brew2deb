@@ -3,12 +3,11 @@ class S3cmd < DebianFormula
 
   name 's3cmd'
   section 'utils'
-  version '1.1.0-master+github2'
+  version '1.1.0-master+github4'
   description 'command-line Amazon S3 client'
 
   build_depends 'python'
   depends 'python'
-  conflicts 'python-django'
 
   def build
     sh 'python', 'setup.py', 'build'
