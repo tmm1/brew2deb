@@ -20,7 +20,7 @@ class ElasticSearch < DebianFormula
     rm_f Dir["bin/*.bat"]
     rm_f Dir["lib/sigar/*-solaris.so"]
     rm_f Dir["lib/sigar/*-freebsd-*.so"]
-    rm_f Dir["lib/sigar/*i64*.so"]
+    rm_f Dir["lib/sigar/*ia64*.so"]
 
     if Hardware.is_32_bit?
       rm_f "lib/sigar/libsigar-amd64-linux.so"
