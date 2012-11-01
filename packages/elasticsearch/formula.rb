@@ -18,6 +18,16 @@ class ElasticSearch < DebianFormula
 
   def build
     rm_f Dir["bin/*.bat"]
+    rm_f Dir["lib/sigar/*-solaris.so"]
+    rm_f Dir["lib/sigar/*-freebsd.so"]
+    rm_f Dir["lib/sigar/*i64*.so"]
+
+    if Hardware.is_32_bit?
+      rm_f "lib/sigar/libsigar-amd64-linux.so"
+    else
+      rm_f "lib/sigar/libsigar-x86-linux.so"
+    end
+
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
 
     inreplace %w[ bin/elasticsearch bin/elasticsearch-plugin ] do |s|
