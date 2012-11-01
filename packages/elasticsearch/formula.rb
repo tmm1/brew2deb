@@ -6,18 +6,28 @@ class ElasticSearch < DebianFormula
   source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
   name 'elasticsearch'
-  version '0.19.10+github1'
+  version '0.19.10+github2'
   section 'database'
   description 'You know, for Search'
 
-  build_depends 'openjdk-6-jdk'
-  depends 'openjdk-6-jre'
+  build_depends 'java6-sdk | java7-jdk | java-compiler'
+  depends 'java7-runtime-headless | java6-runtime-headless | java7-runtime | java6-runtime'
 
   config_files \
     '/etc/elasticsearch/elasticsearch.yml'
 
   def build
     rm_f Dir["bin/*.bat"]
+    rm_f Dir["lib/sigar/*-solaris.so"]
+    rm_f Dir["lib/sigar/*-freebsd-*.so"]
+    rm_f Dir["lib/sigar/*ia64*.so"]
+
+    if Hardware.is_32_bit?
+      rm_f "lib/sigar/libsigar-amd64-linux.so"
+    else
+      rm_f "lib/sigar/libsigar-x86-linux.so"
+    end
+
     mv 'bin/plugin', 'bin/elasticsearch-plugin'
 
     inreplace %w[ bin/elasticsearch bin/elasticsearch-plugin ] do |s|

@@ -2,6 +2,7 @@ $:.unshift File.expand_path('../../homebrew/Library/Homebrew', __FILE__)
 require 'tempfile'
 require 'global'
 require 'formula'
+require 'hardware'
 require 'etc'
 
 class String
@@ -455,4 +456,3 @@ class DebianSourceFormula < DebianFormula
     end
   end
 end
-
