@@ -10,8 +10,8 @@ class ElasticSearch < DebianFormula
   section 'database'
   description 'You know, for Search'
 
-  build_depends 'openjdk-6-jdk'
-  depends 'openjdk-6-jre'
+  build_depends 'java6-sdk | java7-jdk | java-compiler'
+  depends 'java7-runtime-headless | java6-runtime-headless | java7-runtime | java6-runtime'
 
   config_files \
     '/etc/elasticsearch/elasticsearch.yml'
