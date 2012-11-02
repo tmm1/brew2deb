@@ -59,8 +59,6 @@ class Ruby < DebianFormula
 
   def setup_rubylib
     ENV.delete 'RUBYLIB'
-    # XXX needed for ruby 2.0 only?
-    ENV['RUBYLIB'] = "#{prefix}/lib/ruby/2.0.0:#{prefix}/lib/ruby/2.0.0/x86_64-linux"
     pre = prefix.to_s.gsub(destdir, '')
     ENV['RUBYLIB'] = rubylib.gsub(pre, prefix)
   end
