@@ -6,7 +6,7 @@ class REE < MRI
   md5 '8d086d2fe68a4c57ba76228e97fb3116'
 
   name 'rbenv-ree-1.8.7-2012.02+github+stupgrade'
-  version '1.0.1'
+  version '1.0.2'
   description 'The REE Ruby virtual machine'
 
   build_depends \
@@ -22,7 +22,8 @@ class REE < MRI
     [
       'patches/gc-free-slots.patch',
       'patches/gc-hooks.patch',
-      'patches/st-upgrade.patch'
+      'patches/st-upgrade.patch',
+      'patches/st-upacked.patch'
     ]
   end
 
