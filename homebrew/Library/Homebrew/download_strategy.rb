@@ -552,6 +552,7 @@ def detect_download_strategy url
   when %r[^https?://(.+?\.)?googlecode\.com/svn] then SubversionDownloadStrategy
   when %r[^https?://(.+?\.)?sourceforge\.net/svnroot/] then SubversionDownloadStrategy
   when %r[^http://svn.apache.org/repos/] then SubversionDownloadStrategy
+  when %r[^git@github.com] then GitDownloadStrategy
     # Otherwise just try to download
   else CurlDownloadStrategy
   end
