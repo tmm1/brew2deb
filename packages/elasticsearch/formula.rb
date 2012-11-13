@@ -6,7 +6,7 @@ class ElasticSearch < DebianFormula
   source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
   name 'elasticsearch'
-  version '0.19.10+github2'
+  version '0.19.10+github3'
   section 'database'
   description 'You know, for Search'
 
@@ -32,6 +32,7 @@ class ElasticSearch < DebianFormula
 
     inreplace %w[ bin/elasticsearch bin/elasticsearch-plugin ] do |s|
       s.gsub! %{ES_HOME=`dirname "$SCRIPT"`/..}, ': ${ES_HOME:=/usr/share/elasticsearch/}'
+      s.gsub! %{-cp "$ES_HOME/lib/*"}, '-cp "$ES_HOME/lib/*" -cp "$ES_LIB/lib/*"'
     end
 
     inreplace 'bin/elasticsearch.in.sh' do |s|
