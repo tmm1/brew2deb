@@ -1,5 +1,5 @@
 class Git < DebianFormula
-  url 'https://github.com/github/git.git', :tag => 'github-1.7.10-14'
+  url 'git@github.com:github/git.git', :tag => 'github-1.7.10-14'
   homepage 'http://git-scm.com'
 
   section 'vcs'
