@@ -1,10 +1,10 @@
 class Logster < DebianFormula
   url 'https://github.com/etsy/logster.git', 
-    :tag => 'cc0eb8e44f739a589779ebbf2dfcc92e498fe37e'
+    :tag => '286f72e1c32e06076203f5883e722bba60110e8e'
   homepage 'https://github.com/etsy/logster'
 
   name 'logster'
-  version '0.0+github2'
+  version '0.1+github1'
   section 'utils'
   description 'Parse log files and generate metrics for Graphite and Ganglia'
 
