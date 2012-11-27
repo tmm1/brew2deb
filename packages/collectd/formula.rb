@@ -10,6 +10,7 @@ class Collectd < DebianFormula
 
   build_depends \
     'python-dev',
+    'bison',
     'libmysqlclient15-dev | libmysqlclient-dev',
     'libcurl4-openssl-dev | libcurl4-gnutls-dev',
     'pkg-config',
