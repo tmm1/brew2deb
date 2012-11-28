@@ -1,7 +1,7 @@
 class Lsof < DebianFormula
   homepage 'http://people.freebsd.org/~abe/'
   url 'ftp://lsof.itap.purdue.edu/pub/tools/unix/lsof/lsof_4.86.tar.gz'
-  md5 'e8151db708a023f588a3591da55a0a29'
+  md5 '825e48436ab6b66607528a8640a41287'
 
   name 'lsof'
   version '4.86'
