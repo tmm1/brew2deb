@@ -25,6 +25,7 @@ class Collectd < DebianFormula
     'liboping-dev',
     'libpcap0.8-dev',
     'libperl-dev',
+    'libltdl3-dev',
     'librrd-dev',
     'libyajl-dev',
     'iptables-dev',
