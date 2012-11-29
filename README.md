@@ -54,7 +54,7 @@ This uploads the package to `gold1` and runs `freight` to make it available for 
 *  geoip (requires manually building, site license)
 *  git
 *  go
-*  google-coredumper (in progress)
+*  google-coredumper (requires manual building, lenny only)
 *  google-perftools
 *  graphite (in progress)
 *  grok
