@@ -22,10 +22,6 @@ class Redis2 < DebianFormula
       '/var/lib/redis',
     ]
 
-  def patches
-    'fix-link-ordering.patch'
-  end
-
   def build
     make
 
