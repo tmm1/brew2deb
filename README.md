@@ -87,7 +87,7 @@ on build1 (squeeze) and build2 (lenny).
 *  phantomjs
 *  postgresql
 *  pygments
-*  redis1 (in progress)
+*  redis1
 *  redis2
 *  redis24
 *  rsyslog
