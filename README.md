@@ -15,20 +15,22 @@ You can build any package in brew2deb via hubot, using:
 hubot package {package-name}/{branch}
 ```
 
-To build git, for example:
-
-```
-hubot package git/master
-```
-
-You can also build test packages like so:
+You can also test packages like so:
 
 ```
 hubot package git/test-package-branch
 ```
 
-You'll find the built test pacakges for git in, e.g., `/data/brew2deb/packages/git/pkg`
+You'll find the built test packages for git in, e.g., `/data/brew2deb/packages/git/pkg`
 on build1 (squeeze) and build2 (lenny).
+
+Once in master, you can build and setup packages:
+
+```
+hubot package git/master
+```
+
+This uploads the package to `gold1` and runs `freight` to make it available for puppetruns.
 
 ## available packages (a few still in progress)
 
