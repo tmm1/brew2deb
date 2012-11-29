@@ -1,0 +1,47 @@
+# Descrption: Fix the failed to build from source due to the --as-needed linking
+# Bug: LP: https://launchpad.net/bugs/771061
+# Author: Nigel Babu <nigelbabu@ubuntu.com>
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -19,7 +19,7 @@
+   CCLINK+= -ltcmalloc
+   CFLAGS+= -DUSE_TCMALLOC
+ endif
+-CCOPT= $(CFLAGS) $(CCLINK) $(ARCH) $(PROF)
++CCOPT= $(CFLAGS) $(ARCH) $(PROF)
+ 
+ PREFIX= /usr/local
+ INSTALL_BIN= $(PREFIX)/bin
+@@ -111,26 +111,26 @@
+ 	cd ../deps/linenoise && $(MAKE) ARCH="$(ARCH)"
+ 
+ redis-server: $(OBJ)
+-	$(CC) -o $(PRGNAME) $(CCOPT) $(DEBUG) $(OBJ)
++	$(CC) -o $(PRGNAME) $(CCOPT) $(DEBUG) $(OBJ) $(CCLINK)
+ 
+ redis-benchmark: dependencies $(BENCHOBJ)
+ 	cd ../deps/hiredis && $(MAKE) static
+-	$(CC) -o $(BENCHPRGNAME) $(CCOPT) $(DEBUG) $(BENCHOBJ) ../deps/hiredis/libhiredis.a
++	$(CC) -o $(BENCHPRGNAME) $(CCOPT) $(DEBUG) $(BENCHOBJ) ../deps/hiredis/libhiredis.a $(CCLINK)
+ 
+ redis-benchmark.o:
+ 	$(CC) -c $(CFLAGS) -I../deps/hiredis $(DEBUG) $(COMPILE_TIME) $<
+ 
+ redis-cli: dependencies $(CLIOBJ)
+-	$(CC) -o $(CLIPRGNAME) $(CCOPT) $(DEBUG) $(CLIOBJ) ../deps/hiredis/libhiredis.a ../deps/linenoise/linenoise.o
++	$(CC) -o $(CLIPRGNAME) $(CCOPT) $(DEBUG) $(CLIOBJ) ../deps/hiredis/libhiredis.a ../deps/linenoise/linenoise.o $(CCLINK)
+ 
+ redis-cli.o:
+ 	$(CC) -c $(CFLAGS) -I../deps/hiredis -I../deps/linenoise $(DEBUG) $(COMPILE_TIME) $<
+ 
+ redis-check-dump: $(CHECKDUMPOBJ)
+-	$(CC) -o $(CHECKDUMPPRGNAME) $(CCOPT) $(DEBUG) $(CHECKDUMPOBJ)
++	$(CC) -o $(CHECKDUMPPRGNAME) $(CCOPT) $(DEBUG) $(CHECKDUMPOBJ) $(CCLINK)
+ 
+ redis-check-aof: $(CHECKAOFOBJ)
+-	$(CC) -o $(CHECKAOFPRGNAME) $(CCOPT) $(DEBUG) $(CHECKAOFOBJ)
++	$(CC) -o $(CHECKAOFPRGNAME) $(CCOPT) $(DEBUG) $(CHECKAOFOBJ) $(CCLINK)
+ 
+ .c.o:
+ 	$(CC) -c $(CFLAGS) $(DEBUG) $(COMPILE_TIME) $<
+

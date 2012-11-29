@@ -90,7 +90,9 @@ This uploads the package to `gold1` and runs `freight` to make it available for 
 *  phantomjs
 *  postgresql
 *  pygments
-*  redis (multiple versions, in progress of being split)
+*  redis1
+*  redis2
+*  redis24
 *  rsyslog
 *  ruby (multiple versions, in progress of being split)
 *  s3cmd
