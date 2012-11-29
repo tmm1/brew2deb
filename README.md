@@ -5,14 +5,6 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 [pacman](http://www.archlinux.org/pacman/)'s
 [makepkg](http://www.archlinux.org/pacman/makepkg.8.html).
 
-## setup
-
-```
-$ apt-get install dpkg-dev pbuilder
-$ apt-get install ruby rubygems libjson-ruby
-$ apt-get install git
-$ git clone git://github.com/tmm1/brew2deb
-```
 
 ## usage from hubot
 
@@ -106,6 +98,15 @@ on build1 (squeeze) and build2 (lenny).
 *  zeromq
 *  zootest
 
+
+## local setup on debian
+
+```
+$ apt-get install dpkg-dev pbuilder
+$ apt-get install ruby rubygems libjson-ruby
+$ apt-get install git
+$ git clone git://github.com/github/brew2deb
+```
 
 ## command-line usage
 
