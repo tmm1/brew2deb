@@ -14,7 +14,100 @@ $ apt-get install git
 $ git clone git://github.com/tmm1/brew2deb
 ```
 
-## usage
+## usage from hubot
+
+You can build any package in brew2deb via hubot, using:
+
+```
+hubot package {package-name}/{branch}
+```
+
+To build git, for example:
+
+```
+hubot package git/master
+```
+
+You can also build test packages like so:
+
+```
+hubot package git/test-package-branch
+```
+
+You'll find the built test pacakges for git in, e.g., `/data/brew2deb/packages/git/pkg`
+on build1 (squeeze) and build2 (lenny).
+
+## available pacakges (a few still in progress)
+
+*  android-sdk
+*  asciidoc
+*  astyanax
+*  clojure
+*  collectd  (in progress)
+*  collectd-carbon (in progress)
+*  credis
+*  daemontools
+*  django
+*  djbdns
+*  docutils  (in progress)
+*  elasticsearch
+*  elfutils
+*  erlang
+*  filtergen
+*  freight
+*  func
+*  geoip (requires manually building, site license)
+*  git
+*  go
+*  google-coredumper (in progress)
+*  google-perftools
+*  graphite (in progress)
+*  grok
+*  gunicorn (in progress)
+*  hadoop-hive (in progress)
+*  haproxy
+*  htop
+*  igb
+*  ipmitool
+*  ipvsadm
+*  kestrel
+*  leiningen
+*  libelf
+*  libmemcache
+*  libunwind
+*  linux-image
+*  lldpd
+*  lockrun
+*  logstash
+*  lshw
+*  lsof
+*  ltrace
+*  megacli (requires manually building, site license)
+*  megaraid_sas (requires manually building, squeeze only)
+*  memcached
+*  mtop
+*  nethogs
+*  nginx (in progress)
+*  nodejs
+*  openssh
+*  openssl
+*  percona-server
+*  phantomjs
+*  postgresql
+*  pygments
+*  redis (multiple versions, in progress of being split)
+*  rsyslog
+*  ruby (multiple versions, in progress of being split)
+*  s3cmd
+*  spawn-fcgi
+*  toiletfs
+*  vmtouch
+*  yajl
+*  zeromq
+*  zootest
+
+
+## command-line usage
 
 ```
 $ cd packages/git
