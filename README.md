@@ -5,6 +5,7 @@ and [FPM](http://github.com/jordansissel/fpm) to build a Ruby version of
 [pacman](http://www.archlinux.org/pacman/)'s
 [makepkg](http://www.archlinux.org/pacman/makepkg.8.html).
 
+The packages found here can be built using the gh-package/inferno system.
 
 ## usage from hubot
 
@@ -29,7 +30,7 @@ hubot package git/test-package-branch
 You'll find the built test pacakges for git in, e.g., `/data/brew2deb/packages/git/pkg`
 on build1 (squeeze) and build2 (lenny).
 
-## available pacakges (a few still in progress)
+## available packages (a few still in progress)
 
 *  android-sdk
 *  asciidoc
@@ -105,6 +106,7 @@ on build1 (squeeze) and build2 (lenny).
 $ apt-get install dpkg-dev pbuilder
 $ apt-get install ruby rubygems libjson-ruby
 $ apt-get install git
+$ apt-get install curl
 $ git clone git://github.com/github/brew2deb
 ```
 
