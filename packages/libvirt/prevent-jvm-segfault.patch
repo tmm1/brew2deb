@@ -1,0 +1,24 @@
+diff -ur libvirt-0.9.11.4/src/esx/esx_driver.c libvirt-0.9.11.4-patched/src/esx/esx_driver.c
+--- libvirt-0.9.11.4/src/esx/esx_driver.c	2012-06-15 20:21:54.000000000 +0200
++++ libvirt-0.9.11.4-patched/src/esx/esx_driver.c	2012-09-30 19:14:36.000000000 +0200
+@@ -788,8 +788,8 @@
+     result = 0;
+ 
+   cleanup:
+-    VIR_FREE(username);
+-    VIR_FREE(unescapedPassword);
++    /* VIR_FREE(username); */
++    /* VIR_FREE(unescapedPassword); */
+     VIR_FREE(password);
+     VIR_FREE(url);
+     esxVI_String_Free(&propertyNameList);
+@@ -893,8 +893,8 @@
+     result = 0;
+ 
+   cleanup:
+-    VIR_FREE(username);
+-    VIR_FREE(unescapedPassword);
++    /* VIR_FREE(username); */
++    /* VIR_FREE(unescapedPassword); */
+     VIR_FREE(password);
+     VIR_FREE(url);
