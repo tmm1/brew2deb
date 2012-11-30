@@ -70,7 +70,7 @@ This uploads the package to `gold1` and runs `freight` to make it available for 
 *  libelf
 *  libmemcache
 *  libunwind
-*  libvirt
+*  libvirt (Ubuntu 12.04 only)
 *  linux-image
 *  lldpd
 *  lockrun
