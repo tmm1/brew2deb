@@ -1,0 +1,60 @@
+diff -ur libvirt-0.9.11.4/src/esx/esx_storage_driver.c libvirt-0.9.11.4-patched/src/esx/esx_storage_driver.c
+--- libvirt-0.9.11.4/src/esx/esx_storage_driver.c	2012-06-15 20:23:21.000000000 +0200
++++ libvirt-0.9.11.4-patched/src/esx/esx_storage_driver.c	2012-10-03 16:44:02.000000000 +0200
+@@ -1197,6 +1197,7 @@
+     char *datastorePathWithoutFileName = NULL;
+     char *datastorePath = NULL;
+     esxVI_FileInfo *fileInfo = NULL;
++    esxVI_FileBackedVirtualDiskSpec *virtualDiskSpec = NULL;
+     esxVI_ManagedObjectReference *task = NULL;
+     esxVI_TaskInfoState taskInfoState;
+     char *taskInfoErrorMessage = NULL;
+@@ -1290,6 +1291,39 @@
+             goto cleanup;
+         }
+ 
++        /* Create VirtualDiskSpec */
++        if (esxVI_FileBackedVirtualDiskSpec_Alloc(&virtualDiskSpec) < 0 ||
++            esxVI_Long_Alloc(&virtualDiskSpec->capacityKb) < 0) {
++            goto cleanup;
++        }
++
++        /* From the vSphere API documentation about VirtualDiskType ... */
++        if (def->allocation == def->capacity) {
++            /*
++             * "A preallocated disk has all space allocated at creation time
++             *  and the space is zeroed on demand as the space is used."
++             */
++            virtualDiskSpec->diskType = (char *)"preallocated";
++        } else if (def->allocation == 0) {
++            /*
++             * "Space required for thin-provisioned virtual disk is allocated
++             *  and zeroed on demand as the space is used."
++             */
++            virtualDiskSpec->diskType = (char *)"thin";
++        } else {
++            ESX_ERROR(VIR_ERR_INTERNAL_ERROR, "%s",
++                      _("Unsupported capacity-to-allocation relation"));
++            goto cleanup;
++        }
++
++        /*
++         * FIXME: The adapter type is a required parameter, but there is no
++         * way to let the user specify it in the volume XML config. Therefore,
++         * default to 'busLogic' here.
++         */
++        virtualDiskSpec->adapterType = (char *)"busLogic";
++
++
+         /* Create directory, if it doesn't exist yet */
+         if (esxVI_LookupFileInfoByDatastorePath
+               (priv->primary, datastorePathWithoutFileName, true, &fileInfo,
+@@ -1310,7 +1344,7 @@
+                                        priv->primary->datacenter->_reference,
+                                        datastorePath,
+                                        priv->primary->datacenter->_reference,
+-                                       NULL, esxVI_Boolean_False, &task) < 0 ||
++                                       virtualDiskSpec, esxVI_Boolean_False, &task) < 0 ||
+             esxVI_WaitForTaskCompletion(priv->primary, task, NULL,
+                                         esxVI_Occurrence_None,
+                                         priv->parsedUri->autoAnswer,
