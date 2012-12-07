@@ -1,6 +1,5 @@
 class S3cmd < DebianFormula
-  url 'https://github.com/sshirokov/s3cmd.git'
-  branch 'python2.5compat'
+  url 'https://github.com/sshirokov/s3cmd.git', :branch => 'python2.5compat'
 
   name 's3cmd'
   section 'utils'
