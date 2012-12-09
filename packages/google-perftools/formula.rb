@@ -3,9 +3,9 @@ class GPerftools < DebianFormula
   url 'http://gperftools.googlecode.com/files/gperftools-2.0.tar.gz'
   md5 '13f6e8961bc6a26749783137995786b6'
 
-  name 'gperftools'
+  name 'google-perftools'
   section 'devel'
-  version '2.0.0+github1'
+  version '2.0.0+github2'
   description 'Fast, multi-threaded malloc() and nifty performance analysis tools'
 
   build_depends \
@@ -14,7 +14,7 @@ class GPerftools < DebianFormula
   depends \
     'libunwind7'
 
-  conflicts 'google-perftools', 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
-  replaces  'google-perftools', 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
-  provides  'google-perftools', 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
+  conflicts 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
+  replaces  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
+  provides  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
 end
