@@ -2,7 +2,7 @@ class Ruby < DebianFormula
   section 'interpreters'
 
   source 'http://production.cf.rubygems.org/rubygems/rubygems-1.8.23.tgz'
-  source 'https://rubygems.org/downloads/bundler-1.1.3.gem'
+  source 'https://rubygems.org/downloads/bundler-1.2.1.gem'
   source 'https://rubygems.org/downloads/rake-0.9.2.2.gem'
 
   def prefix
@@ -43,7 +43,7 @@ class Ruby < DebianFormula
   def install_bundler
     setup_rubylib
 
-    install_gem builddir/'bundler-1.1.3.gem'
+    install_gem builddir/'bundler-1.2.1.gem'
     fix_shebangs 'bundle'
   end
 

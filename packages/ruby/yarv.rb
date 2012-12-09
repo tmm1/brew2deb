@@ -5,7 +5,7 @@ class YARV < MRI
   homepage 'http://www.ruby-lang.org/'
   md5 'bc0c715c69da4d1d8bd57069c19f6c0e'
 
-  source 'https://rubygems.org/downloads/bundler-1.2.0.rc.gem'
+  source 'https://rubygems.org/downloads/bundler-1.2.1.gem'
 
   name 'rbenv-1.9.3-p194'
   section 'interpreters'
@@ -29,7 +29,7 @@ class YARV < MRI
   def install_bundler
     setup_rubylib
 
-    install_gem builddir/'bundler-1.2.0.rc.gem'
+    install_gem builddir/'bundler-1.2.1.gem'
     fix_shebangs 'bundle'
   end
 
