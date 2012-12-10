@@ -1,9 +1,9 @@
 class S3cmd < DebianFormula
-  url 'https://github.com/s3tools/s3cmd.git'
+  url 'https://github.com/sshirokov/s3cmd.git', :tag => 'stdin-stream'
 
   name 's3cmd'
   section 'utils'
-  version '1.1.0-master+github4'
+  version '1.1.0-master+github5'
   description 'command-line Amazon S3 client'
 
   build_depends 'python'

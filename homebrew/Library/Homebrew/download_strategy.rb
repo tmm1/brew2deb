@@ -327,6 +327,7 @@ class GitDownloadStrategy < AbstractDownloadStrategy
       git_args = %w(git clone)
       git_args << "--depth" << "1" if support_depth?
       git_args << @url << @clone
+      git_args << "-b" << @ref if @spec == :branch
       safe_system *git_args
     else
       puts "Updating #{@clone}"
