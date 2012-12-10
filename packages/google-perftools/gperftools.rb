@@ -1,11 +1,11 @@
-class GooglePerftools < DebianFormula
-  homepage 'http://code.google.com/p/google-perftools/'
-  url 'http://google-perftools.googlecode.com/files/google-perftools-1.8.3.tar.gz'
-  md5 '70c95322c9bac97e67f0162e4cc55996'
+class GPerftools < DebianFormula
+  homepage 'http://code.google.com/p/gperftools/'
+  url 'http://gperftools.googlecode.com/files/gperftools-2.0.tar.gz'
+  md5 '13f6e8961bc6a26749783137995786b6'
 
   name 'google-perftools'
   section 'devel'
-  version '1.8.3+github1'
+  version '2.0.0+github2'
   description 'Fast, multi-threaded malloc() and nifty performance analysis tools'
 
   build_depends \
