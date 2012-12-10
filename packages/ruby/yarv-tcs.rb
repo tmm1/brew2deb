@@ -10,10 +10,14 @@ class TCS < YARV
   description 'The YARV Ruby virtual machine + TCS patches'
 
   build_depends \
-    'google-perftools (>= 2.0)'
+    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
 
   depends \
-    'google-perftools (>= 2.0)'
+    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
+
+  def patches
+    'patches/gc-tcs.patch'
+  end
 
   def build
     ENV['LIBS'] = '-ltcmalloc_minimal'

@@ -11,10 +11,10 @@ class REE < MRI
 
   build_depends \
     'ruby',
-    'google-perftools (>= 2.0)'
+    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
 
   depends \
-    'google-perftools (>= 2.0)'
+    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
 
   provides! 'rbenv-ree'
 
