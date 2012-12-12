@@ -3,7 +3,7 @@ class Filtergen < DebianFormula
   url 'https://github.com/anchor/filtergen.git', :sha => 'b5a4b06'
 
   name 'filtergen'
-  version '0.12.5+github1'
+  version '0.12.5+github2'
   description 'packet filter generator for various firewall systems'
   section 'net'
 
