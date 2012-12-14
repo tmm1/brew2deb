@@ -6,7 +6,7 @@ class TCS < YARV
 
   name 'rbenv-1.9.3-p194+tcs+tcmalloc'
   section 'interpreters'
-  version '1.0.0'
+  version '1.0.1'
   description 'The YARV Ruby virtual machine + TCS patches'
 
   build_depends \
@@ -16,7 +16,7 @@ class TCS < YARV
     'google-perftools (>= 1.8), google-perftools (<= 1.9)'
 
   def patches
-    'patches/gc-tcs.patch'
+    ['patches/gc-tcs.patch', 'patches/tcs-process-kill.patch']
   end
 
   def build
