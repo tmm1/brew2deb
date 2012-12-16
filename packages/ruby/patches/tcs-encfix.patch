@@ -1,0 +1,63 @@
+diff --git a/enc/trans/single_byte.trans b/enc/trans/single_byte.trans
+index 1bf1001..dfff0be 100644
+--- a/enc/trans/single_byte.trans
++++ b/enc/trans/single_byte.trans
+@@ -6,7 +6,7 @@
+   transcode_tblgen "US-ASCII", "UTF-8", us_ascii_map
+   transcode_tblgen "UTF-8", "US-ASCII", us_ascii_map
+   transcode_tblgen "ASCII-8BIT", "UTF-8", us_ascii_map
+-  transcode_tblgen "UTF-8", "ASCII-8BIT", us_ascii_map
++  transcode_tblgen "UTF-8", "ASCII-8BIT", [["{00-ff}", :nomap]], '{00-ff}'
+ 
+   CONTROL1_TO_UCS_TBL = (0x80..0x9f).map {|c| ["%02X" % c, c] }
+ 
+diff --git a/encoding.c b/encoding.c
+index b8c5f6d..1b8d4f7 100644
+--- a/encoding.c
++++ b/encoding.c
+@@ -806,6 +806,12 @@ rb_enc_compatible(VALUE str1, VALUE str2)
+ 	    if (cr2 == ENC_CODERANGE_7BIT) {
+ 		return enc1;
+ 	    }
++	    if (idx1 == ENCINDEX_UTF_8 && idx2 == ENCINDEX_ASCII) {
++		return enc2;
++	    }
++	    else if (idx1 == ENCINDEX_ASCII && idx2 == ENCINDEX_UTF_8) {
++		return enc1;
++	    }
+ 	}
+ 	if (cr1 == ENC_CODERANGE_7BIT)
+ 	    return enc2;
+diff --git a/string.c b/string.c
+index 134d65b..7f4f704 100644
+--- a/string.c
++++ b/string.c
+@@ -1947,7 +1947,11 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
+     if (ptr_cr_ret)
+         *ptr_cr_ret = ptr_cr;
+ 
+-    if (str_encindex != ptr_encindex &&
++    if ((str_encindex == rb_utf8_encindex() && ptr_encindex == rb_ascii8bit_encindex()) ||
++        (str_encindex == rb_ascii8bit_encindex() && ptr_encindex == rb_utf8_encindex())) {
++        /* pass through */
++    }
++    else if (str_encindex != ptr_encindex &&
+         str_cr != ENC_CODERANGE_7BIT &&
+         ptr_cr != ENC_CODERANGE_7BIT) {
+       incompatible:
+@@ -1956,7 +1960,13 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
+             rb_enc_name(rb_enc_from_index(ptr_encindex)));
+     }
+ 
+-    if (str_cr == ENC_CODERANGE_UNKNOWN) {
++    if (str_encindex != ptr_encindex &&
++        str_cr != ENC_CODERANGE_7BIT &&
++        ptr_cr != ENC_CODERANGE_7BIT) {
++        res_encindex = rb_ascii8bit_encindex();
++        res_cr = ENC_CODERANGE_VALID;
++    }
++    else if (str_cr == ENC_CODERANGE_UNKNOWN) {
+         res_encindex = str_encindex;
+         res_cr = ENC_CODERANGE_UNKNOWN;
+     }
+
