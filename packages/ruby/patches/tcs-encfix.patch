@@ -29,7 +29,7 @@ index b8c5f6d..1b8d4f7 100644
  	if (cr1 == ENC_CODERANGE_7BIT)
  	    return enc2;
 diff --git a/string.c b/string.c
-index 134d65b..7f4f704 100644
+index 134d65b..01311ab 100644
 --- a/string.c
 +++ b/string.c
 @@ -1947,7 +1947,11 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
@@ -60,4 +60,15 @@ index 134d65b..7f4f704 100644
          res_encindex = str_encindex;
          res_cr = ENC_CODERANGE_UNKNOWN;
      }
+@@ -2227,6 +2237,10 @@ rb_str_comparable(VALUE str1, VALUE str2)
+ 	if (rb_enc_asciicompat(rb_enc_from_index(idx1)))
+ 	    return TRUE;
+     }
++    if ((idx1 == rb_utf8_encindex() && idx2 == rb_ascii8bit_encindex()) ||
++        (idx1 == rb_ascii8bit_encindex() && idx2 == rb_utf8_encindex())) {
++      return TRUE;
++    }
+     return FALSE;
+ }
+ 
 
