@@ -1,18 +1,16 @@
 require 'mri'
 
 class YARV < MRI
-  url 'http://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.3-p194.tar.gz'
+  url 'http://ftp.ruby-lang.org/pub/ruby/1.9/ruby-1.9.2-p290.tar.gz'
   homepage 'http://www.ruby-lang.org/'
-  md5 'bc0c715c69da4d1d8bd57069c19f6c0e'
+  md5 '604da71839a6ae02b5b5b5e1b792d5eb'
 
-  source 'https://rubygems.org/downloads/bundler-1.2.1.gem'
-
-  name 'rbenv-1.9.3-p194'
+  name 'rbenv-1.9.2-p290'
   section 'interpreters'
-  version '1.0.3'
+  version '1.0.0'
   description 'The YARV Ruby virtual machine'
 
-  provides! 'rbenv-1.9', 'rbenv-1.9.3'
+  provides! 'rbenv-1.9', 'rbenv-1.9.2'
 
   build_depends \
     'libyaml-dev'
