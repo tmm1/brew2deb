@@ -1,9 +1,9 @@
 class Kestrel < DebianFormula
-  url 'http://robey.github.com/kestrel/download/kestrel-2.1.5.zip'
-  md5 '256503b15fb7feec37e100f5ef92f94d'
+  url 'http://robey.github.com/kestrel/download/kestrel-2.4.1.zip'
+  md5 '623e325823a97dd6e5d58f7a3d114c9f'
 
   name 'kestrel'
-  version '2.1.5'
+  version '2.4.1'
   description 'a simple, distributed message queue written on the JVM'
   section 'utils'
   arch 'all'
@@ -26,11 +26,11 @@ class Kestrel < DebianFormula
   end
 
   def install
-    (share/'kestrel/current').install(builddir/'kestrel-2.1.5/kestrel-2.1.5.jar')
-    (share/'kestrel/current').install(builddir/'kestrel-2.1.5/libs')
-    (etc/'init.d').install(builddir/'kestrel-2.1.5/scripts/kestrel')
+    (share/'kestrel/current').install(builddir/'kestrel-2.4.1/kestrel_2.9.2-2.4.1jar')
+    (share/'kestrel/current').install(builddir/'kestrel-2.4.1/libs')
+    (etc/'init.d').install(builddir/'kestrel-2.4.1/scripts/kestrel')
+    (var+'run/kestrel').mkpath
     (var+'log/kestrel').mkpath
-    (var+'pid/kestrel').mkpath
     (var+'spool/kestrel').mkpath
   end
 end
