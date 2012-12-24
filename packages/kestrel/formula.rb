@@ -8,9 +8,9 @@ class Kestrel < DebianFormula
   section 'utils'
   arch 'all'
 
-#  build_depends \
-#    'sun-java6-jdk', \
-#    'sbt'
+  build_depends \
+    'sun-java6-jdk', \
+    'sbt'
 
   depends \
     'sun-java6-jre', \
