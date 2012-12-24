@@ -26,7 +26,7 @@ class Kestrel < DebianFormula
   end
 
   def install
-    (share/'kestrel/current').install(builddir/'kestrel-2.4.1/kestrel_2.9.2-2.4.1jar')
+    (share/'kestrel/current').install(builddir/'kestrel-2.4.1/kestrel_2.9.2-2.4.1.jar')
     (share/'kestrel/current').install(builddir/'kestrel-2.4.1/libs')
     (etc/'init.d').install(builddir/'kestrel-2.4.1/scripts/kestrel')
     (var+'run/kestrel').mkpath
