@@ -6,15 +6,15 @@ class REE < MRI
   md5 '8d086d2fe68a4c57ba76228e97fb3116'
 
   name 'rbenv-ree-1.8.7-2012.02+github1'
-  version '1.0.2'
+  version '1.0.2+github1'
   description 'The REE Ruby virtual machine'
 
   build_depends \
     'ruby',
-    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
+    'google-perftools (>= 1.8.3+github2), google-perftools (<= 1.9)'
 
   depends \
-    'google-perftools (>= 1.8), google-perftools (<= 1.9)'
+    'google-perftools (>= 1.8.3+github2), google-perftools (<= 1.9)'
 
   provides! 'rbenv-ree'
 
