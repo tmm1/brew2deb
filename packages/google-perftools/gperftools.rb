@@ -14,6 +14,12 @@ class GPerftools < DebianFormula
   depends \
     'libunwind7'
 
+  def patches
+    [
+      'patches/001-sjg-dont-trace-heap-growth.patch',
+    ]
+  end
+
   conflicts 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
   replaces  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
   provides  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'

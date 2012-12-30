@@ -1,0 +1,11 @@
+--- google-perftools-1.8.3/src/page_heap.cc	2011-07-12 17:27:08.000000000 -0700
++++ p/google-perftools-1.8.3/src/page_heap.cc	2012-12-29 15:46:00.000000000 -0800
+@@ -474,7 +474,7 @@
+ 
+ static void RecordGrowth(size_t growth) {
+   StackTrace* t = Static::stacktrace_allocator()->New();
+-  t->depth = GetStackTrace(t->stack, kMaxStackDepth-1, 3);
++  t->depth = 0;//GetStackTrace(t->stack, kMaxStackDepth-1, 3);
+   t->size = growth;
+   t->stack[kMaxStackDepth-1] = reinterpret_cast<void*>(Static::growth_stacks());
+   Static::set_growth_stacks(t);
