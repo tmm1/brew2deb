@@ -5,7 +5,7 @@ class GooglePerftools < DebianFormula
 
   name 'google-perftools'
   section 'devel'
-  version '1.8.3+github1'
+  version '1.8.3+github2'
   description 'Fast, multi-threaded malloc() and nifty performance analysis tools'
 
   build_depends \
@@ -13,6 +13,12 @@ class GooglePerftools < DebianFormula
 
   depends \
     'libunwind7'
+
+  def patches
+    [
+      'patches/001-sjg-dont-trace-heap-growth.patch',
+    ]
+  end
 
   conflicts 'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
   replaces  'libgoogle-perftools-dev', 'libgoogle-perftools0', 'libtcmalloc-minimal0'
