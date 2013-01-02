@@ -1,6 +1,6 @@
 diff -ur libvirt-0.9.11.4/src/esx/esx_storage_driver.c libvirt-0.9.11.4-patched/src/esx/esx_storage_driver.c
---- libvirt-0.9.11.4/src/esx/esx_storage_driver.c	2012-06-15 20:23:21.000000000 +0200
-+++ libvirt-0.9.11.4-patched/src/esx/esx_storage_driver.c	2012-10-03 16:44:02.000000000 +0200
+--- libvirt-0.9.11.4/src/esx/esx_storage_backend_vmfs.c	2012-06-15 20:23:21.000000000 +0200
++++ libvirt-0.9.11.4-patched/src/esx/esx_storage_backend_vmfs.c	2012-10-03 16:44:02.000000000 +0200
 @@ -1197,6 +1197,7 @@
      char *datastorePathWithoutFileName = NULL;
      char *datastorePath = NULL;
@@ -12,7 +12,7 @@ diff -ur libvirt-0.9.11.4/src/esx/esx_storage_driver.c libvirt-0.9.11.4-patched/
 @@ -1290,6 +1291,39 @@
              goto cleanup;
          }
- 
+
 +        /* Create VirtualDiskSpec */
 +        if (esxVI_FileBackedVirtualDiskSpec_Alloc(&virtualDiskSpec) < 0 ||
 +            esxVI_Long_Alloc(&virtualDiskSpec->capacityKb) < 0) {
@@ -33,7 +33,7 @@ diff -ur libvirt-0.9.11.4/src/esx/esx_storage_driver.c libvirt-0.9.11.4-patched/
 +             */
 +            virtualDiskSpec->diskType = (char *)"thin";
 +        } else {
-+            ESX_ERROR(VIR_ERR_INTERNAL_ERROR, "%s",
++            virReportError(VIR_ERR_INTERNAL_ERROR, "%s",
 +                      _("Unsupported capacity-to-allocation relation"));
 +            goto cleanup;
 +        }

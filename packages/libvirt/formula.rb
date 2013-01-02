@@ -1,11 +1,12 @@
 class LibVirt < DebianFormula
   homepage 'http://www.libvirt.org'
-  url 'http://libvirt.org/sources/stable_updates/libvirt-0.9.11.4.tar.gz'
-  sha256 'f3e16a62dff9720e1541da5561f448853e9821baa4622a0064dc28589eebed45'
+  url 'http://libvirt.org/sources/libvirt-1.0.1.tar.gz'
+  sha256 '4a16c76c46ebc41a6514082b5d95b5d5a0868e7a8cc00ab2e6cc1a23ec6b5a3b'
+
 
   name 'libvirt'
   section 'libs'
-  version '0.9.11.4+github1'
+  version '1.0.1+github1'
   description 'libvirt is a library to interact with various virtualization technologies'
 
   conflicts 'libvirt-bin'
