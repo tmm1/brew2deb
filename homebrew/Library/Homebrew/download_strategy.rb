@@ -333,8 +333,7 @@ class GitDownloadStrategy < AbstractDownloadStrategy
       puts "Updating #{@clone}"
       Dir.chdir(@clone) do
         quiet_safe_system 'git', 'fetch', @url
-        # If we're going to checkout a tag, then we need to fetch new tags too.
-        quiet_safe_system 'git', 'fetch', '--tags' if @spec == :tag
+        quiet_safe_system 'git', 'fetch', '--tags' 
       end
     end
   end
