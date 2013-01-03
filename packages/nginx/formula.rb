@@ -9,7 +9,7 @@ class Nginx < DebianFormula
   source 'https://github.com/yaoweibin/nginx_syslog_patch.git', :sha => 'afeea6d'
 
   name 'nginx'
-  version '1.0.13+github4'
+  version '1.0.13+github5'
   section 'httpd'
   description 'a high performance web server and a reverse proxy server'
 
@@ -34,6 +34,7 @@ class Nginx < DebianFormula
        'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
        workdir/'src/nginx_syslog_patch.git/syslog_1.0.6.patch',
        'nginx-disable-ssl-compression.patch',
+       'nginx-msec-backport.patch',
      ]}
   end
 

@@ -1,0 +1,78 @@
+--- nginx-1.0.13/src/http/ngx_http_variables.c.orig	2012-03-05 04:36:51.000000000 -0800
++++ nginx-1.0.13/src/http/ngx_http_variables.c	2013-01-03 01:19:59.000000000 -0800
+@@ -93,6 +93,10 @@
+     ngx_http_variable_value_t *v, uintptr_t data);
+ static ngx_int_t ngx_http_variable_pid(ngx_http_request_t *r,
+     ngx_http_variable_value_t *v, uintptr_t data);
++static ngx_int_t ngx_http_variable_start_msec(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data);
++static ngx_int_t ngx_http_variable_msec(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data);
+ 
+ /*
+  * TODO:
+@@ -255,6 +259,12 @@
+     { ngx_string("pid"), NULL, ngx_http_variable_pid,
+       0, 0, 0 },
+ 
++    { ngx_string("start_msec"), NULL, ngx_http_variable_start_msec,
++      0, 0, 0 },
++
++    { ngx_string("msec"), NULL, ngx_http_variable_msec,
++      0, 0, 0 },
++
+     { ngx_null_string, NULL, NULL, 0, 0, 0 }
+ };
+ 
+@@ -1672,6 +1682,51 @@
+     v->valid = 1;
+     v->no_cacheable = 0;
+     v->not_found = 0;
++    v->data = p;
++
++    return NGX_OK;
++}
++
++
++static ngx_int_t
++ngx_http_variable_start_msec(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data)
++{
++    u_char           *p;
++
++    p = ngx_pnalloc(r->pool, NGX_INT64_LEN);
++    if (p == NULL) {
++        return NGX_ERROR;
++    }
++
++    v->len = ngx_sprintf(p, "%T.%03M", r->start_sec, r->start_msec) - p;
++    v->valid = 1;
++    v->no_cacheable = 0;
++    v->not_found = 0;
++    v->data = p;
++
++    return NGX_OK;
++}
++
++
++static ngx_int_t
++ngx_http_variable_msec(ngx_http_request_t *r,
++    ngx_http_variable_value_t *v, uintptr_t data)
++{
++    u_char      *p;
++    ngx_time_t  *tp;
++
++    p = ngx_pnalloc(r->pool, NGX_TIME_T_LEN + 4);
++    if (p == NULL) {
++        return NGX_ERROR;
++    }
++
++    tp = ngx_timeofday();
++
++    v->len = ngx_sprintf(p, "%T.%03M", tp->sec, tp->msec) - p;
++    v->valid = 1;
++    v->no_cacheable = 0;
++    v->not_found = 0;
+     v->data = p;
+ 
+     return NGX_OK;
