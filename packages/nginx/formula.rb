@@ -5,7 +5,7 @@ class Nginx < DebianFormula
 
   source 'https://github.com/nickh/chunkin-nginx-module.git', :sha => '140d61c3'
   source 'https://github.com/agentzh/headers-more-nginx-module.git', :tag => 'v0.15'
-  source 'https://github.com/vkholodkov/nginx-upload-module.git', :tag => '2.2.0'
+  source 'https://github.com/vkholodkov/nginx-upload-module.git', :sha => '2ec4e4fb'
   source 'https://github.com/yaoweibin/nginx_syslog_patch.git', :sha => 'afeea6d'
 
   name 'nginx'
