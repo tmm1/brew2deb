@@ -14,7 +14,9 @@ class Kestrel < DebianFormula
 
   depends \
     'sun-java6-jre', \
-    'daemon'
+    'daemon', \
+    'scala'
+
 
   def build
     mv 'scripts/kestrel.sh', 'scripts/kestrel'
