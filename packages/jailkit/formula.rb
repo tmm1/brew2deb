@@ -7,4 +7,6 @@ class Jailkit < DebianFormula
   version '2.15'
   description 'utilities for jailing a user or process'
   section 'admin'
+
+  depends 'python'
 end
