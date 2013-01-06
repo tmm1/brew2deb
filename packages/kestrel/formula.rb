@@ -25,6 +25,7 @@ class Kestrel < DebianFormula
       s.gsub! '/usr/local/bin', '/usr/bin'
       s.gsub! '/usr/local', '/usr/share'
       s.gsub! '.sh', ''
+      s.gsub! '/opt/jdk', '/usr'
     end
   end
 
