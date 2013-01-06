@@ -3,7 +3,7 @@ class Kestrel < DebianFormula
   md5 '623e325823a97dd6e5d58f7a3d114c9f'
 
   name 'kestrel'
-  version '2.4.1'
+  version '2.4.1+github1'
   description 'a simple, distributed message queue written on the JVM'
   section 'utils'
   arch 'all'
