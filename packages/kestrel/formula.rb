@@ -18,6 +18,7 @@ class Kestrel < DebianFormula
 
   def build
     mv 'scripts/kestrel.sh', 'scripts/kestrel'
+    sh 'chmod +x scripts/kestrel'
     inreplace 'scripts/kestrel' do |s|
       s.gsub! '/usr/local/bin', '/usr/bin'
       s.gsub! '/usr/local', '/usr/share'
