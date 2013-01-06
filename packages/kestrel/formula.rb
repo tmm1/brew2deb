@@ -34,7 +34,7 @@ class Kestrel < DebianFormula
     (share/'kestrel/current').install(builddir/'kestrel-2.4.1/config')
     (share/'kestrel/current').install(builddir/'kestrel-2.4.1/scripts')
     (etc/'init.d').install_p(builddir/'kestrel-2.4.1/scripts/kestrel')
-    (var+'run/kestrel').mpath
+    (var+'run/kestrel').mkpath
     (var+'log/kestrel').mkpath
     (var+'spool/kestrel').mkpath
   end
