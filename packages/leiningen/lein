@@ -2,7 +2,7 @@
 
 CLOJURE_JAR="/usr/share/java/clojure-1.2.1+github1.jar"
 TRAMPOLINE_FILE="/tmp/lein-trampoline-$$"
-CLASSPATH="$CLASSPATH:test/:src/:resources/:/usr/share/java/leiningen-1.7.1-standalone.jar"
+CLASSPATH="$CLASSPATH:test/:src/:resources/:/usr/share/java/leiningen-2.0.0-preview10-standalone.jar"
 
 /usr/bin/rlwrap -b '"(){}[],^%0@";:'\''"' java \
 -Xbootclasspath/a:$CLOJURE_JAR \
