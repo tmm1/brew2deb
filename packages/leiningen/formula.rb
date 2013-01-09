@@ -1,12 +1,12 @@
 class Leiningen < DebianFormula
   homepage 'https://github.com/technomancy/leiningen'
 
-  url 'https://github.com/downloads/technomancy/leiningen/leiningen-1.7.1-standalone.jar'
+  url 'https://github.com/downloads/technomancy/leiningen/leiningen-2.0.0-preview10-standalone.jar'
 
   arch 'all'
   name 'leiningen'
   section 'devel'
-  version '1.7.1+github3'
+  version '2.0.0-preview10+github1'
   description 'A build tool for Clojure projects'
 
   depends \
@@ -32,6 +32,6 @@ class Leiningen < DebianFormula
 
   def install
     (prefix/'bin').install 'lein'
-    (prefix/'share/java').install 'leiningen-1.7.1-standalone.jar'
+    (prefix/'share/java').install 'leiningen-2.0.0-preview10-standalone.jar'
   end
 end
