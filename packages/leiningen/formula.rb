@@ -6,7 +6,7 @@ class Leiningen < DebianFormula
   arch 'all'
   name 'leiningen'
   section 'devel'
-  version '2.0.0-preview10+github1'
+  version '2.0.0-preview10+github2'
   description 'A build tool for Clojure projects'
 
   depends \
