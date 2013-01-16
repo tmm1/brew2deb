@@ -9,6 +9,7 @@ class S3fs < DebianFormula
   description 'FUSE-based file system backed by Amazon S3'
 
   build_depends \
+    'fuse (>= 2.8.4)',
     'libcurl4-openssl-dev',
     'libfuse-dev',
     'libxml2-dev'
