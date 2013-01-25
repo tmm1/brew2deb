@@ -1,12 +1,12 @@
 class ElasticSearch < DebianFormula
-  url 'http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.20.2.tar.gz'
+  url 'http://download.elasticsearch.org/elasticsearch/elasticsearch/elasticsearch-0.20.3.tar.gz'
   homepage 'http://www.elasticsearch.org'
-  md5 'fe50d6f4b11e9e0d1ccf661b32f15fbc'
+  md5 '42ffbc5b866a66fa77d4ca4ed2e84896'
 
   source 'http://api.cld.me/3d3d100w3I1B2s0L040o/download/lucene-highlighter-3.6-SNAPSHOT.jar'
 
   name 'elasticsearch'
-  version '0.20.2+github1'
+  version '0.20.3+github1'
   section 'database'
   description 'You know, for Search'
 
