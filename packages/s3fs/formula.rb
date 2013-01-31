@@ -1,7 +1,7 @@
 class S3fs < DebianFormula
   homepage 'http://code.google.com/p/s3fs/'
   url 'http://s3fs.googlecode.com/files/s3fs-1.62.tar.gz'
-  sha1 '8f6561ce00b41c667b738595fdb7b42196c5eee6'
+  sha1 '1b86d2b3f52dc490e138dddf469d4044c573c632'
 
   name 's3fs'
   version '1.62'
