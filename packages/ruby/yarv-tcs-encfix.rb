@@ -6,7 +6,7 @@ class TCSEncodingFix < YARV
 
   name 'rbenv-1.9.3-p194+tcs+tcmalloc+encfix'
   section 'interpreters'
-  version '1.0.1'
+  version '1.0.3'
   description 'The YARV Ruby virtual machine + TCS patches'
 
   build_depends \
