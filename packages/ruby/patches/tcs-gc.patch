@@ -1,5 +1,5 @@
 diff --git a/gc.c b/gc.c
-index a72a855..4de3859 100644
+index a72a855..4ed5858 100644
 --- a/gc.c
 +++ b/gc.c
 @@ -139,7 +139,13 @@ typedef struct gc_profile_record {
@@ -17,78 +17,64 @@ index a72a855..4de3859 100644
      struct rusage usage;
      struct timeval time;
      getrusage(RUSAGE_SELF, &usage);
-@@ -376,6 +382,8 @@ typedef struct rb_objspace {
+@@ -269,8 +275,8 @@ getrusage_time(void)
+         (record).heap_use_size = live * sizeof(RVALUE);\
+         (record).heap_total_size = total * sizeof(RVALUE);\
+     } while(0)
+-#define GC_PROF_INC_LIVE_NUM
+-#define GC_PROF_DEC_LIVE_NUM
++#define GC_PROF_INC_LIVE_NUM objspace->heap.live_num++
++#define GC_PROF_DEC_LIVE_NUM objspace->heap.live_num--
+ #endif
+ 
+ 
+@@ -376,6 +382,7 @@ typedef struct rb_objspace {
  	struct heaps_header **sorted;
  	size_t length;
  	size_t used;
-+	size_t freelist_size;
 +	size_t allocated_objects;
          struct heaps_slot *reserve_slots;
  	RVALUE *range[2];
  	size_t live_num;
-@@ -428,6 +436,8 @@ int *ruby_initial_gc_stress_ptr = &rb_objspace.gc_stress;
+@@ -428,6 +435,7 @@ int *ruby_initial_gc_stress_ptr = &rb_objspace.gc_stress;
  #define heaps			objspace->heap.ptr
  #define heaps_length		objspace->heap.length
  #define heaps_used		objspace->heap.used
-+#define freelist_size		objspace->heap.freelist_size
 +#define allocated_objects	objspace->heap.allocated_objects
  #define lomem			objspace->heap.range[0]
  #define himem			objspace->heap.range[1]
  #define heaps_inc		objspace->heap.increment
-@@ -1247,6 +1257,7 @@ assign_heap_slot(rb_objspace_t *objspace)
- 	p->as.free.flags = 0;
- 	p->as.free.next = heaps->freelist;
- 	heaps->freelist = p;
-+	freelist_size++;
- 	p++;
-     }
-     link_free_heap_slot(objspace, heaps);
-@@ -1374,6 +1385,8 @@ rb_newobj(void)
+@@ -1374,6 +1382,7 @@ rb_newobj(void)
      RANY(obj)->file = rb_sourcefile();
      RANY(obj)->line = rb_sourceline();
  #endif
-+    freelist_size--;
 +    allocated_objects++;
      GC_PROF_INC_LIVE_NUM;
  
      return obj;
-@@ -2133,6 +2146,7 @@ add_slot_local_freelist(rb_objspace_t *objspace, RVALUE *p)
-     slot = GET_HEAP_SLOT(p);
-     p->as.free.next = slot->freelist;
-     slot->freelist = p;
-+    freelist_size++;
- 
-     return slot;
- }
-@@ -2240,6 +2254,7 @@ slot_sweep(rb_objspace_t *objspace, struct heaps_slot *sweep_slot)
-                     p->as.free.flags = 0;
-                     p->as.free.next = sweep_slot->freelist;
-                     sweep_slot->freelist = p;
-+                    freelist_size++;
-                     free_num++;
-                 }
-             }
-@@ -2310,6 +2325,7 @@ before_gc_sweep(rb_objspace_t *objspace)
-     objspace->heap.sweep_slots = heaps;
-     objspace->heap.free_num = 0;
-     objspace->heap.free_slots = NULL;
-+    freelist_size = 0;
- 
-     /* sweep unlinked method entries */
-     if (GET_VM()->unlinked_method_entry_list) {
-@@ -3010,6 +3026,32 @@ os_each_obj(int argc, VALUE *argv, VALUE os)
+@@ -3010,6 +3019,42 @@ os_each_obj(int argc, VALUE *argv, VALUE os)
  }
  
  /*
-+ *  ObjectSpace.freelist_size => number
++ *  ObjectSpace.free_slots => number
 + *
-+ * Returns the count of freelist slots available for new objects.
++ * Returns the count of free slots available for new objects.
 + */
 +static
-+VALUE os_freelist_size(VALUE self)
++VALUE os_free_slots(VALUE self)
 +{
 +    rb_objspace_t *objspace = &rb_objspace;
-+    return SIZET2NUM(freelist_size);
++    return SIZET2NUM(heaps_used * HEAP_OBJ_LIMIT - objspace->heap.live_num);
++}
++
++/* call-seq:
++ *  ObjectSpace.live_objects => number
++ */
++static
++VALUE os_live_objects(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM(objspace->heap.live_num);
 +}
 +
 +/* call-seq:
@@ -109,12 +95,13 @@ index a72a855..4de3859 100644
   *  call-seq:
   *     ObjectSpace.undefine_finalizer(obj)
   *
-@@ -3889,6 +3931,8 @@ Init_GC(void)
+@@ -3889,6 +3934,9 @@ Init_GC(void)
      rb_mObSpace = rb_define_module("ObjectSpace");
      rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
      rb_define_module_function(rb_mObSpace, "garbage_collect", rb_gc_start, 0);
-+    rb_define_module_function(rb_mObSpace, "freelist_size", os_freelist_size, 0);
++    rb_define_module_function(rb_mObSpace, "free_slots", os_free_slots, 0);
 +    rb_define_module_function(rb_mObSpace, "allocated_objects", os_allocated_objects, 0);
++    rb_define_module_function(rb_mObSpace, "live_objects", os_live_objects, 0);
  
      rb_define_module_function(rb_mObSpace, "define_finalizer", define_final, -1);
      rb_define_module_function(rb_mObSpace, "undefine_finalizer", undefine_final, 1);

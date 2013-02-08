@@ -1,0 +1,25 @@
+diff --git a/version.h b/version.h
+index 4ddf8b8..42792a4 100644
+--- a/version.h
++++ b/version.h
+@@ -33,15 +33,16 @@
+ # ifdef RUBY_BRANCH_NAME
+ #  define RUBY_REVISION_STR " "RUBY_BRANCH_NAME" "STRINGIZE(RUBY_REVISION)
+ # else
+-#  define RUBY_REVISION_STR ", TCS patched 2012-05-27"
++#  define RUBY_REVISION_STR ", TCS patched 2012-05-27, GitHub v3"
+ # endif
+ #else
+-# define RUBY_REVISION_STR ", TCS patched 2012-05-27"
++# define RUBY_REVISION_STR ", TCS patched 2012-05-27, GitHub v3"
+ #endif
+ 
+ # define RUBY_DESCRIPTION	    \
+-    "tcs-ruby "RUBY_VERSION		    \
++    "ruby "RUBY_VERSION		    \
+     RUBY_PATCHLEVEL_STR             \
++    "-tcs-github"             \
+     " ("RUBY_RELEASE_DATE	    \
+     RUBY_REVISION_STR") "	    \
+     "["RUBY_PLATFORM"]"
+

@@ -1,8 +1,150 @@
+diff --git a/binary_test.rb b/binary_test.rb
+new file mode 100644
+index 0000000..0300beb
+--- /dev/null
++++ b/binary_test.rb
+@@ -0,0 +1,136 @@
++# coding: utf-8
++require 'test/unit'
++
++class BinaryUTF8CompatTest < Test::Unit::TestCase
++  def setup
++    @binary_mb = 'héllø'.force_encoding('binary')
++    @utf8_mb   = 'héllø'.force_encoding('utf-8')
++    @binary_as = 'hello'.force_encoding('binary')
++    @utf8_as   = 'hello'.force_encoding('utf-8')
++  end
++
++  def test_encode_utf8_to_binary
++    assert_nothing_raised do
++      @utf8_mb.encode('binary')
++    end
++  end
++
++  def test_encode_binary_to_utf8
++    assert_nothing_raised do
++      @binary_mb.encode('utf-8')
++    end
++  end
++
++  def test_invalid_byte_seq
++    email = "\xD0\xEE\xEC\xE0\xF8\xEA\xE0@MyAcerPC.(none)".force_encoding('UTF-8')
++    assert_nothing_raised do
++      email.strip
++      email.split("\0")
++      email.split(/\s+/)
++    end
++  end
++
++  def test_equal_contents
++    assert_equal @binary_mb, @utf8_mb
++  end
++
++  def test_match_binary_regexp
++    assert_nothing_raised do
++      assert_equal 0, Regexp.new(@binary_mb) =~ @utf8_mb
++    end
++  end
++
++  def test_match_utf8_regexp
++    assert_nothing_raised do
++      assert_equal 0, Regexp.new(@utf8_mb) =~ @binary_mb
++    end
++  end
++
++  def test_add_binary
++    ret = @binary_mb + @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_mb + @binary_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as + @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as + @binary_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++  end
++
++  def test_add_utf8
++    ret = @utf8_mb + @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_mb + @utf8_as
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as + @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as + @utf8_as
++    assert_equal Encoding::UTF_8, ret.encoding
++  end
++
++  def test_add_utf8_plus_7bit
++    ret = @binary_as + @utf8_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as + @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as + @binary_as
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_mb + @binary_as
++    assert_equal Encoding::UTF_8, ret.encoding
++  end
++
++  def test_add_8bit_plus_utf8
++    ret = @binary_mb + @utf8_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_mb + @utf8_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @utf8_mb + @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @utf8_as + @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++  end
++
++  def test_concat_binary
++    ret = @binary_mb.dup << @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_mb.dup << @binary_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as.dup << @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as.dup << @binary_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++  end
++
++  def test_concat_utf8
++    ret = @utf8_mb.dup << @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_mb.dup << @utf8_as
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as.dup << @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as.dup << @utf8_as
++    assert_equal Encoding::UTF_8, ret.encoding
++  end
++
++  def test_concat_utf8_and_7bit
++    ret = @binary_as.dup << @utf8_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_as.dup << @utf8_mb
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_as.dup << @binary_as
++    assert_equal Encoding::UTF_8, ret.encoding
++    ret = @utf8_mb.dup << @binary_as
++    assert_equal Encoding::UTF_8, ret.encoding
++  end
++
++  def test_concat_8bit_and_utf8
++    ret = @binary_mb.dup << @utf8_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @binary_mb.dup << @utf8_as
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @utf8_mb.dup << @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++    ret = @utf8_as.dup << @binary_mb
++    assert_equal Encoding::ASCII_8BIT, ret.encoding
++  end
++end
 diff --git a/enc/trans/single_byte.trans b/enc/trans/single_byte.trans
-index 1bf1001..7c07854 100644
+index 1bf1001..dc3708c 100644
 --- a/enc/trans/single_byte.trans
 +++ b/enc/trans/single_byte.trans
-@@ -2,11 +2,12 @@
+@@ -2,11 +2,13 @@
  
  <%
    us_ascii_map = [["{00-7f}", :nomap]]
@@ -10,57 +152,100 @@ index 1bf1001..7c07854 100644
  
    transcode_tblgen "US-ASCII", "UTF-8", us_ascii_map
    transcode_tblgen "UTF-8", "US-ASCII", us_ascii_map
--  transcode_tblgen "ASCII-8BIT", "UTF-8", us_ascii_map
--  transcode_tblgen "UTF-8", "ASCII-8BIT", us_ascii_map
-+  transcode_tblgen "ASCII-8BIT", "UTF-8", binary_map
-+  transcode_tblgen "UTF-8", "ASCII-8BIT", binary_map, '{00-ff}'
+   transcode_tblgen "ASCII-8BIT", "UTF-8", us_ascii_map
+   transcode_tblgen "UTF-8", "ASCII-8BIT", us_ascii_map
++  transcode_tblgen "UTF-8-COMPAT", "ASCII-8BIT", binary_map, '{00-ff}'
  
    CONTROL1_TO_UCS_TBL = (0x80..0x9f).map {|c| ["%02X" % c, c] }
  
+@@ -83,9 +85,15 @@
+ 
+ <%= transcode_generated_code %>
+ 
++extern rb_encoding_compat;
++
+ void
+ Init_single_byte(void)
+ {
++    if (rb_encoding_compat) {
++        ((struct rb_transcoder *)&rb_from_ASCII_8BIT)->conv_tree_start = from_UTF_8_COMPAT_to_ASCII_8BIT;
++        ((struct rb_transcoder *)  &rb_to_ASCII_8BIT)->conv_tree_start = from_UTF_8_COMPAT_to_ASCII_8BIT;
++    }
+ <%= transcode_register_code %>
+ }
+ 
 diff --git a/encoding.c b/encoding.c
-index b8c5f6d..60fa97e 100644
+index b8c5f6d..395d6c5 100644
 --- a/encoding.c
 +++ b/encoding.c
-@@ -806,6 +806,12 @@ rb_enc_compatible(VALUE str1, VALUE str2)
+@@ -35,6 +35,8 @@ int rb_encdb_alias(const char *alias, const char *orig);
+ #pragma GCC visibility pop
+ #endif
+ 
++int rb_encoding_compat;
++
+ static ID id_encoding;
+ VALUE rb_cEncoding;
+ static VALUE rb_encoding_list;
+@@ -806,6 +808,14 @@ rb_enc_compatible(VALUE str1, VALUE str2)
  	    if (cr2 == ENC_CODERANGE_7BIT) {
  		return enc1;
  	    }
-+	    if (idx1 == ENCINDEX_UTF_8 && idx2 == ENCINDEX_ASCII) {
-+		return enc2;
-+	    }
-+	    else if (idx1 == ENCINDEX_ASCII && idx2 == ENCINDEX_UTF_8) {
-+		return enc1;
++            if (rb_encoding_compat) {
++	        if (idx1 == ENCINDEX_UTF_8 && idx2 == ENCINDEX_ASCII) {
++	            return enc2;
++	        }
++	        else if (idx1 == ENCINDEX_ASCII && idx2 == ENCINDEX_UTF_8) {
++	            return enc1;
++	        }
 +	    }
  	}
  	if (cr1 == ENC_CODERANGE_7BIT)
  	    return enc2;
-@@ -901,6 +907,11 @@ rb_enc_codepoint_len(const char *p, const char *e, int *len_p, rb_encoding *enc)
+@@ -901,6 +911,13 @@ rb_enc_codepoint_len(const char *p, const char *e, int *len_p, rb_encoding *enc)
  	if (len_p) *len_p = MBCLEN_CHARFOUND_LEN(r);
          return rb_enc_mbc_to_codepoint(p, e, enc);
      }
-+    else if (enc == rb_utf8_encoding() && MBCLEN_CHARFOUND_P(r = rb_enc_precise_mbclen(p, e, rb_ascii8bit_encoding()))) {
-+	// swallow invalid byte sequence in utf-8 strings; treat as ascii-8bit instead
++    else if (rb_encoding_compat &&
++             enc == rb_utf8_encoding() &&
++             MBCLEN_CHARFOUND_P(r = rb_enc_precise_mbclen(p, e, rb_ascii8bit_encoding()))) {
++	// avoid invalid byte sequence exception on utf-8 strings; treat as ascii-8bit instead
 +	if (len_p) *len_p = MBCLEN_CHARFOUND_LEN(r);
 +        return rb_enc_mbc_to_codepoint(p, e, rb_ascii8bit_encoding());
 +    }
      else
  	rb_raise(rb_eArgError, "invalid byte sequence in %s", rb_enc_name(enc));
  }
+diff --git a/include/ruby/encoding.h b/include/ruby/encoding.h
+index 058462f..d5452e6 100644
+--- a/include/ruby/encoding.h
++++ b/include/ruby/encoding.h
+@@ -77,6 +77,7 @@ extern "C" {
+         ENC_CODERANGE_SET(rb_encoding_coderange_obj, (cr)); \
+     } while (0)
+ 
++extern int rb_encoding_compat;
+ typedef OnigEncodingType rb_encoding;
+ 
+ int rb_char_to_option_kcode(int c, int *option, int *kcode);
 diff --git a/re.c b/re.c
-index 9fdbf54..661909c 100644
+index 9fdbf54..f1928b9 100644
 --- a/re.c
 +++ b/re.c
-@@ -1235,15 +1235,15 @@ static rb_encoding*
+@@ -1235,15 +1235,16 @@ static rb_encoding*
  rb_reg_prepare_enc(VALUE re, VALUE str, int warn)
  {
      rb_encoding *enc = 0;
 +    enc = rb_enc_get(str);
  
--    if (rb_enc_str_coderange(str) == ENC_CODERANGE_BROKEN) {
-+    if (rb_enc_str_coderange(str) == ENC_CODERANGE_BROKEN && enc != rb_utf8_encoding()) {
-         rb_raise(rb_eArgError,
-             "invalid byte sequence in %s",
-             rb_enc_name(rb_enc_get(str)));
+     if (rb_enc_str_coderange(str) == ENC_CODERANGE_BROKEN) {
+-        rb_raise(rb_eArgError,
+-            "invalid byte sequence in %s",
+-            rb_enc_name(rb_enc_get(str)));
++        if (!(rb_encoding_compat && enc == rb_utf8_encoding()))
++            rb_raise(rb_eArgError,
++                "invalid byte sequence in %s",
++                rb_enc_name(rb_enc_get(str)));
      }
  
      rb_reg_check(re);
@@ -68,49 +253,71 @@ index 9fdbf54..661909c 100644
      if (!rb_enc_str_asciicompat_p(str)) {
          if (RREGEXP(re)->ptr->enc != enc) {
  	    reg_enc_error(re, str);
-@@ -1253,12 +1253,17 @@ rb_reg_prepare_enc(VALUE re, VALUE str, int warn)
+@@ -1253,6 +1254,11 @@ rb_reg_prepare_enc(VALUE re, VALUE str, int warn)
          if (RREGEXP(re)->ptr->enc != enc &&
  	    (!rb_enc_asciicompat(RREGEXP(re)->ptr->enc) ||
  	     rb_enc_str_coderange(str) != ENC_CODERANGE_7BIT)) {
-+            if ((RREGEXP(re)->ptr->enc == rb_ascii8bit_encoding() && enc == rb_utf8_encoding()) ||
-+                (enc == rb_ascii8bit_encoding() && RREGEXP(re)->ptr->enc == rb_utf8_encoding())) {
++            if (rb_encoding_compat &&
++                ((RREGEXP(re)->ptr->enc == rb_ascii8bit_encoding() && enc == rb_utf8_encoding()) ||
++                 (enc == rb_ascii8bit_encoding() && RREGEXP(re)->ptr->enc == rb_utf8_encoding()))) {
 +                return rb_ascii8bit_encoding();
 +            }
  	    reg_enc_error(re, str);
  	}
  	enc = RREGEXP(re)->ptr->enc;
-     }
+@@ -1260,8 +1266,9 @@ rb_reg_prepare_enc(VALUE re, VALUE str, int warn)
      if (warn && (RBASIC(re)->flags & REG_ENCODING_NONE) &&
  	enc != rb_ascii8bit_encoding() &&
-+	enc != rb_utf8_encoding() && // rack-1.4.1/lib/rack/utils.rb:87: warning: regexp match /.../n against to UTF-8 string
  	rb_enc_str_coderange(str) != ENC_CODERANGE_7BIT) {
- 	rb_warn("regexp match /.../n against to %s string",
- 		rb_enc_name(enc));
+-	rb_warn("regexp match /.../n against to %s string",
+-		rb_enc_name(enc));
++        if (!(rb_encoding_compat && enc == rb_utf8_encoding()))
++	    rb_warn("regexp match /.../n against to %s string",
++	        rb_enc_name(enc));
+     }
+     return enc;
+ }
+diff --git a/ruby.c b/ruby.c
+index b9b9fd5..4edd658 100644
+--- a/ruby.c
++++ b/ruby.c
+@@ -1021,6 +1021,9 @@ proc_options(long argc, char **argv, struct cmdline_options *opt, int envopt)
+ 		set_source_encoding_once(opt, s, 0);
+ 	    }
+ #endif
++	    else if (strcmp("encoding-compatibility", s) == 0) {
++                rb_encoding_compat = 1;
++            }
+ 	    else if (strcmp("version", s) == 0) {
+ 		if (envopt) goto noenvopt_long;
+ 		opt->dump |= DUMP_BIT(version);
 diff --git a/string.c b/string.c
-index 134d65b..c721c7f 100644
+index 134d65b..d3d54ae 100644
 --- a/string.c
 +++ b/string.c
-@@ -1947,7 +1947,11 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
+@@ -1947,7 +1947,12 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
      if (ptr_cr_ret)
          *ptr_cr_ret = ptr_cr;
  
 -    if (str_encindex != ptr_encindex &&
-+    if ((str_encindex == rb_utf8_encindex() && ptr_encindex == rb_ascii8bit_encindex()) ||
-+        (str_encindex == rb_ascii8bit_encindex() && ptr_encindex == rb_utf8_encindex())) {
++    if (rb_encoding_compat &&
++        ((str_encindex == rb_utf8_encindex() && ptr_encindex == rb_ascii8bit_encindex()) ||
++         (str_encindex == rb_ascii8bit_encindex() && ptr_encindex == rb_utf8_encindex()))) {
 +        /* fall through to conditional below */
 +    }
 +    else if (str_encindex != ptr_encindex &&
          str_cr != ENC_CODERANGE_7BIT &&
          ptr_cr != ENC_CODERANGE_7BIT) {
        incompatible:
-@@ -1956,7 +1960,13 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
+@@ -1956,7 +1961,14 @@ rb_enc_cr_str_buf_cat(VALUE str, const char *ptr, long len,
              rb_enc_name(rb_enc_from_index(ptr_encindex)));
      }
  
 -    if (str_cr == ENC_CODERANGE_UNKNOWN) {
-+    if (str_encindex != ptr_encindex &&
-+        str_cr != ENC_CODERANGE_7BIT &&
-+        ptr_cr != ENC_CODERANGE_7BIT) {
++    if (rb_encoding_compat &&
++        str_encindex != ptr_encindex &&
++        str_cr != ENC_CODERANGE_7BIT && ptr_cr != ENC_CODERANGE_7BIT) {
++        /* from fall through above */
 +        res_encindex = rb_ascii8bit_encindex();
 +        res_cr = ENC_CODERANGE_VALID;
 +    }
@@ -118,23 +325,26 @@ index 134d65b..c721c7f 100644
          res_encindex = str_encindex;
          res_cr = ENC_CODERANGE_UNKNOWN;
      }
-@@ -2227,6 +2237,10 @@ rb_str_comparable(VALUE str1, VALUE str2)
+@@ -2227,6 +2239,11 @@ rb_str_comparable(VALUE str1, VALUE str2)
  	if (rb_enc_asciicompat(rb_enc_from_index(idx1)))
  	    return TRUE;
      }
-+    if ((idx1 == rb_utf8_encindex() && idx2 == rb_ascii8bit_encindex()) ||
-+        (idx1 == rb_ascii8bit_encindex() && idx2 == rb_utf8_encindex())) {
++    if (rb_encoding_compat &&
++        ((idx1 == rb_utf8_encindex() && idx2 == rb_ascii8bit_encindex()) ||
++         (idx1 == rb_ascii8bit_encindex() && idx2 == rb_utf8_encindex()))) {
 +        return TRUE;
 +    }
      return FALSE;
  }
  
-@@ -5882,7 +5896,7 @@ rb_str_split_m(int argc, VALUE *argv, VALUE str)
- 	char *sptr = RSTRING_PTR(spat);
+@@ -5883,7 +5900,8 @@ rb_str_split_m(int argc, VALUE *argv, VALUE str)
  	long slen = RSTRING_LEN(spat);
  
--	if (is_broken_string(str)) {
-+	if (is_broken_string(str) && STR_ENC_GET(str) != rb_utf8_encoding()) {
- 	    rb_raise(rb_eArgError, "invalid byte sequence in %s", rb_enc_name(STR_ENC_GET(str)));
+ 	if (is_broken_string(str)) {
+-	    rb_raise(rb_eArgError, "invalid byte sequence in %s", rb_enc_name(STR_ENC_GET(str)));
++	    if (!(rb_encoding_compat && STR_ENC_GET(str) == rb_utf8_encoding()))
++	        rb_raise(rb_eArgError, "invalid byte sequence in %s", rb_enc_name(STR_ENC_GET(str)));
  	}
  	if (is_broken_string(spat)) {
+ 	    rb_raise(rb_eArgError, "invalid byte sequence in %s", rb_enc_name(STR_ENC_GET(spat)));
+

@@ -1,0 +1,113 @@
+diff --git a/gc.c b/gc.c
+index e65d0ec..0f14a2f 100644
+--- a/gc.c
++++ b/gc.c
+@@ -127,7 +127,13 @@ typedef struct gc_profile_record {
+ static double
+ getrusage_time(void)
+ {
+-#ifdef RUSAGE_SELF
++#if defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_PROCESS_CPUTIME_ID)
++    struct timespec ts;
++
++    if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &ts) == 0) {
++        return ts.tv_sec + ts.tv_nsec * 1e-9;
++    }
++#elif defined RUSAGE_SELF
+     struct rusage usage;
+     struct timeval time;
+     getrusage(RUSAGE_SELF, &usage);
+@@ -337,6 +343,8 @@ typedef struct rb_objspace {
+ 	struct sorted_heaps_slot *sorted;
+ 	size_t length;
+ 	size_t used;
++	size_t freelist_size;
++	size_t allocated_objects;
+ 	RVALUE *freelist;
+ 	RVALUE *range[2];
+ 	RVALUE *freed;
+@@ -386,6 +394,8 @@ int *ruby_initial_gc_stress_ptr = &rb_objspace.gc_stress;
+ #define heaps_length		objspace->heap.length
+ #define heaps_used		objspace->heap.used
+ #define freelist		objspace->heap.freelist
++#define freelist_size		objspace->heap.freelist_size
++#define allocated_objects	objspace->heap.allocated_objects
+ #define lomem			objspace->heap.range[0]
+ #define himem			objspace->heap.range[1]
+ #define heaps_inc		objspace->heap.increment
+@@ -1077,6 +1087,7 @@ assign_heap_slot(rb_objspace_t *objspace)
+ 	p->as.free.flags = 0;
+ 	p->as.free.next = freelist;
+ 	freelist = p;
++	freelist_size++;
+ 	p++;
+     }
+ }
+@@ -1188,6 +1199,8 @@ rb_newobj(void)
+ 
+     obj = (VALUE)freelist;
+     freelist = freelist->as.free.next;
++    freelist_size--;
++    allocated_objects++;
+ 
+     MEMZERO((void*)obj, RVALUE, 1);
+ #ifdef GC_DEBUG
+@@ -1936,6 +1949,7 @@ add_freelist(rb_objspace_t *objspace, RVALUE *p)
+     p->as.free.flags = 0;
+     p->as.free.next = freelist;
+     freelist = p;
++    freelist_size++;
+ }
+ 
+ static void
+@@ -2093,6 +2107,7 @@ static void
+ before_gc_sweep(rb_objspace_t *objspace)
+ {
+     freelist = 0;
++    freelist_size = 0;
+     objspace->heap.do_heap_free = (size_t)((heaps_used * HEAP_OBJ_LIMIT) * 0.65);
+     objspace->heap.free_min = (size_t)((heaps_used * HEAP_OBJ_LIMIT)  * 0.2);
+     if (objspace->heap.free_min < initial_free_min) {
+@@ -2797,6 +2812,32 @@ os_each_obj(int argc, VALUE *argv, VALUE os)
+ }
+ 
+ /*
++ *  ObjectSpace.freelist_size => number
++ *
++ * Returns the count of freelist slots available for new objects.
++ */
++static
++VALUE os_freelist_size(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM(freelist_size);
++}
++
++/* call-seq:
++ *  ObjectSpace.allocated_objects => number
++ *
++ * Returns the count of objects allocated since the Ruby interpreter has
++ * started.  This number can only increase. To know how many objects are
++ * currently allocated, use ObjectSpace::live_objects
++ */
++static
++VALUE os_allocated_objects(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM(allocated_objects);
++}
++
++/*
+  *  call-seq:
+  *     ObjectSpace.undefine_finalizer(obj)
+  *
+@@ -3611,6 +3652,8 @@ Init_GC(void)
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
+     rb_define_module_function(rb_mObSpace, "garbage_collect", rb_gc_start, 0);
++    rb_define_module_function(rb_mObSpace, "freelist_size", os_freelist_size, 0);
++    rb_define_module_function(rb_mObSpace, "allocated_objects", os_allocated_objects, 0);
+ 
+     rb_define_module_function(rb_mObSpace, "define_finalizer", define_final, -1);
+     rb_define_module_function(rb_mObSpace, "undefine_finalizer", undefine_final, 1);
+
