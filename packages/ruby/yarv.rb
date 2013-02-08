@@ -13,7 +13,8 @@ class YARV < MRI
   provides! 'rbenv-1.9', 'rbenv-1.9.2'
 
   build_depends \
-    'libyaml-dev'
+    'libyaml-dev',
+    'libffi-dev'
 
   def configure(opts={})
     super opts.merge(:disable_install_rdoc => true)
