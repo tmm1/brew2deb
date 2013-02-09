@@ -19,7 +19,7 @@ class TCS < YARV
 
   def build
     sh 'autoconf'
-    inreplace 'version.h', /GitHub v\d+"/, "GitHub v#{self.class.version}\""
+    inreplace 'version.h', /GitHub v.+"/, "GitHub v#{self.class.version}\""
     cp 'version.h', 'version.h.pristine'
     super
   end
