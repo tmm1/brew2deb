@@ -20,7 +20,7 @@ class Kiji < MRI
     'google-perftools'
 
   def patches
-    'no-recursive-freeze.patch'
+    'patches/no-recursive-freeze.patch'
   end
 
   def build
@@ -36,11 +36,6 @@ class Kiji < MRI
 
   def post_install
     super
-
-    # patch bundler to work w/ kiji
-    chdir(prefix/'lib/ruby/gems/1.8/gems/bundler-1.0.15') do
-      sh 'patch', '-p1', '-i', workdir/'bundler-frozen-error.patch'
-    end
   end
 
   private
