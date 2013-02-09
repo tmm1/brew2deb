@@ -28,7 +28,7 @@ class YARV < MRI
   def install_bundler
     setup_rubylib
 
-    install_gem builddir/'bundler-1.2.1.gem'
+    install_gem builddir/'bundler-1.2.3.gem'
     fix_shebangs 'bundle'
   end
 
