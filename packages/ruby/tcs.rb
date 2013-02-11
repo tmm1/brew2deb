@@ -1,12 +1,12 @@
 require 'yarv'
 
 class TCS < YARV
-  url 'git://github.com/github/ruby-thecodeshop', :sha => 'd2891a6a1a1d60f4d0a68919382ca87f2a64c587'
+  url 'git://github.com/github/ruby-thecodeshop', :sha => 'ad71fcadeedf48a9c6f8609c94d93c5e329e5057'
   homepage 'https://github.com/thecodeshop/ruby/wiki'
 
   name 'rbenv-1.9.3-p231-tcs-github'
   section 'interpreters'
-  version '1.0.5'
+  version '1.0.6'
   description 'The YARV Ruby virtual machine + TCS patches + GitHub patches'
 
   build_depends \
@@ -30,6 +30,7 @@ class TCS < YARV
     touch 'version.h'
     super
     bin.install_p 'ruby', 'ruby-libcmalloc'
+    (include/'ruby-1.9.1').install Dir['*.{h,inc}']
 
     # wait to touch version.h last modified timestamp (1 sec resolution),
     # so make recognizes the change and rebuilds
