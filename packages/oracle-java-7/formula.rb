@@ -3,6 +3,13 @@ class OracleJava7 < DebianSourceFormula
 
   version "7.13-1+github1"
 
+  depends \
+    'libasound2',
+    'unixodbc',
+    'libxi6',
+    'libxt6',
+    'libxtst6'
+
   def build
     download_jdk
     download_jce
