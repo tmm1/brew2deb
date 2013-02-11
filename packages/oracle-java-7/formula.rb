@@ -3,12 +3,28 @@ class OracleJava7 < DebianSourceFormula
 
   version "7.13-1+github1"
 
+  provides \
+    'oracle-java7-jre',
+    'oracle-java7-bin',
+    'oracle-java7-plugin',
+    'oracle-java7-fonts',
+    'oracle-java7-jdk',
+    'oracle-java7-source',
+    'oracle-java7-javadb'
+
   build_depends \
+    'lsb-release',
+    'unzip',
+    'bzip2',
+    'patch',
     'libasound2',
     'unixodbc',
+    'libx11-6',
+    'libxext6',
     'libxi6',
     'libxt6',
-    'libxtst6'
+    'libxtst6',
+    'libxrender1'
 
   def build
     download_jdk
