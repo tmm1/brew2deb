@@ -21,7 +21,7 @@ class OracleJava7 < DebianSourceFormula
   end
 
   def wget_download(url, cookie)
-    command = %w[wget --no-check-certificate --continue]
+    command = %w[wget --no-check-certificate --continue --quiet]
     command << '--header' << "'#{cookie}'"
     command << url
 
