@@ -46,6 +46,7 @@ class OracleJava7 < DebianSourceFormula
   def wget_download(url, cookie)
     command = %w[wget --no-check-certificate --continue --quiet]
     command << '--header' << "'#{cookie}'"
+    command << '--output-document' << File.basename(url)
     command << url
 
     # sh is doing some crazy escaping that fucks up wget
