@@ -1,9 +1,9 @@
 class Libgithub < DebianFormula
   homepage 'https://github.com/github/libgithub'
-  url 'git@github.com:github/libgithub', :sha => '9904dc3'
+  url 'git@github.com:github/libgithub', :sha => '7735b20'
 
   name 'libgithub'
-  version "1.0.0"
+  version "1.0.1"
   section 'libs'
   description 'Utility library for writing C at GitHub'
 
