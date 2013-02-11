@@ -1,7 +1,8 @@
+# checkout http://www.oracle.com/technetwork/java/javase/downloads/index.html for the "build" number
 class OracleJava7 < DebianSourceFormula
   url 'https://github.com/rraptorr/oracle-java7.git'
 
-  version "7.13-1+github1"
+  version "7.13-20+github1"
 
   provides \
     'oracle-java7-jre',
@@ -30,6 +31,8 @@ class OracleJava7 < DebianSourceFormula
     download_jdk
     download_jce
 
+    fix_version
+
     sh('dpkg-buildpackage', '-uc', '-us')
   end
 
@@ -43,14 +46,13 @@ class OracleJava7 < DebianSourceFormula
     wget_download(url, jce_cookie)
   end
 
-  def wget_download(url, cookie)
-    command = %w[wget --no-check-certificate --continue --quiet]
-    command << '--header' << "'#{cookie}'"
-    command << '--output-document' << File.basename(url)
-    command << url
-
-    # sh is doing some crazy escaping that fucks up wget
-    %x(#{command.join(' ')})
+  def wget_download(url, cookie_header)
+    sh 'wget', '--no-check-certificate',
+               '--continue',
+               '--quiet',
+               '--header', cookie_header,
+               '--output-document', File.basename(url),
+               url
   end
 
   def cookie_header(cookie)
@@ -65,12 +67,20 @@ class OracleJava7 < DebianSourceFormula
     cookie_header("oraclelicensejce-7-oth-JPR=accept-securebackup-cookie;gpw_e24=http://edelivery.oracle.com")
   end
 
+  def version_parts
+    version.match(/^(\d+)\.(\d+)-(\d+)\+/)
+  end
+
   def java_version
-    version[/^(\d+)\./, 1]
+    version_parts[1]
   end
 
   def java_update
-    version[/\d+\.(\d+)-/, 1]
+    version_parts[2]
+  end
+
+  def java_build
+    version_parts[3]
   end
 
   def java_arch
@@ -81,9 +91,12 @@ class OracleJava7 < DebianSourceFormula
   end
 
   def jdk_url
-    # checkout http://www.oracle.com/technetwork/java/javase/downloads/index.html for the "b" number
-    b_number = "20"
+    "http://download.oracle.com/otn-pub/java/jdk/#{java_version}u#{java_update}-b#{java_build}/jdk-#{java_version}u#{java_update}-linux-#{java_arch}.tar.gz"
+  end
 
-    "http://download.oracle.com/otn-pub/java/jdk/#{java_version}u#{java_update}-b#{b_number}/jdk-#{java_version}u#{java_update}-linux-#{java_arch}.tar.gz"
+  def fix_version
+    current_version = %x{dpkg-parsechangelog}.grep(/^Version: /).first[/^Version: (\d+\.\d+\-\d+)/, 1]
+
+    sh('sed', '-i', "1 s/#{current_version}/#{version}/", 'debian/changelog')
   end
 end
