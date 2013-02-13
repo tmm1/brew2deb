@@ -14,4 +14,10 @@ class Tomcat7 < DebianSourceFormula
     'junit4',
     'libjstl1.1-java',
     'libjakarta-taglibs-standard-java'
+
+  def build
+    ENV['dpkg-buildpackage'] = 'nocheck' # skip the junit crap
+
+    super
+  end
 end
