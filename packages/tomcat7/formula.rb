@@ -9,7 +9,6 @@ class Tomcat7 < DebianSourceFormula
     'default-jdk',
     'ant-optional',
     'maven-repo-helper (>> 1.0.1)',
-    'maven-javadoc-plugin',
     'libecj-java',
     'javahelper',
     'junit4',
@@ -18,6 +17,7 @@ class Tomcat7 < DebianSourceFormula
 
   def build
     ENV['DEB_BUILD_OPTIONS'] = 'nocheck' # skip the junit crap
+    ENV['PATH'] = "#{ENV['PATH']}:/usr/lib/jvm/default-java/bin"
 
     super
   end
