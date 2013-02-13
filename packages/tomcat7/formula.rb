@@ -9,6 +9,7 @@ class Tomcat7 < DebianSourceFormula
     'default-jdk',
     'ant-optional',
     'maven-repo-helper (>> 1.0.1)',
+    'maven-javadoc-plugin',
     'libecj-java',
     'javahelper',
     'junit4',
