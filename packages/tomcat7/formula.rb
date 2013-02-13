@@ -16,7 +16,7 @@ class Tomcat7 < DebianSourceFormula
     'libjakarta-taglibs-standard-java'
 
   def build
-    ENV['dpkg-buildpackage'] = 'nocheck' # skip the junit crap
+    ENV['DEB_BUILD_OPTIONS'] = 'nocheck' # skip the junit crap
 
     super
   end
