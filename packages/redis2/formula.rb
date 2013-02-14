@@ -22,10 +22,6 @@ class Redis2 < DebianFormula
       '/var/lib/redis',
     ]
 
-  def patches
-    'fix-link-ordering.patch'
-  end
-
   def build
     make
 
@@ -33,7 +29,6 @@ class Redis2 < DebianFormula
     inreplace "redis.conf" do |s|
       s.gsub! 'daemonize no', 'daemonize yes'
       s.gsub! 'logfile stdout', 'logfile /var/log/redis/redis-server.log'
-      s.gsub! 'loglevel verbose', 'loglevel notice'
 
       s.gsub! 'dir ./', 'dir /var/lib/redis/'
       s.gsub! '/var/run/redis.pid', '/var/run/redis.pid'
