@@ -23,4 +23,8 @@ class Redis22 < Redis2
       '/var/log/redis',
       '/var/lib/redis',
     ]
+    
+  def patches
+    'fix-link-ordering.patch'
+  end
 end

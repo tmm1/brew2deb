@@ -12,9 +12,6 @@ class Redis1 < Redis2
   config_files! \
     '/etc/redis/redis1.conf'
 
-  def patches
-  end
-
   def build
     super
 

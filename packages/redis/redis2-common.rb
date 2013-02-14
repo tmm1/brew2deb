@@ -1,8 +1,4 @@
 class Redis2 < DebianFormula
-  def patches
-    'fix-link-ordering.patch'
-  end
-
   def build
     make
 

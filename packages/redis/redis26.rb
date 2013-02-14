@@ -23,7 +23,4 @@ class Redis26 < Redis2
       '/var/log/redis',
       '/var/lib/redis',
     ]
-
-  def patches
-  end
 end
