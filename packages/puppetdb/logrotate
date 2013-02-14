@@ -1,0 +1,9 @@
+/var/log/puppetdb/puppetdb.log {
+    weekly
+    missingok
+    rotate 12
+    compress
+    copytruncate
+    notifempty
+    create 640  puppetdb puppetdb
+}
