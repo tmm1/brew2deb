@@ -1,12 +1,12 @@
 class Redis2 < DebianFormula
   homepage 'http://redis.io/'
   head 'https://github.com/antirez/redis.git'
-  url 'http://redis.googlecode.com/files/redis-2.2.5.tar.gz'
-  md5 'fe6395bbd2cadc45f4f20f6bbe05ed09'
+  url 'http://redis.googlecode.com/files/redis-2.6.10.tar.gz'
+  md5 '711b472b14084863699987786a378d87'
 
   name 'redis2-server'
   section 'database'
-  version '2.2.5+github2'
+  version '2.6.10+github'
   description 'An advanced key-value store.'
 
   conflicts 'redis-server'
