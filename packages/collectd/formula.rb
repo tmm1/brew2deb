@@ -29,7 +29,8 @@ class Collectd < DebianFormula
     'librrd-dev',
     'libyajl-dev',
     'iptables-dev',
-    'linux-headers-2.6.32-5-common | linux-headers-2.6.26-2-common | linux-headers-3.2.0-32-virtual'
+    'linux-headers-2.6.32-5-common | linux-headers-2.6.26-2-common | linux-headers-3.2.0-32-virtual',
+    'libperl-dev'
 
   depends \
     'python',
@@ -44,7 +45,7 @@ class Collectd < DebianFormula
     'libopenipmi0',
     'liboping0',
     'libpcap0.8',
-    'libperl5.10',
+    'libperl5.10 | libperl5.14',
     'librrd4',
     'libyajl1'
 
