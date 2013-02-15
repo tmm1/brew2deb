@@ -12,7 +12,7 @@ class AndroidSDK < DebianFormula
 
   depends \
     'ant',
-    'sun-java6-jdk',
+    'sun-java6-jdk | oracle-java7-jdk',
     'ia32-libs'
 
   def build
