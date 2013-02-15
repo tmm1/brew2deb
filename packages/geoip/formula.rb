@@ -1,12 +1,15 @@
 class GeoIPCityDB < DebianFormula
-  VERSION = "GeoIP-133_20120327"
+  EDITION = "133"
+  DATE    = '20120327'
+  LICENSE = 'WxlMSJQFXkqF'
+  VERSION = "GeoIP-#{EDITION}_#{DATE}"
 
   homepage 'http://www.maxmind.com/app/city'
-  url "#{VERSION}.tar.gz"
+  url "http://download.maxmind.com/app/geoip_download?edition_id=#{EDITION}&date=#{DATE}&suffix=tar.gz&license_key=#{LICENSE}"
   md5 '100f82fea1a6a12d5e8494dcb8c13305'
 
   name 'geoip-city'
-  version VERSION.sub('GeoIP-','').gsub('_','.') + '+github1'
+  version "#{EDITION}.#{DATE}+github1"
   description 'City Database for use with the GeoIP library'
 
   depends 'libgeoip-dev', 'libgeoip1'
