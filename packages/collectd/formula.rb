@@ -5,7 +5,7 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.1.0+github2'
+  version '5.1.0+github3'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
@@ -34,10 +34,10 @@ class Collectd < DebianFormula
     'libmysqlclient15off | libmysqlclient16',
     'libcurl3',
     'libdbi0 | libdbi1',
-    'libesmtp5 | libesmtp5',
+    'libesmtp5 | libesmtp6',
     'libgcrypt11',
     'libiptcdata0',
-    'libmemcached3 | libmemcached5 | libmemcached5',
+    'libmemcached3 | libmemcached5 | libmemcached6',
     'libsnmp15',
     'liboping0',
     'libpcap0.8',
