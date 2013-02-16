@@ -364,7 +364,6 @@ class FPM::Command < Clamp::Command
     input.config_files += config_files
     input.directories += directories
     
-    script_errors = []
     setscript = proc do |scriptname|
       # 'self.send(scriptname) == self.before_install == --before-install
       # Gets the path to the script
@@ -374,7 +373,7 @@ class FPM::Command < Clamp::Command
 
       if !File.exists?(path)
         @logger.error("No such file (for #{scriptname.to_s}): #{path.inspect}")
-        script_errors << path
+        return 1
       end
 
       # Load the script into memory.
@@ -385,10 +384,6 @@ class FPM::Command < Clamp::Command
     setscript.call(:after_install)
     setscript.call(:before_remove)
     setscript.call(:after_remove)
-
-    # Bail if any setscript calls had errors. We don't need to log
-    # anything because we've already logged the error(s) above.
-    return 1 if script_errors.any?
 
     # Validate the package
     if input.name.nil? or input.name.empty?
@@ -428,9 +423,6 @@ class FPM::Command < Clamp::Command
     return 1
   rescue FPM::Package::InvalidArgument => e
     @logger.error("Invalid package argument: #{e}")
-    return 1
-  rescue FPM::Util::ProcessFailed => e
-    @logger.error("Process failed: #{e}")
     return 1
   ensure
     input.cleanup unless input.nil?
@@ -496,7 +488,7 @@ class FPM::Command < Clamp::Command
         mandatory(@command.input_type == "dir", "--inputs is only valid with -s dir")
       end
 
-      mandatory(@command.args.any? || @command.inputs || @command.input_type == 'empty',
+      mandatory(@command.args.any? || @command.inputs,
                 "No parameters given. You need to pass additional command " \
                 "arguments so that I know what you want to build packages " \
                 "from. For example, for '-s dir' you would pass a list of " \

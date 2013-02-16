@@ -58,8 +58,6 @@ class FPM::Package::Python < FPM::Package
   option "--install-data", "DATA_PATH", "The path to where data should be." \
     "installed to. This is equivalent to 'python setup.py --install-data " \
     "DATA_PATH"
-  option "--dependencies", :flag, "Include requirements defined in setup.py" \
-    " as dependencies.", :default => true
 
   private
 
@@ -198,25 +196,23 @@ class FPM::Package::Python < FPM::Package
         .map(&:strip)
     end
 
-    if attributes[:python_dependencies?]
-      self.dependencies += metadata["dependencies"].collect do |dep|
-        dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
-        match = dep_re.match(dep)
-        if match.nil?
-          @logger.error("Unable to parse dependency", :dependency => dep)
-          raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
-        end
-        name, cmp, version = match.captures
-        # dependency name prefixing is optional, if enabled, a name 'foo' will
-        # become 'python-foo' (depending on what the python_package_name_prefix
-        # is)
-        name = fix_name(name) if attributes[:python_fix_dependencies?]
-
-        # convert dependencies from python-Foo to python-foo
-        name = name.downcase if attributes[:python_downcase_dependencies?]
-        "#{name} #{cmp} #{version}"
+    self.dependencies += metadata["dependencies"].collect do |dep|
+      dep_re = /^([^<>!= ]+)\s*(?:([<>!=]{1,2})\s*(.*))?$/
+      match = dep_re.match(dep)
+      if match.nil?
+        @logger.error("Unable to parse dependency", :dependency => dep)
+        raise FPM::InvalidPackageConfiguration, "Invalid dependency '#{dep}'"
       end
-    end # if attributes[:python_dependencies?]
+      name, cmp, version = match.captures
+      # dependency name prefixing is optional, if enabled, a name 'foo' will
+      # become 'python-foo' (depending on what the python_package_name_prefix
+      # is)
+      name = fix_name(name) if attributes[:python_fix_dependencies?]
+
+      # convert dependencies from python-Foo to python-foo
+      name = name.downcase if attributes[:python_downcase_dependencies?]
+      "#{name} #{cmp} #{version}"
+    end
   end # def load_package_info
 
   # Sanitize package name.
@@ -247,29 +243,13 @@ class FPM::Package::Python < FPM::Package
       flags = [ "--root", staging_path ]
       if !attributes[:python_install_lib].nil?
         flags += [ "--install-lib", File.join(prefix, attributes[:python_install_lib]) ]
-      elsif !attributes[:prefix].nil?
-        # setup.py install --prefix PREFIX still installs libs to
-        # PREFIX/lib64/python2.7/site-packages/
-        # but we really want something saner.
-        #
-        # since prefix is given, but not python_install_lib, assume PREFIX/lib
-        flags += [ "--install-lib", File.join(prefix, "lib") ]
       end
-
       if !attributes[:python_install_data].nil?
         flags += [ "--install-data", File.join(prefix, attributes[:python_install_data]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_data, assume PREFIX/data
-        flags += [ "--install-data", File.join(prefix, "data") ]
       end
-
       if !attributes[:python_install_bin].nil?
         flags += [ "--install-scripts", File.join(prefix, attributes[:python_install_bin]) ]
-      elsif !attributes[:prefix].nil?
-        # prefix given, but not python_install_bin, assume PREFIX/bin
-        flags += [ "--install-scripts", File.join(prefix, "bin") ]
       end
-
       safesystem(attributes[:python_bin], "setup.py", "install", *flags)
     end
   end # def install_to_staging

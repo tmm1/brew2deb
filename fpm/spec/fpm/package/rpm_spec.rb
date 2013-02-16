@@ -42,10 +42,6 @@ describe FPM::Package::RPM do
     it "should default to 1" do
       insist { subject.epoch.to_s } == "1"
     end
-    it "should cope with it being zero" do
-      subject.epoch = 0
-      insist { subject.epoch.to_s } == "0"
-    end
   end
   
   describe "#to_s" do
@@ -60,7 +56,6 @@ describe FPM::Package::RPM do
       insist { subject.to_s } == "name-123-100.noarch.rpm"
     end
   end
-
 
   describe "#templating" do
     context "default user and group" do
