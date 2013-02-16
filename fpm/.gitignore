@@ -1,4 +1,26 @@
+# vim
 .*.sw[a-z]
+
+# build byproducts
 build-*/*
 fpm.wiki
+*.gem
+*.pkg
+
+# python
 *.pyc
+
+# RVM
+.rvmrc
+
+.yardoc
+coverage
+test/tmp
+Gemfile.lock
+
+# OS X
+.DS_Store
+
+# brew2deb doesn't need Travis info for fpm, etc
+.travis.yml
+.batcave
