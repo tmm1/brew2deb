@@ -1,3 +1,263 @@
+0.4.29 (January 22, 2013)
+  - Copy links literally, not what they point at (#337, patch by Dane Knecht)
+
+0.4.28 (January 21, 2013)
+  - Fix a dependency on the 'cabin' gem. (#344, reported by Jay Buffington)
+
+0.4.27 (January 16, 2013)
+  - Make all fpm output go through the logger (#329; patch by jaybuff)
+  - New package type: osxpkg, for building packages installable on OS X. (#332,
+    patch by Timothy Sutton)
+  - Fix crash bug when converting rpms to something else (#316, #325; patch by
+    rtucker-mozilla)
+  - deb: Add --deb-field for setting a custom field in the control file.
+    For more information on this setting, see section 5.7 "User-defined fields"
+    of the debian policy manual: 
+    http://www.debian.org/doc/debian-policy/ch-controlfields.html#s5.7
+  - deb: Add --deb-recommends and --deb-suggests (#285, #310; patch by Pranay
+    Kanwar)
+  - python to rpm: convert "!=" dependency operators in python to "Conflicts"
+    in rpm. (#263, #312; patch by Pranay Kanwar)
+  - python: fix bug - ignore blank lines in requirements.txt (#312, patch by
+    Pranay Kanwar)
+
+0.4.26 (December 27, 2012)
+  - rpm: add --rpm-sign flag to sign packages using the 'rpmbuild --sign' flag.
+    (#311, Patch by Pranay Kanwar)
+  - rpm: fix flag ordering when calling rpmbuild (#309, #315, patch by Trotter
+    Cashion)
+  - deb: re-enable "Predepends" support (#319, #320, patch by Pranay Kanwar)
+  - rpm: fix default 'rpm os' value (#321, 314, 309)
+
+0.4.25 (December 7, 2012)
+  - Added --deb-changelog and --rpm-changelog support flags. Both take a path to
+    a changelog file. Both must be valid changelog formats for their respective
+    package types. (#300, patch by Pranay Kanwar)
+  - deb: Multiple "provides" are now supported. (#301, patch by Pranay Kanwar)
+  - rpm: Added --rpm-os flag to set the OS target for the rpm. This lets you build 
+    rpms for linux on OS X and other platforms (with --rpm-os linux). (#309)
+  - rpm: Avoid platform-dependent commands in the %install phase (#309, fixes
+    'cp -d' on OSX)
+  - python: ignore comments in requirements.txt (#304, patch by Pranay Kanwar)
+  - Fixed warning 'already initialized constant' (#274)
+
+0.4.24 (November 30, 2012)
+  - Don't include an empty url in rpm spec (#296, #276; patch by Pranay Kanwar)
+  - Don't require extra parameters if you use --inputs (#278, #297; Patch by
+    Pranay Kanwar)
+  - python: supports requirements.txt now for dependency information.
+  - python: supports pip now. Use '--python-pip path/to/pip' to have fpm use
+    it instead of easy_install.
+  - solaris: package building works again (#216, #299, patch by Pierre-Yves
+    Ritschard)
+
+0.4.23 (November 26, 2012)
+  - The --directories flag is now recursive when the output package is rpm.
+    This makes all directories under a given path as owned by the package
+    so they'll be removed when the package is uninstalled (#245, #293, #294,
+    patch by Justin Ellison)
+  - Add fpm version info to '--help' output (#281)
+  - gem to rpm: Use 'rubygem(gemname)' for dependencies (#284, patch by
+    Jan Vansteenkiste)
+  - Fix a bug in gem version mangling (#292, #291; patch by Pranay Kanwar)
+  - Fix compatibility with Python 2.5 (#279, patch by Denis Bilenko)
+
+0.4.22 (November 15, 2012)
+  - Add --no-depends flag for creating packages with no dependencies listed
+    (#289, patch by Brett Gailey)
+  - Fix a bug where blank lines were present in a debian control file.
+    (#288, patch by Andrew Bunday)
+
+0.4.21 (November 8, 2012)
+  - gem: remove restriction on expected gem names (#287)
+  - add --directory flag; lets you mark a directory as being owned by a
+    package. (#260, #245, patch by ajf8)
+  - deb: don't include a version in the Provides field (#280)
+  - gem: if the version is '1.1' make it imply '1.1.0' (#269, patch by 
+    Radim Marek)
+
+0.4.20 (October 5, 2012)
+  - python: only specify --install-{scripts,lib,data} flags to setup.py if
+    they were given on the command line to fpm. Fixes #273.
+
+0.4.19 (September 26, 2012)
+  - Escape '%' characters in file names (#266, #222. Patch by John Wittkoski)
+
+0.4.18 (September 25, 2012)
+  - Fix regression in rpm building where the epoch in was missing in the rpm,
+    but prior fpm versions defaulted it to 1. This caused rpms built with newer
+    fpms to appear "older" than older rpms. Tests added to ensure this regression
+    is caught prior to future releases! (Reported by eliklein)
+
+0.4.17 (September 12, 2012)
+  - Remove accidental JSON warning when using '-s python'
+
+0.4.16 (September 6, 2012)
+  - Fix compatibility with Ruby 1.8.7 (broken in 0.4.15)
+
+0.4.15 (September 6, 2012)
+  - pear: support custom channels with --pear-channel <channel> (#207)
+    Example: fpm -s pear -t deb --pear-channel pear.drush.org drush
+  - permit literal '\n' in --description, fpm will replace with a newline
+    character. Example: fpm --description "line one\nline two" (#251)
+  - improve error messaging when trying to output a package to a directory that
+    doesn't exist (#244)
+  - deb: convert '>' and '<' dependency operators to the correct '>>' and '<<'
+    debian version operators (#250, patch by Thomas Meson).
+  - deb: add --deb-priority flag (#232) for setting the debian 'priority'
+    value for your package.
+  - add --template-value. Used to expose arbitrary values to script templates.
+    If you do --template-value hello=world, in your template you can do
+    <%= hello %> to get 'world' to show up in your maintainer scripts.
+  - python: add --python-install-data flag to set the --install-data option to
+    setup.py (#255, patch by Thomas Meson)
+  - Reject bad dependency flags (ones containing commas) and offer alternative.
+    (#257)
+  - Try to copy a file if hardlinking fails with permission problems (#253, 
+    patch by Jacek Lach)
+  - Make --exclude, if a directory, include itself and any children, recursive.
+    (#248)
+
+0.4.14 (August 24, 2012)
+  - rpm: Replace newlines with space in any license setting. (#252)
+
+0.4.13 (August 14, 2012)
+  - Make --exclude accept path prefixes as well. If you have a files in
+    'usr/share/man' in your package, you can now exclude all of a subdir
+    by doing '--exclude usr/share/man'
+
+0.4.12 (August 10, 2012)
+  - Fix a major bug introduced in 0.4.11 that caused all deb packages to
+    contain empty maintainer scripts if not otherwise specified, which made
+    apt/dpkg quite unhappy
+
+0.4.11 (August 7, 2012)
+  - Fix some symlink handling to prevent links from being followed during
+    cleanup (#228, patch by sbuss)
+  - rpm: 'vendor' in rpm spec is now omitted if empty or nil. This fixes a bug
+    where rpmbuild fails due to empty 'Vendor' tag if you convert rpm to rpm.
+  - internal: remove empty directories marked by --exclude (#205, patch by
+    jimbrowne)
+  - dir: don't try to set utime on symlinks (#234, #240, patch by ctgswallow)
+  - rpm: relocatable rpms now supported when using the '--prefix' flag.
+    Example: fpm -s dir -t rpm --prefix /usr/local -n example /etc/motd 
+    (patch by jkoppe)
+  - deb: --deb-compression flag: Support different compression methods. 
+    Default continues to be gzip.
+  - new flag: --template-scripts. This lets you write script templates for
+    --after-install, etc. Templates are ERB, so you can do things like 
+    '<%= name %>' to get the package name in the script, etc.
+  - warn on command invocations that appear to have stray flags to try and
+    help users who have complex command lines that are failling.
+
+0.4.10 (May 25, 2012)
+  - Fix python package support for python3 (#212, patch by Slezhuk Evgeniy)
+  - Preserve file metadata (time, owner, etc) when copying with the dir
+    package. (#217, patch by Marshall T. Vandegrift)
+  - Missing executables will now error more readably in fpm.
+  - Fix gem and python 'version' selection (#215, #204)
+  - Dependencies using '!=' will now map to 'Conflicts' in deb packages. (#221,
+    patch by Sven Fischer)
+  - Allow setting default user/group for files in rpm packages (#208, patch by
+    Jason Rogers). Note: This adds --user and --group flags to effect this.
+    These flags may go away in the future, but if they do, they will be
+  - In python packages set 'install-data' correctly. (#223, patch by Jamie
+    Scheinblum)
+
+0.4.9 (April 25, 2012)
+  - Fix --prefix support when building gems (#213, patch by Jan Vansteenkiste)
+
+0.4.8 (April 25, 2012)
+  - RPM: use 'noreplace' option for config files (#194, patch by Steve Lum)
+  - Python: Fix bug around exact dependency versions (#206, patch by Lars van
+    de Kerkhof)
+  - Gem->RPM: Make 'provides' "rubygem(thegemname)" instead of "rubygem-thegemname"
+  - Fix oddity where Ruby would complain about constant redefinition (#198,
+    patch by Marcus Vinicius Ferreira)
+
+0.4.7 skipped.
+
+0.4.6 (April 10, 2012)
+  - Work around more problems in RPM with respect to file listing (#202)
+
+0.4.5 (April 3, 2012)
+  - Fix gem->rpm conversion where the '~>' rubygem version operator (#193,
+    patch by antoncohen)
+  - Escape filenames RPM install process (permits files with spaces, dollar signs, etc) 
+    (#196, reported by pspiertz)
+
+0.4.4 (March 30, 2012)
+  - Fix a bug in gem bin_dir handling (Calen Pennington)
+  - The --config-files flag should work again (Brian Akins)
+  - Fix syntax error when using --deb-pre-depends (Andrew Bennett)
+  - Make --exclude work again (#185, #186) (Calen Pennington)
+  - Fix file listing so that rpm packages don't declare ownership on / and
+    /usr, etc.
+  - make --deb-custom-control to work again (Tor Arne Vestbø)
+  - Add --rpm-digest flag to allow selection of the rpm 'file name' digest
+    algorithm. Default is 'md5' since it works on the most rpm systems.
+  - Reimplement old behavior assuming "." as the input when using '-s dir' and
+    also setting -C (#187)
+  - Set BuildRoot on rpm to work around an rpmbuild bug(?) on CentOS 5 (#191)
+  - Add --rpm-compression flag to allow selection of the rpm payload
+    compression. Default is 'gzip' since it works on the most rpm systems
+  - Specs now pass on ubuntu/32bit systems (found by travis-ci.org's test runner)
+  - Improve default values of iteration and epoch (#190)
+  - Make FPM::Package#files list only 'leaf' nodes (files, empty directories,
+    symlinks, etc).
+
+0.4.3 (March 21, 2012)
+  - Fix bug in python packaging when invoked with a relative path to a setup.py
+    (Reported by Thomas Meson, https://github.com/jordansissel/fpm/pull/180)
+
+0.4.2 (March 21, 2012)
+  - Set default temporary directory to /tmp 
+    (https://github.com/jordansissel/fpm/issues/174)
+  - Improve symlink handling (patch by Aleix Conchillo Flaqué, pull/177))
+  - Python package support changes (thanks to input by Luke Macken):
+    * New flag: --python-install-bin. Sets the location for python package
+      scripts (default: /usr/bin)
+    * New flag: --python-install-lib. Sets the location for the python
+      package to install libs to, default varies by system. Usually something
+      like /usr/lib/python2.7/site-packages.
+    * Fix up --prefix support
+    * Improve staged package installation
+
+0.4.1 (March 19, 2012)
+  - Fix fpm so it works in ruby 1.8 again.
+    Tests run, and passing:
+      rvm 1.8.7,1.9.2,1.9.3 do bundle exec rspec
+
+0.4.0 (March 18, 2012)
+  - Complete rewrite of pretty much everything.
+    * Otherwise, the 'fpm' command functionality should be the same
+    * Please let me know if something broke!
+  - Now has an API (see examples/api directory)
+  - Also has a proper test suite
+  - Updated the rpm spec generator to disable all the ways I've found rpmbuild
+    to molest packages. This means that fpm-generated rpms will no longer
+    strip libraries, move files around, randomly mutate jar files, etc.
+  - Add --license and --vendor settings (via Pieter Loubser)
+  - python support: try to name python packages sanely. Some pypi packages
+    are literally called 'python-foo' so make sure we generate packages named
+    'python-foo' and not 'python-python-foo' (via Thomas Meson)
+  - rpm support: Add --rpm-rpmbuild-define for passing a --define flag to rpmbuild
+    (via Naresh V)
+  - PHP pear source support (fpm -s pear ...) (via Andrew Gaffney)
+
+0.3.10 (Oct 10, 2011)
+  - Allow taking a list of files/inputs on stdin with '-' or with the --inputs
+    flag. (Matt Patterson)
+  - (python) pass -U to easy_install (Khalid Goudeaux)
+  - (debian) quote paths in md5sum calls (Matt Patterson)
+  - (debian) quiet stderr from dpkg --print-architecture
+
+0.3.9 (Sep 8, 2011)
+  - Fix bug in 'dir' source that breaks full paths
+  - Added a bunch of tests (yaay)
+
+0.3.8 and earlier: I have not kept this file up to date very well... Sorry :(
+
 0.2.29 (May 20, 2011)
   - Add 'tar' source support. Useful for binary releases to repackage as rpms
     and debs. Example:

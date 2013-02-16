@@ -1,3 +1,19 @@
+# Disable the stupid stuff rpm distros include in the build process by default:
+<% %w(prep build install clean).each do |step| -%>
+<%# These definitions have to be non-empty... I guess... -%>
+#   Disable any <%= step %> shell actions. replace them with simply 'true'
+%define __spec_<%= step %>_post true
+%define __spec_<%= step %>_pre true
+<% end -%>
+# Disable checking for unpackaged files ?
+#%undefine __check_files
+
+# Use <%= attributes[:rpm_digest] %> file digest method
+%define _binary_filedigest_algorithm <%= digest_algorithm %>
+
+# Use <%= attributes[:rpm_compression] %> payload compression
+%define _binary_payload <%= payload_compression %> 
+
 Name: <%= name %>
 Version: <%= version %>
 <% if epoch -%>
@@ -5,46 +21,42 @@ Epoch: <%= epoch %>
 <% end -%>
 Release: <%= iteration or 1 %>
 <%# use the first line of the description as the summary -%>
-Summary: <%= description.split("\n").first %>
+Summary: <%= description.split("\n").first.empty? ? "_" :  description.split("\n").first %>
 BuildArch: <%= architecture %>
 AutoReqProv: no
+# Seems specifying BuildRoot is required on older rpmbuild (like on CentOS 5)
+# fpm passes '--define buildroot ...' on the commandline, so just reuse that.
+BuildRoot: %buildroot
+<% if !prefix.nil? and !prefix.empty? %>
+Prefix: <%= prefix %>
+<% end -%>
 
 Group: <%= category %>
-<%#
-TODO: [Jay] rpms require a license
-let's detect it intelligently
--%>
-License: <%= license %>
-URL: <%= url or "http://nourlgiven.example.com/" %>
-Source0:  %{_sourcedir}/data.tar.gz
-BuildRoot: %(mktemp -ud %{_tmppath}/%{name}-%{version}-%{release}-XXXXXX)
+<%# Sometimes the 'license' field has multiple lines... Hack around it. 
+  # While technically yes this means we are 'modifying' the license,
+  # since the job of FPM is to get shit done and that this is  only
+  # modifying whitespace, it should be reasonably OK. -%>
+License: <%= license.gsub("\n", " ") %>
+<% if !vendor.nil? and !vendor.empty? -%>
+Vendor: <%= vendor %>
+<% end -%>
+<% if !url.nil? and !url.empty? -%>
+URL: <%= url %>
+<%else -%>
+URL: http://nourlgiven.example.com/
+<% end -%>
+Packager: <%= maintainer %>
 
-<% if !dependencies.empty? -%>
-<%
-  properdeps = dependencies.collect do |d|
-    # Convert gem ~> X.Y.Z to '>= X.Y.Z' and < X.Y+1.0
-    if d =~ /\~>/
-      name, version = d.gsub(/[()~>]/, "").split(/ +/)[0..1]
-      nextversion = version.split(".").collect { |v| v.to_i }
-      l = nextversion.length
-      nextversion[l-2] += 1
-      nextversion[l-1] = 0
-      nextversion = nextversion.join(".")
-      ["#{name} >= #{version}", "#{name} < #{nextversion}"]
-    # Convert gem >= A.B.C <= X.Y.Z to '>= A.B.C' and '<= X.Y.Z'
-    elsif d =~ /\d [<>]=? \d/
-      puts d
-      # split out version numbers with their equality sign
-      name, lower_version, upper_version = d.scan(/([\w-]+) ([<>]=? [\d\.]+) ([<>]=? [\d\.]+)/)[0]
-      ["#{name} #{lower_version}", "#{name} #{upper_version}"]
-    else
-      d
-    end
-  end
--%>Requires: <%= properdeps.join(", ") %>
+<% if !attributes[:no_depends?] -%>
+<% dependencies.each do |req| -%>
+Requires: <%= req %>
+<% end -%>
 <% end -%>
 <% provides.each do |prov| -%>
 Provides: <%= prov %>
+<% end -%>
+<% conflicts.each do |conflict| -%>
+Conflicts: <%= conflict %>
 <% end -%>
 <% replaces.each do |repl| -%>
 <%# The closes equivalent in RPM to "replaces" is "Obsoletes" -%>
@@ -59,41 +71,84 @@ Obsoletes: <%= repl %>
 # noop
 
 %build
-# some rpm implementations delete the build dir and then recreate it by
-# default, for some reason. Whatever, let's work around it.
-cd $RPM_BUILD_ROOT
-tar -zxf %SOURCE0
+# noop
 
 %install
-#noop
+<% files.each do |path| -%>
+<%   source = File.join(staging_path, path) -%>
+<%   source_safe = Shellwords.shellescape(source).gsub("%", "%%") -%>
+<%   # Copy to the build_path/BUILD/ to make rpmbuild happy -%>
+<%   target_safe = Shellwords.shellescape(File.join(build_path, build_sub_dir, path)).gsub("%", "%%") -%>
+<%   st = File.lstat(source) -%>
+<%   dir = File.dirname(target_safe) -%>
+[ ! -d <%= dir %> ] && mkdir -p <%= dir %>
+<%   if st.symlink? -%>
+ln -s <%= File.readlink(source) %> <%= target_safe %>
+<%   elsif st.directory? -%>
+mkdir <%= target_safe %>
+<%   else -%>
+cp <%= source_safe %> <%= target_safe %>
+<%   end -%>
+<% end %>
 
 %clean
-rm -rf $RPM_BUILD_ROOT
+# noop
 
-<% if scripts["pre-install"] -%>
-%pre
-<%= File.read(scripts["pre-install"]) %>
+<%# This next section puts any %pre, %post, %preun, or %postun scripts %>
+<% 
+  scriptmap = {
+    :before_install => "pre",
+    :after_install => "post",
+    :before_remove => "preun",
+    :after_remove => "postun",
+  }
+  scriptmap.each do |name, rpmname| 
+-%>
+<%   if script?(name) -%>
+%<%= rpmname %>
+<%= script(name) %>
 
+<%   end -%>
 <% end -%>
-<% if scripts["post-install"] -%>
-%post
-<%= File.read(scripts["post-install"]) %>
 
-<% end -%>
-<% if scripts["pre-uninstall"] -%>
-%preun
-<%= File.read(scripts["pre-uninstall"]) %>
-
-<% end -%>
-<% if scripts["post-uninstall"] -%>
-%postun
-<%= File.read(scripts["post-uninstall"]) %>
-
-<% end -%>
 %files
-%defattr(-,root,root,-)
-<%# Trim leading '.' from paths if they are './blah...' -%>
-<%# Also ensure paths start with '/' -%>
-<%= @source.paths.collect { |p| p.gsub(/^\.\//, "/").gsub(/^[^\/]/, "/\\0") }.join("\n") %>
+%defattr(-,<%= attributes[:rpm_user] %>,<%= attributes[:rpm_group] %>,-)
+<%# Output config files and then regular files. -%>
+<% config_files.each do |path| -%>
+%config(noreplace) <%= File.join(prefix, path) %>
+<% end -%>
+<% subdirs = [] -%>
+<% directories.each do |path| -%>
+%dir <%= File.join(prefix, path) %>
+<%#  We need to include hidden directories, but exclude . and .. -%>
+<%   ::Dir.glob("#{path}/**/*/", File::FNM_DOTMATCH) do |subdir| -%>
+<%     next if File.basename(subdir) =~ /^\.+$/ -%>
+%dir <%= File.join(prefix, subdir) %>
+<% subdirs << subdir -%>
+<%   end -%>
+<% end -%>
+<%# list only files, not directories? -%>
+<%= 
+  # Reject config files already listed or parent directories, then prefix files
+  # with "/", then make sure paths with spaces are quoted. I hate rpm so much.
+
+  # 'files' here is the method FPM::Package#files.
+  # The 'files' section of rpm can be 
+  # Replace [ with [\[] to make rpm not use globs
+  # Replace * with [*] to make rpm not use globs
+  # Replace ? with [?] to make rpm not use globs
+  # Replace % with [%] to make rpm not expand macros
+  files.collect { |f| "/#{f}" } \
+    .reject { |f| config_files.include?(f) } \
+    .reject { |f| subdirs.include?("#{f}/") } \
+    .collect { |f| f[/\s/] and "\"#{f}\"" or f } \
+    .collect { |f| f.gsub("[", "[\\[]") } \
+    .collect { |f| f.gsub("*", "[*]") } \
+    .collect { |f| f.gsub("?", "[?]") } \
+    .collect { |f| f.gsub("%", "[%]") } \
+    .join("\n")
+    #.collect { |f| File.join(prefix, f) } \
+%>
 
 %changelog
+<%= attributes[:rpm_changelog] %>
