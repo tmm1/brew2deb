@@ -1,23 +1,19 @@
-class Haproxy < DebianFormula
+class HAProxy < DebianFormula
   homepage 'http://haproxy.1wt.eu/'
-  url 'http://haproxy.1wt.eu/download/1.4/src/haproxy-1.4.20.tar.gz'
-  md5 '0cd3b91812ff31ae09ec4ace6355e29e'
+  url 'http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev17.tar.gz'
+  md5 'b8deab9989e6b9925410b0bc44dd4353'
 
   name 'haproxy'
-  version '1.4.20+github6'
+  version '1.5-dev17+github2'
   section 'net'
   description 'The Reliable, High Performance TCP/HTTP Load Balancer'
 
-  build_depends 'libpcre3-dev'
+  build_depends ['libpcre3-dev','libssl-dev','zlib1g-dev']
   config_files '/etc/haproxy/haproxy.cfg'
   requires_user 'haproxy', :remove => false
 
-  def patches
-    'patches/send-proxy.patch'
-  end
-
   def build
-    make 'TARGET' => 'linux26', 'CPU' => 'native', 'USE_PCRE' => '1', 'PREFIX' => '/usr'
+    make 'TARGET' => 'linux26', 'CPU' => 'native', 'PREFIX' => '/usr', 'USE_CTTPROXY' => '1', 'USE_PCRE' => '1', 'USE_OPENSSL' => '1', 'USE_ZLIB' => '1'
   end
 
   def install
