@@ -13,7 +13,7 @@ class HAProxy < DebianFormula
   requires_user 'haproxy', :remove => false
 
   def build
-    make 'TARGET' => 'linux26', 'CPU' => 'native', 'PREFIX' => '/usr', 'USE_CTTPROXY' => '1', 'USE_PCRE' => '1', 'USE_OPENSSL' => '1', 'USE_ZLIB' => '1'
+    make 'TARGET' => 'linux2628', 'CPU' => 'native', 'PREFIX' => '/usr', 'USE_CTTPROXY' => '1', 'USE_PCRE' => '1', 'USE_OPENSSL' => '1', 'USE_ZLIB' => '1'
   end
 
   def install
