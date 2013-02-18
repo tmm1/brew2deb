@@ -6,7 +6,7 @@ class TCS < YARV
 
   name 'rbenv-1.9.3-p231-tcs-github'
   section 'interpreters'
-  version '1.0.7+1'
+  version '1.0.8'
   description 'The YARV Ruby virtual machine + TCS patches + GitHub patches'
 
   build_depends \
