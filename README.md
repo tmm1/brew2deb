@@ -87,6 +87,7 @@ This uploads the package to `gold1` and runs `freight` to make it available for 
 *  nodejs
 *  openssh
 *  openssl
+*  openwsman (Ubuntu 12.04 only)
 *  percona-server
 *  phantomjs
 *  postgresql
