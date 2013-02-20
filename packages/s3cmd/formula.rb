@@ -1,5 +1,5 @@
 class S3cmd < DebianFormula
-  url 'https://github.com/sshirokov/s3cmd.git', :tag => 'stdin-stream'
+  url 'https://github.com/sshirokov/s3cmd.git', :tag => 'v1.5.0-alpha1-github1'
 
   name 's3cmd'
   section 'utils'
