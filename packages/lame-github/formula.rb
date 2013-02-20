@@ -7,12 +7,8 @@ class LameGitHub < DebianFormula
   name "lame-github"
 
   def build
-    system "./configure", "--disable-debug",
-                          "--prefix=#{prefix}",
-                          "--enable-nasm"
-  end
-
-  def install
-    system "make install"
+    configure "--disable-debug",
+              "--prefix=#{prefix}",
+              "--enable-nasm"
   end
 end

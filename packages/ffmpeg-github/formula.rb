@@ -11,14 +11,10 @@ class FfmpegGitHub < DebianFormula
   build_depends "lame-github"
 
   def build
-    system "./configure", "--enable-libmp3lame",
-                          "--enable-nonfree",
-                          "--enable-pthreads",
-                          "--enable-openssl",
-                          "--prefix=#{prefix}"
-  end
-
-  def install
-    system "make install"
+    configure "--enable-libmp3lame",
+              "--enable-nonfree",
+              "--enable-pthreads",
+              "--enable-openssl",
+              "--prefix=#{prefix}"
   end
 end
