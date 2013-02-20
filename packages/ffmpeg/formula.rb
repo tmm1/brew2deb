@@ -7,7 +7,8 @@ class Ffmpeg < DebianFormula
   version "1.1.2-github1"
   description "ffmpeg turns one thing into another thing"
 
-  depends "lame"
+  build_depends "libmp3lame-dev"
+  depends "lame", "libmp3lame0"
 
   def install
     system "./configure", "--enable-libmp3lame",
