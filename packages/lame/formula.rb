@@ -6,10 +6,13 @@ class LameGitHub < DebianFormula
   description "mp3 codecs for github.fm"
   name "lame-github"
 
-  def install
+  def build
     system "./configure", "--disable-debug",
                           "--prefix=#{prefix}",
                           "--enable-nasm"
+  end
+
+  def install
     system "make install"
   end
 end
