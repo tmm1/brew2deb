@@ -4,7 +4,7 @@ class FfmpegGitHubFM < DebianFormula
   sha1 '1fb1c2019ff13440b3670dc83846c654b245c4c9'
   homepage 'http://ffmpeg.org/'
 
-  version "1.1.2+github1"
+  version "1.1.2+github2"
   description "ffmpeg turns one thing into another thing"
 
   depends "lame", "libmp3lame0"
