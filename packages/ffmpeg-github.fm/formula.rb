@@ -7,8 +7,8 @@ class FfmpegGitHubFM < DebianFormula
   version "1.1.2+github1"
   description "ffmpeg turns one thing into another thing"
 
-  depends "lame-github.fm"
-  build_depends "lame-github.fm"
+  depends "lame", "libmp3lame0"
+  build_depends "lame", "libmp3lame-dev"
 
   def build
     configure "--enable-libmp3lame",
