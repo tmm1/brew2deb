@@ -6,7 +6,7 @@ class NodeJS < DebianFormula
 
   section 'interpreters'
   name 'nvm-0.8.11'
-  version '1.0.0'
+  version '1.0.1'
   description 'Evented I/O for V8 JavaScript'
 
   build_depends \
@@ -17,6 +17,10 @@ class NodeJS < DebianFormula
 
   depends \
     'openssl'
+
+  def patches
+    'cloexec-and-reuseaddr.patch'
+  end
 
   def prefix
     current_pathname_for("usr/share/nvm/#{self.class.name.gsub('nvm-','')}")
