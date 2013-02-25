@@ -13,8 +13,24 @@ class LibVirt < DebianFormula
   replaces  'libvirt-bin'
   provides  'libvirt-bin'
 
-  build_depends  'libxml2-dev', 'libgnutls-dev', 'libdevmapper-dev', 'libcurl4-gnutls-dev', 'python-dev', 'libnl-dev', 'libudev-dev'
-  depends        'libxml2', 'libgnutls26', 'libdevmapper', 'libcurl3-gnutls', 'libnl1', 'udev'
+  build_depends \
+    'libxml2-dev',
+    'libgnutls-dev',
+    'libdevmapper-dev',
+    'libcurl4-gnutls-dev',
+    'python-dev',
+    'libnl-dev',
+    'libudev-dev',
+    'libpciaccess-dev'
+
+  depends \
+    'libxml2',
+    'libgnutls26',
+    'libdevmapper',
+    'libcurl3-gnutls',
+    'libnl1',
+    'udev',
+    'libpciaccess0'
 
   def patches
     [ 'prevent-jvm-segfault.patch',
