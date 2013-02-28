@@ -26,13 +26,6 @@ class YARV < MRI
   end
   alias install_rake install_rubygems
 
-  def install_bundler
-    setup_rubylib
-
-    install_gem builddir/'bundler-1.2.3.gem'
-    fix_shebangs 'bundle'
-  end
-
   def rubylib
     `strings #{prefix/'bin/ruby'}`.split("\n").grep(/versions/).grep(/lib/).map{ |lib| destdir/lib }.join(':')
   end
