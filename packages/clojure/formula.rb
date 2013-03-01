@@ -1,7 +1,8 @@
 class Leiningen < DebianFormula
   homepage 'https://github.com/clojure/clojure'
 
-  url 'https://github.com/clojure/clojure/archive/clojure-1.5.0.zip'
+  url 'http://repo1.maven.org/maven2/org/clojure/clojure/1.5.0/clojure-1.5.0.zip'
+  sha1 '38d1e9701e3a34d9a88a53ea0038ca29679bb55e'
 
   arch 'all'
   name 'clojure'
