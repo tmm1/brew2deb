@@ -80,7 +80,7 @@ class OracleJava7 < DebianSourceFormula
   end
 
   def java_build
-    version_parts[3]
+    "%02d" % version_parts[3]
   end
 
   def java_arch
