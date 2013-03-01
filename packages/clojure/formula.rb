@@ -1,12 +1,12 @@
 class Leiningen < DebianFormula
   homepage 'https://github.com/clojure/clojure'
 
-  url 'https://github.com/downloads/clojure/clojure/clojure-1.2.1.zip'
+  url 'https://github.com/clojure/clojure/archive/clojure-1.5.0.zip'
 
   arch 'all'
   name 'clojure'
   section 'devel'
-  version '1.2.1+github1'
+  version '1.5.0+github1'
   description 'The Clojure programming language'
 
   depends \
@@ -14,10 +14,10 @@ class Leiningen < DebianFormula
     'rlwrap'
 
   def build
-    FileUtils.cp('clojure.jar', "clojure-1.2.1+github1.jar")
+    FileUtils.cp('clojure.jar', "clojure-1.5.0+github1.jar")
   end
 
   def install
-    (prefix/'share/java').install "clojure-1.2.1+github1.jar"
+    (prefix/'share/java').install "clojure-1.5.0+github1.jar"
   end
 end
