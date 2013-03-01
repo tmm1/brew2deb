@@ -2,7 +2,7 @@
 class OracleJava7 < DebianSourceFormula
   url 'https://github.com/rraptorr/oracle-java7.git'
 
-  version "7.13-20+github1"
+  version "7.15-3+github1"
 
   provides \
     'oracle-java7-jre',
