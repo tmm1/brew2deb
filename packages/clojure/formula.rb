@@ -14,7 +14,7 @@ class Leiningen < DebianFormula
     'rlwrap'
 
   def build
-    FileUtils.cp('clojure.jar', "clojure-1.5.0+github1.jar")
+    FileUtils.cp('clojure-1.5.0.jar', "clojure-1.5.0+github1.jar")
   end
 
   def install
