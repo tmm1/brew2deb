@@ -1,0 +1,153 @@
+diff --git a/gc.c b/gc.c
+index ace7a08..71f509f 100644
+--- a/gc.c
++++ b/gc.c
+@@ -71,11 +71,13 @@
+ #endif
+ #define HEAP_MIN_SLOTS 10000
+ #define FREE_MIN  4096
++#define HEAP_GROWTH_FACTOR 1.8
+ 
+ typedef struct {
+     unsigned int initial_malloc_limit;
+     unsigned int initial_heap_min_slots;
+     unsigned int initial_free_min;
++    double initial_growth_factor;
+ #if defined(ENABLE_VM_OBJSPACE) && ENABLE_VM_OBJSPACE
+     int gc_stress;
+ #endif
+@@ -85,6 +87,7 @@ static ruby_gc_params_t initial_params = {
+     GC_MALLOC_LIMIT,
+     HEAP_MIN_SLOTS,
+     FREE_MIN,
++    HEAP_GROWTH_FACTOR,
+ #if defined(ENABLE_VM_OBJSPACE) && ENABLE_VM_OBJSPACE
+     FALSE,
+ #endif
+@@ -287,6 +290,7 @@ int *ruby_initial_gc_stress_ptr = &rb_objspace.gc_stress;
+ #define initial_malloc_limit	initial_params.initial_malloc_limit
+ #define initial_heap_min_slots	initial_params.initial_heap_min_slots
+ #define initial_free_min	initial_params.initial_free_min
++#define initial_growth_factor	initial_params.initial_growth_factor
+ 
+ #define is_lazy_sweeping(objspace) ((objspace)->heap.sweep_slots != 0)
+ 
+@@ -318,8 +318,8 @@ int *ruby_initial_gc_stress_ptr = &rb_objspace.gc_stress;
+ #define MARKED_IN_BITMAP(bits, p) (bits[BITMAP_INDEX(p)] & ((uintptr_t)1 << BITMAP_OFFSET(p)))
+ 
+ #ifndef HEAP_ALIGN_LOG
+-/* default tiny heap size: 16KB */
+-#define HEAP_ALIGN_LOG 14
++/* default heap size: 64KB */
++#define HEAP_ALIGN_LOG 16
+ #endif
+ 
+ #define CEILDIV(i, mod) (((i) + (mod) - 1)/(mod))
+@@ -605,7 +609,7 @@ initial_expand_heap(rb_objspace_t *objspace)
+ static void
+ set_heaps_increment(rb_objspace_t *objspace)
+ {
+-    size_t next_heaps_length = (size_t)(heaps_used * 1.8);
++    size_t next_heaps_length = (size_t)(heaps_used * initial_growth_factor);
+ 
+     if (next_heaps_length == heaps_used) {
+         next_heaps_length++;
+@@ -3119,6 +3123,49 @@ rb_during_gc(void)
+ }
+ 
+ /*
++ *  ObjectSpace.free_slots => number
++ *
++ * Returns the count of free slots available for new objects.
++ */
++static
++VALUE os_free_slots(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM((heaps_used * HEAP_OBJ_LIMIT - objspace_live_num(objspace)));
++}
++
++/* call-seq:
++ *  ObjectSpace.live_objects => number
++ */
++static
++VALUE os_live_objects(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM(objspace_live_num(objspace));
++}
++
++/* call-seq:
++ *  ObjectSpace.allocated_objects => number
++ *
++ * Returns the count of objects allocated since the Ruby interpreter has
++ * started.  This number can only increase. To know how many objects are
++ * currently allocated, use ObjectSpace::live_objects
++ */
++static
++VALUE os_allocated_objects(VALUE self)
++{
++    rb_objspace_t *objspace = &rb_objspace;
++    return SIZET2NUM(objspace->total_allocated_object_num);
++}
++
++size_t
++rb_os_allocated_objects(void)
++{
++  rb_objspace_t *objspace = &rb_objspace;
++  return objspace->total_allocated_object_num;
++}
++
++/*
+  *  call-seq:
+  *     GC.count -> Integer
+  *
+@@ -3290,7 +3337,7 @@ rb_gc_disable(void)
+ void
+ rb_gc_set_params(void)
+ {
+-    char *malloc_limit_ptr, *heap_min_slots_ptr, *free_min_ptr;
++    char *malloc_limit_ptr, *heap_min_slots_ptr, *free_min_ptr, *growth_factor_ptr;
+ 
+     if (rb_safe_level() > 0) return;
+ 
+@@ -3317,6 +3364,16 @@ rb_gc_set_params(void)
+ 	}
+     }
+ 
++    growth_factor_ptr = getenv("RUBY_HEAP_SLOTS_GROWTH_FACTOR");
++    if (growth_factor_ptr != NULL) {
++	double growth_factor_f = atof(growth_factor_ptr);
++	if (RTEST(ruby_verbose))
++	    fprintf(stderr, "growth_factor=%f (%f)\n", growth_factor_f, initial_growth_factor);
++	if (growth_factor_f > 0) {
++	    initial_growth_factor = growth_factor_f;
++	}
++    }
++
+     free_min_ptr = getenv("RUBY_FREE_MIN");
+     if (free_min_ptr != NULL) {
+ 	int free_min_i = atoi(free_min_ptr);
+@@ -4506,6 +4563,9 @@ Init_GC(void)
+     rb_mObSpace = rb_define_module("ObjectSpace");
+     rb_define_module_function(rb_mObSpace, "each_object", os_each_obj, -1);
+     rb_define_module_function(rb_mObSpace, "garbage_collect", rb_gc_start, 0);
++    rb_define_module_function(rb_mObSpace, "allocated_objects", os_allocated_objects, 0);
++    rb_define_module_function(rb_mObSpace, "live_objects", os_live_objects, 0);
++    rb_define_module_function(rb_mObSpace, "free_slots", os_free_slots, 0);
+ 
+     rb_define_module_function(rb_mObSpace, "define_finalizer", define_final, -1);
+     rb_define_module_function(rb_mObSpace, "undefine_finalizer", undefine_final, 1);
+diff --git a/gc.h b/gc.h
+index 10f634e..d0a1b6f 100644
+--- a/gc.h
++++ b/gc.h
+@@ -88,6 +88,7 @@ int ruby_get_stack_grow_direction(volatile VALUE *addr);
+ #endif
+ 
+ /* exports for objspace module */
++size_t rb_os_allocated_objects(void);
+ size_t rb_objspace_data_type_memsize(VALUE obj);
+ void rb_objspace_reachable_objects_from(VALUE obj, void (func)(VALUE, void *), void *data);
+ int rb_objspace_markable_object_p(VALUE obj);
+

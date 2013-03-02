@@ -7,7 +7,7 @@ class YARV2 < YARV
 
   name 'rbenv-2.0.0-p0'
   section 'interpreters'
-  version '1.0.1'
+  version '1.0.4'
   description 'The YARV 2.0 Ruby virtual machine'
 
   depends 'rbenv'
@@ -20,6 +20,10 @@ class YARV2 < YARV
   depends \
     'google-perftools (>= 1.8), google-perftools (<= 1.9)',
     'jemalloc'
+
+  def patches
+    ['patches/ruby2-encoding-compat.patch', 'patches/ruby2-encoding-const.patch', 'patches/ruby2-gc-stats.patch']
+  end
 
   def install
     make 'ruby'

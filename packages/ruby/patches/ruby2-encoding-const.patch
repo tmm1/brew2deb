@@ -1,0 +1,355 @@
+diff --git a/enc/trans/emoji_iso2022_kddi.trans b/enc/trans/emoji_iso2022_kddi.trans
+index ea180c1..6a1302f 100644
+--- a/enc/trans/emoji_iso2022_kddi.trans
++++ b/enc/trans/emoji_iso2022_kddi.trans
+@@ -113,7 +113,7 @@ fun_so_iso2022jp_kddi_decoder(void *statep, const unsigned char *s, size_t l, un
+     }
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_iso2022jp_kddi_decoder = {
+     "ISO-2022-JP-KDDI", "stateless-ISO-2022-JP-KDDI", iso2022jp_kddi_decoder,
+     TRANSCODE_TABLE_INFO,
+@@ -194,7 +194,7 @@ finish_iso2022jp_kddi_encoder(void *statep, unsigned char *o, size_t osize)
+     return o - output0;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_iso2022jp_kddi_encoder = {
+     "stateless-ISO-2022-JP-KDDI", "ISO-2022-JP-KDDI", iso2022jp_kddi_encoder,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/escape.trans b/enc/trans/escape.trans
+index 550e4ac..e5190d8 100644
+--- a/enc/trans/escape.trans
++++ b/enc/trans/escape.trans
+@@ -72,7 +72,7 @@ escape_xml_attr_quote_finish(void *statep, unsigned char *o, size_t osize)
+     return n;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_escape_xml_attr_quote = {
+     "", "xml_attr_quote", escape_xml_attr_quote,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/gb18030.trans b/enc/trans/gb18030.trans
+index 94c866e..14bd7c8 100644
+--- a/enc/trans/gb18030.trans
++++ b/enc/trans/gb18030.trans
+@@ -150,7 +150,7 @@ fun_sio_to_gb18030(void *statep, const unsigned char *s, size_t l, VALUE info, u
+ }
+ 
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_GB18030 = {
+     "GB18030", "UTF-8", from_GB18030,
+     TRANSCODE_TABLE_INFO,
+@@ -162,7 +162,7 @@ rb_from_GB18030 = {
+     NULL, NULL, NULL, fun_so_from_gb18030,
+     NULL, NULL, NULL, fun_sio_from_gb18030
+ };
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_GB18030 = {
+     "UTF-8", "GB18030", to_GB18030,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/iso2022.trans b/enc/trans/iso2022.trans
+index a441f15..2ebddc3 100644
+--- a/enc/trans/iso2022.trans
++++ b/enc/trans/iso2022.trans
+@@ -128,7 +128,7 @@ fun_so_iso2022jp_decoder(void *statep, const unsigned char *s, size_t l, unsigne
+     }
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_iso2022jp_decoder = {
+     "ISO-2022-JP", "stateless-ISO-2022-JP", iso2022jp_decoder,
+     TRANSCODE_TABLE_INFO,
+@@ -210,7 +210,7 @@ finish_iso2022jp_encoder(void *statep, unsigned char *o, size_t osize)
+     return o - output0;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_iso2022jp_encoder = {
+     "stateless-ISO-2022-JP", "ISO-2022-JP", iso2022jp_encoder,
+     TRANSCODE_TABLE_INFO,
+@@ -232,7 +232,7 @@ fun_so_stateless_iso2022jp_to_eucjp(void *statep, const unsigned char *s, size_t
+     return 2;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_stateless_iso2022jp_to_eucjp = {
+     "stateless-ISO-2022-JP", "EUC-JP", stateless_iso2022jp_to_eucjp,
+     TRANSCODE_TABLE_INFO,
+@@ -253,7 +253,7 @@ fun_so_eucjp_to_stateless_iso2022jp(void *statep, const unsigned char *s, size_t
+     return 3;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_eucjp_to_stateless_iso2022jp = {
+     "EUC-JP", "stateless-ISO-2022-JP", eucjp_to_stateless_iso2022jp,
+     TRANSCODE_TABLE_INFO,
+@@ -357,7 +357,7 @@ fun_so_cp50221_decoder(void *statep, const unsigned char *s, size_t l, unsigned
+     }
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_cp50220_decoder = {
+     "CP50220", "cp51932", cp50221_decoder,
+     TRANSCODE_TABLE_INFO,
+@@ -369,7 +369,7 @@ rb_cp50220_decoder = {
+     NULL, fun_si_cp50221_decoder, NULL, fun_so_cp50221_decoder
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_cp50221_decoder = {
+     "CP50221", "cp51932", cp50221_decoder,
+     TRANSCODE_TABLE_INFO,
+@@ -429,7 +429,7 @@ fun_so_cp5022x_encoder(void *statep, const unsigned char *s, size_t l,
+     return o - output0;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_cp50221_encoder = {
+     "CP51932", "CP50221", cp50221_encoder,
+     TRANSCODE_TABLE_INFO,
+@@ -539,7 +539,7 @@ finish_cp50220_encoder(void *statep, unsigned char *o, size_t osize)
+     return o - output0;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_cp50220_encoder = {
+     "CP51932", "CP50220", cp50221_encoder,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/japanese.trans b/enc/trans/japanese.trans
+index 7ff024f..3030524 100644
+--- a/enc/trans/japanese.trans
++++ b/enc/trans/japanese.trans
+@@ -66,7 +66,7 @@ fun_so_sjis2eucjp(void *statep, const unsigned char *s, size_t l, unsigned char
+     }
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_eucjp2sjis = {
+     "EUC-JP", "Shift_JIS", eucjp2sjis,
+     TRANSCODE_TABLE_INFO,
+@@ -78,7 +78,7 @@ rb_eucjp2sjis = {
+     NULL, NULL, NULL, fun_so_eucjp2sjis
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_sjis2eucjp = {
+     "Shift_JIS", "EUC-JP", sjis2eucjp,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/newline.trans b/enc/trans/newline.trans
+index a200ec0..6ae8375 100644
+--- a/enc/trans/newline.trans
++++ b/enc/trans/newline.trans
+@@ -89,7 +89,7 @@ universal_newline_finish(void *statep, unsigned char *o, size_t osize)
+     return len;
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_universal_newline = {
+     "", "universal_newline", universal_newline,
+     TRANSCODE_TABLE_INFO,
+@@ -102,7 +102,7 @@ rb_universal_newline = {
+     universal_newline_finish
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_crlf_newline = {
+     "", "crlf_newline", crlf_newline,
+     TRANSCODE_TABLE_INFO,
+@@ -114,7 +114,7 @@ rb_crlf_newline = {
+     NULL, NULL, NULL, NULL
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_cr_newline = {
+     "", "cr_newline", cr_newline,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/utf8_mac.trans b/enc/trans/utf8_mac.trans
+index 11ce35e..463dfbd 100644
+--- a/enc/trans/utf8_mac.trans
++++ b/enc/trans/utf8_mac.trans
+@@ -220,7 +220,7 @@ fun_so_from_utf8_mac(void *statep,
+     return buf_output_char(sp, o);
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF8_MAC = {
+     "UTF8-MAC", "UTF-8", from_UTF8_MAC,
+     TRANSCODE_TABLE_INFO,
+diff --git a/enc/trans/utf_16_32.trans b/enc/trans/utf_16_32.trans
+index 632c880..e2b4f6e 100644
+--- a/enc/trans/utf_16_32.trans
++++ b/enc/trans/utf_16_32.trans
+@@ -395,7 +395,7 @@ fun_so_to_utf_32(void *statep, const unsigned char *s, size_t l, unsigned char *
+     return fun_so_to_utf_32be(statep, s, l, o, osize);
+ }
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_16BE = {
+     "UTF-16BE", "UTF-8", from_UTF_16BE,
+     TRANSCODE_TABLE_INFO,
+@@ -407,7 +407,7 @@ rb_from_UTF_16BE = {
+     NULL, NULL, NULL, fun_so_from_utf_16be
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_16BE = {
+     "UTF-8", "UTF-16BE", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+@@ -419,7 +419,7 @@ rb_to_UTF_16BE = {
+     NULL, NULL, NULL, fun_so_to_utf_16be
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_16LE = {
+     "UTF-16LE", "UTF-8", from_UTF_16LE,
+     TRANSCODE_TABLE_INFO,
+@@ -431,7 +431,7 @@ rb_from_UTF_16LE = {
+     NULL, NULL, NULL, fun_so_from_utf_16le
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_16LE = {
+     "UTF-8", "UTF-16LE", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+@@ -443,7 +443,7 @@ rb_to_UTF_16LE = {
+     NULL, NULL, NULL, fun_so_to_utf_16le
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_32BE = {
+     "UTF-32BE", "UTF-8", from_UTF_32BE,
+     TRANSCODE_TABLE_INFO,
+@@ -455,7 +455,7 @@ rb_from_UTF_32BE = {
+     NULL, NULL, NULL, fun_so_from_utf_32be
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_32BE = {
+     "UTF-8", "UTF-32BE", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+@@ -467,7 +467,7 @@ rb_to_UTF_32BE = {
+     NULL, NULL, NULL, fun_so_to_utf_32be
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_32LE = {
+     "UTF-32LE", "UTF-8", from_UTF_32LE,
+     TRANSCODE_TABLE_INFO,
+@@ -479,7 +479,7 @@ rb_from_UTF_32LE = {
+     NULL, NULL, NULL, fun_so_from_utf_32le
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_32LE = {
+     "UTF-8", "UTF-32LE", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+@@ -491,7 +491,7 @@ rb_to_UTF_32LE = {
+     NULL, NULL, NULL, fun_so_to_utf_32le
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_16 = {
+     "UTF-16", "UTF-8", from_UTF_16,
+     TRANSCODE_TABLE_INFO,
+@@ -503,7 +503,7 @@ rb_from_UTF_16 = {
+     NULL, fun_si_from_utf_16, NULL, fun_so_from_utf_16
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_from_UTF_32 = {
+     "UTF-32", "UTF-8", from_UTF_32,
+     TRANSCODE_TABLE_INFO,
+@@ -515,7 +515,7 @@ rb_from_UTF_32 = {
+     NULL, fun_si_from_utf_32, NULL, fun_so_from_utf_32
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_16 = {
+     "UTF-8", "UTF-16", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+@@ -527,7 +527,7 @@ rb_to_UTF_16 = {
+     NULL, NULL, NULL, fun_so_to_utf_16
+ };
+ 
+-static const rb_transcoder
++static rb_transcoder
+ rb_to_UTF_32 = {
+     "UTF-8", "UTF-32", from_UTF_8,
+     TRANSCODE_TABLE_INFO,
+diff --git a/template/transdb.h.tmpl b/template/transdb.h.tmpl
+index d0cf101..c9d3fdf 100644
+--- a/template/transdb.h.tmpl
++++ b/template/transdb.h.tmpl
+@@ -1,6 +1,6 @@
+ <%
+ #
+-# static const rb_transcoder
++# static rb_transcoder
+ # rb_from_US_ASCII = {
+ #     "US-ASCII", "UTF-8", &from_US_ASCII, 1, 0,
+ #     NULL, NULL,
+@@ -37,7 +37,7 @@ transdirs.each do |transdir|
+     path = File.join(transdir,fn)
+     open(path) do |f|
+       f.each_line do |line|
+-        if (/^static const rb_transcoder/ =~ line)..(/"(.*?)"\s*,\s*"(.*?)"/ =~ line)
++        if (/^static rb_transcoder/ =~ line)..(/"(.*?)"\s*,\s*"(.*?)"/ =~ line)
+           if $1 && $2
+             from_to = "%s to %s" % [$1, $2]
+             if converters[from_to]
+diff --git a/tool/transcode-tblgen.rb b/tool/transcode-tblgen.rb
+index 0c5dbd6..4e8aa45 100644
+--- a/tool/transcode-tblgen.rb
++++ b/tool/transcode-tblgen.rb
+@@ -68,7 +68,7 @@ class ArrayCode
+ 
+   def to_s
+     <<"End"
+-static const #{@type}
++static #{@type}
+ #{@name}[#{@len}] = {
+ #{@content}};
+ End
+@@ -847,7 +847,7 @@ def transcode_tblgen(from, to, map, valid_encoding=UnspecifiedValidEncoding)
+   input_unit_length = UnitLength[from]
+   max_output = map.map {|k,v| String === v ? v.length/2 : 1 }.max
+   transcoder_code = <<"End"
+-static const rb_transcoder
++static rb_transcoder
+ #{transcoder_name} = {
+     #{c_esc from}, #{c_esc to}, #{real_tree_name},
+     TRANSCODE_TABLE_INFO,
+
