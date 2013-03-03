@@ -1,6 +1,12 @@
-class Smartmontools < DebianSourceFormula
-  url 'http://archive.ubuntu.com/ubuntu/pool/main/s/smartmontools/smartmontools_5.43-0ubuntu1.dsc'
-  md5 'dffe37aceda3a2a06bb3c0b5a8a03615'
-  version '5.43-0ubuntu1'
-  build_depends %w(quilt libcap-ng-dev)
+class Smartmontools < DebianFormula
+  url 'https://smartmontools.svn.sourceforge.net/svnroot/smartmontools/trunk/smartmontools', :revision => '3783'
+  name 'smartmontools'
+  version '6.1-0github1+r3783'
+  build_depends %w(subversion quilt libcap-ng-dev)
+
+  def build
+    sh './autogen.sh'
+    configure :sysconfdir => '/etc', :prefix => '/usr'
+    make
+  end
 end
