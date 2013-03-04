@@ -8,9 +8,9 @@ class RubyEncoder < DebianFormula
   end
 
   arch 'x86_64'
+  shared_deps false
 
   depends \
-    'libc6',
     'libgphoto2-2',
     'libsane',
     'ia32-libs-multiarch',
