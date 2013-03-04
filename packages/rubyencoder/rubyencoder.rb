@@ -20,6 +20,9 @@ class RubyEncoder < DebianFormula
   end
 
   def install
-    bin.install_p 'bin/rubyencoder', self.class.name
+    name = self.class.name
+
+    prefix.install Dir['*']
+    ln_s((prefix / 'bin/rubyencoder'), (bin / name))
   end
 end
