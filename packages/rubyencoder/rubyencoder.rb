@@ -8,6 +8,7 @@ class RubyEncoder < DebianFormula
   end
 
   section 'libs'
+  arch 'x86_64'
 
   depends \
     'libgphoto2-2',
