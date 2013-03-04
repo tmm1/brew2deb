@@ -11,9 +11,6 @@ class RubyEncoder < DebianFormula
   arch 'x86_64'
 
   depends \
-    'libgphoto2-2',
-    'libsane',
-    'ia32-libs-multiarch',
     'ia32-libs'
 
   def build
