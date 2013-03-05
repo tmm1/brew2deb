@@ -50,7 +50,6 @@ class DebianFormula < Formula
   attr_rw :name, :description
   attr_rw :maintainer, :section, :arch
   attr_rw :pre_install, :post_install, :pre_uninstall, :post_uninstall
-  attr_rw :shared_deps
 
   attr_rw_list :depends, :build_depends
   attr_rw_list :provides, :conflicts, :replaces
@@ -58,8 +57,6 @@ class DebianFormula < Formula
 
   attr_accessor :skip_build
   attr_writer :installing
-
-  shared_deps true
 
   build_depends \
     'build-essential',
@@ -291,28 +288,26 @@ CONTROL
       end
 
       # Calculate shared library dependencies.
-      if self.class.shared_deps
-        begin
-          tmpdir = Dir.mktmpdir('brew2deb-shlibs')
-          Dir.chdir tmpdir do
-            FileUtils.mkdir_p 'debian'
-            File.open('debian/control','w'){ |f| f.puts "Source: #{name}\nPackage: #{name}" }
-            out = `dpkg-gensymbols -P#{destdir} -p#{name} -v#{self.class.version} 2>&1 && fakeroot dh_shlibdeps -P#{destdir} -p#{name} 2>&1`
-            if $?.exitstatus != 0
-              opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
-            end
+      begin
+        tmpdir = Dir.mktmpdir('brew2deb-shlibs')
+        Dir.chdir tmpdir do
+          FileUtils.mkdir_p 'debian'
+          File.open('debian/control','w'){ |f| f.puts "Source: #{name}\nPackage: #{name}" }
+          out = `dpkg-gensymbols -P#{destdir} -p#{name} -v#{self.class.version} 2>&1 && fakeroot dh_shlibdeps -P#{destdir} -p#{name} 2>&1`
+          if $?.exitstatus != 0
+            opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
+          end
 
-            if File.exists?('debian/substvars')
-              File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
-                next if dep =~ /^#{name} /
-                opts += ["--depends", dep]
-              end
+          if File.exists?('debian/substvars')
+            File.read('debian/substvars').strip.gsub('shlibs:Depends=', '').split(', ').each do |dep|
+              next if dep =~ /^#{name} /
+              opts += ["--depends", dep]
             end
           end
-        ensure
-          FileUtils.rm_rf tmpdir
-          FileUtils.rm_rf destdir/'DEBIAN'
         end
+      ensure
+        FileUtils.rm_rf tmpdir
+        FileUtils.rm_rf destdir/'DEBIAN'
       end
 
       opts << '.'

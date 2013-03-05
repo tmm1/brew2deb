@@ -11,7 +11,6 @@ class RubyEncoder < DebianFormula
   end
 
   arch 'x86_64'
-  shared_deps false
 
   depends \
     'libgphoto2-2',
