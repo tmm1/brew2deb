@@ -29,10 +29,6 @@ class RubyEncoder < DebianFormula
     package_path = local / package_name
     package_path.mkpath
 
-    build_path = HOMEBREW_WORKDIR / 'tmp-build' / package_name
-
-    Dir[build_path + 'bin'].each do |file|
-      FileUtils.cp_r file, package_path
-    end
+    FileUtils.cp_r 'bin', package_path
   end
 end
