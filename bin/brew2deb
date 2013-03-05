@@ -2,6 +2,11 @@
 require 'optparse'
 require 'fileutils'
 
+if ARGV.include? 'clean'
+  FileUtils.rm_rf %w[ tmp-build tmp-install ], :verbose => true
+  exit
+end
+
 formula = ARGV.find{ |arg| arg =~ /\.rb$/ and File.exists?(arg) }
 formula ||= 'formula.rb'
 
@@ -11,11 +16,6 @@ unless File.exists?(formula)
 end
 
 Dir.chdir File.dirname(File.expand_path(formula))
-
-if ARGV.include? 'clean'
-  FileUtils.rm_rf %w[ tmp-build tmp-install ], :verbose => true
-  exit
-end
 
 $:.unshift File.expand_path('../../lib', __FILE__)
 require 'debian_formula'
