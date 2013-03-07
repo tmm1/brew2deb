@@ -4,7 +4,7 @@ class Git < DebianFormula
 
   section 'vcs'
   name 'git'
-  version '1:1.7.10-1+github29'
+  version '2:1.7.10-1+github29'
   description <<-DESC
     The Git DVCS with custom patches and bugfixes for GitHub.
   DESC
