@@ -50,7 +50,7 @@ class OracleJava7 < DebianSourceFormula
     sh 'wget', '--no-check-certificate',
                '--continue',
                '--quiet',
-               '--header', "\"#{cookie_header}\"",
+               '--header', cookie_header,
                '--output-document', File.basename(url),
                url
   end
