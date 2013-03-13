@@ -39,7 +39,7 @@ class PuppetDB < DebianFormula
     
     (etc/'puppetdb').mkpath
     (etc/'puppetdb/conf.d').mkpath
-    (etc/'puppetdb/conf.d').install_p Dir[builddir/'ext/files/*.ini']
+    (etc/'puppetdb/conf.d').install Dir[builddir/'ext/files/*.ini']
     
     (prefix/'share/puppetdb').mkpath
     (prefix/'share/puppetdb').install builddir/'target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
