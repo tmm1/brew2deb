@@ -1,4 +1,4 @@
-require 'redis2'
+require 'redis2-common'
 
 class Redis1 < Redis2
   url 'http://redis.googlecode.com/files/redis-1.2.1.tar.gz'

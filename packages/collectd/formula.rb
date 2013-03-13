@@ -5,7 +5,7 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.1.0+github1'
+  version '5.1.0+github4'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
@@ -21,30 +21,26 @@ class Collectd < DebianFormula
     'libmemcached-dev',
     'iproute-dev',
     'libsnmp-dev',
-    'libopenipmi-dev',
     'liboping-dev',
     'libpcap0.8-dev',
-    'libperl-dev',
     'libltdl3-dev',
     'librrd-dev',
     'libyajl-dev',
     'iptables-dev',
-    'linux-headers-2.6.32-5-common | linux-headers-2.6.26-2-common'
+    'linux-headers-2.6.32-5-common | linux-headers-2.6.26-2-common | linux-headers-3.2.0-32-virtual'
 
   depends \
     'python',
-    'libmysqlclient15off | libmysqlclient16',
+    'libmysqlclient15off | libmysqlclient16 | libmysqlclient18',
     'libcurl3',
-    'libdbi0',
-    'libesmtp5',
+    'libdbi0 | libdbi1',
+    'libesmtp5 | libesmtp6',
     'libgcrypt11',
     'libiptcdata0',
-    'libmemcached3 | libmemcached5',
+    'libmemcached3 | libmemcached5 | libmemcached6',
     'libsnmp15',
-    'libopenipmi0',
     'liboping0',
     'libpcap0.8',
-    'libperl5.10',
     'librrd4',
     'libyajl1'
 
@@ -77,7 +73,7 @@ class Collectd < DebianFormula
       '--enable-fscache',
       '--enable-hddtemp',
       '--enable-interface',
-      '--enable-ipmi',
+      '--disable-ipmi',
       '--enable-iptables',
       '--enable-ipvs',
       '--enable-irq',
@@ -101,7 +97,7 @@ class Collectd < DebianFormula
       '--enable-notify_email',
       '--enable-ntpd',
       '--enable-openvpn',
-      '--enable-perl',
+      '--disable-perl',
       '--enable-ping',
       '--enable-powerdns',
       '--enable-processes',

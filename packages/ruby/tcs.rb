@@ -1,12 +1,12 @@
 require 'yarv'
 
 class TCS < YARV
-  url 'git://github.com/github/ruby-thecodeshop', :sha => 'ad71fcadeedf48a9c6f8609c94d93c5e329e5057'
+  url 'git://github.com/github/ruby-thecodeshop', :sha => '239aa91f9295ed1dca84ffbd267a7a99b6569f16'
   homepage 'https://github.com/thecodeshop/ruby/wiki'
 
   name 'rbenv-1.9.3-p231-tcs-github'
   section 'interpreters'
-  version '1.0.6'
+  version '1.0.11'
   description 'The YARV Ruby virtual machine + TCS patches + GitHub patches'
 
   build_depends \

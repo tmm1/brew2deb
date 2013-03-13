@@ -4,7 +4,7 @@ class AndroidSDK < DebianFormula
   md5 '14e99dfa8eb1a8fadd2f3557322245c4'
 
   name 'android-sdk'
-  version 'r17+github1'
+  version '17+github2'
 
   description 'Android SDK'
   section 'devel'
@@ -12,7 +12,7 @@ class AndroidSDK < DebianFormula
 
   depends \
     'ant',
-    'sun-java6-jdk',
+    'sun-java6-jdk | oracle-java7-jdk',
     'ia32-libs'
 
   def build

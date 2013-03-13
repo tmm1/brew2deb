@@ -1,11 +1,11 @@
 class Freight < DebianFormula
   homepage 'http://rcrowley.github.com/freight/'
-  url 'https://github.com/rcrowley/freight.git', :sha => '4549c18'
+  url 'https://github.com/tnm/freight.git', :sha => '3fde0429d'
 
   arch 'all'
   name 'freight'
   section 'admin'
-  version '0.2.0+github1'
+  version '0.3.2+github2'
   description 'A modern take on the Debian archive'
 
   depends \

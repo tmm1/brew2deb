@@ -14,7 +14,8 @@ class YARV < MRI
 
   build_depends \
     'libyaml-dev',
-    'libffi-dev'
+    'libffi-dev',
+    'libssl-dev'
 
   def configure(opts={})
     super opts.merge(:disable_install_rdoc => true)
@@ -24,13 +25,6 @@ class YARV < MRI
     # bundled with 1.9
   end
   alias install_rake install_rubygems
-
-  def install_bundler
-    setup_rubylib
-
-    install_gem builddir/'bundler-1.2.3.gem'
-    fix_shebangs 'bundle'
-  end
 
   def rubylib
     `strings #{prefix/'bin/ruby'}`.split("\n").grep(/versions/).grep(/lib/).map{ |lib| destdir/lib }.join(':')
