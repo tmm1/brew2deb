@@ -26,19 +26,12 @@ class PuppetDB < DebianFormula
     ]
 
   def build
+    ENV['DESTDIR'] = workdir
     inreplace 'Rakefile' do |s|
       # I hate this with the passion of a thousand suns
       s.concat "\n\n"
       s.concat <<-EOC.undent
         def erb(erbfile,  outfile)
-          if ENV['SOURCEINSTALL'] == 1
-            @install_dir = "#{DESTDIR}/@install_dir"
-            @config_dir = "#{DESTDIR}/@config_dir"
-            @initscriptname = "#{DESTDIR}/@initscript"
-            @log_dir = "#{DESTDIR}/@log_dir"
-            @lib_dir = "#{DESTDIR}/@lib_dir"
-            @link = "#{DESTDIR}/@link"
-          end
           template = File.read(erbfile)
           message = ERB.new(template, nil, "-")
           output = message.result(binding)
