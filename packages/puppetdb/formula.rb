@@ -30,7 +30,7 @@ class PuppetDB < DebianFormula
 
   def install
     (var/'lib/puppetdb').mkpath
-    (var/'lib/puppetdb/state').
+    (var/'lib/puppetdb/state').mkpath
     (var/'lib/puppetdb/db').mkpath
     (var/'lib/puppetdb/mq').mkpath
     
