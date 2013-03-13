@@ -26,7 +26,8 @@ class PuppetDB < DebianFormula
     ]
 
   def build
-    sh 'rake', 'uberjar'
+    sh 'lein', 'uberjar'
+    mv 'target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
   end
 
   def install
