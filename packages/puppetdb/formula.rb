@@ -39,14 +39,14 @@ class PuppetDB < DebianFormula
     
     (etc/'puppetdb').mkpath
     (etc/'puppetdb/conf.d').mkpath
-    (etc/'puppetdb/conf.d').install Dir[builddir/'ext/files/*.ini']
+    (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
     
     (prefix/'share/puppetdb').mkpath
-    (prefix/'share/puppetdb').install_p builddir/'target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
+    (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
     
-    (etc/'logrotate.d').install_p builddir/'ext/files/puppetdb.logrotate', 'puppetdb'
-    (etc/'default').install_p builddir/'ext/files/puppetdb.default', 'puppetdb'
-    (etc/'init.d').install_p builddir/'ext/files/puppetdb.debian.init', 'puppetdb'
-    (prefix/'sbin').install Dir[builddir/'ext/files/puppetdb-*']
+    (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
+    (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
+    (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
+    (prefix/'sbin').install Dir[builddir/'puppetdb.git/ext/files/puppetdb-*']
   end
 end
