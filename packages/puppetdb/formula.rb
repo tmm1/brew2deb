@@ -9,7 +9,8 @@ class PuppetDB < DebianFormula
   arch 'all'
   
   build_depends \
-    'leiningen'
+    'leiningen',
+    'facter'
     
   depends \
     'oracle-java7-jdk'
