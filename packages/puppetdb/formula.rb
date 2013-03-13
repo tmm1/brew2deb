@@ -26,8 +26,27 @@ class PuppetDB < DebianFormula
     ]
 
   def build
-    # Just a dirty, dirty hack because the Rakefile is not so good.
     inreplace 'Rakefile' do |s|
+      # I hate this with the passion of a thousand suns
+      s.concat "\n\n"
+      s.concat <<-EOC.undent
+        def erb(erbfile,  outfile)
+          if ENV['SOURCEINSTALL'] == 1
+            @install_dir = "#{DESTDIR}/@install_dir"
+            @config_dir = "#{DESTDIR}/@config_dir"
+            @initscriptname = "#{DESTDIR}/@initscript"
+            @log_dir = "#{DESTDIR}/@log_dir"
+            @lib_dir = "#{DESTDIR}/@lib_dir"
+            @link = "#{DESTDIR}/@link"
+          end
+          template = File.read(erbfile)
+          message = ERB.new(template, nil, "-")
+          output = message.result(binding)
+          File.open(outfile, 'w') { |f| f.write output }
+          puts "Generated: #{outfile}"
+        end
+  
+      EOC
       s.gsub! ':default => [ :package ]', ':default => [ :template ]'
     end
     
@@ -48,7 +67,7 @@ class PuppetDB < DebianFormula
     (prefix/'share/puppetdb').mkpath
     (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
     
-    (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
+    (etc/'puppetdb/conf.d').install Dir[workingdir/'puppetdb.git/ext/files/*.ini']
     (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
     (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
