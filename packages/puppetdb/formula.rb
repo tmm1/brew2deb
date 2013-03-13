@@ -28,7 +28,7 @@ class PuppetDB < DebianFormula
   def build
     # Just a dirty, dirty hack because the Rakefile is not so good.
     inreplace 'Rakefile' do |s|
-      s.gsub! ':default => [ :package ]', ':default => [ :template ]',
+      s.gsub! ':default => [ :package ]', ':default => [ :template ]'
     end
     
     sh 'rake'
