@@ -1,6 +1,6 @@
 class PuppetDB < DebianFormula
   homepage 'http://docs.puppetlabs.com/puppetdb/1.1/index.html'
-  url 'https://github.com/puppetlabs/puppetdb', :sha => '92ceef0907ae2afa2047af34ed8526abd6e9f6ba'
+  url 'https://github.com/puppetlabs/puppetdb.git', :sha => '92ceef0907ae2afa2047af34ed8526abd6e9f6ba'
 
   name 'puppetdb'
   version '1.1.1+github1'
