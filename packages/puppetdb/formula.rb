@@ -26,24 +26,29 @@ class PuppetDB < DebianFormula
     ]
 
   def build
+    # Just a dirty, dirty hack because the Rakefile is not so good.
+    inreplace 'Rakefile' do |s|
+      s.gsub! ':default => [ :package ]', ':default => [ :template ]',
+    end
+    
+    sh 'rake'
     sh 'lein', 'uberjar'
   end
 
   def install
-    (var/'lib/puppetdb').mkpath
-    (var/'lib/puppetdb/state').mkpath
-    (var/'lib/puppetdb/db').mkpath
-    (var/'lib/puppetdb/mq').mkpath
-    
-    (var/'log/puppetdb').mkpath
-    
-    (etc/'puppetdb').mkpath
-    (etc/'puppetdb/conf.d').mkpath
-    (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
+    [ 'lib/puppetdb',
+      'lib/puppetdb/state',
+      'lib/puppetdb/db',
+      'lib/puppetdb/mq',
+      'log/puppetdb',
+    ].each { |p| (var+p).mkpath }
+
+    [ 'puppetdb', 'puppetdb/conf.d' ].each { |p| (etc+p).mkpath }
     
     (prefix/'share/puppetdb').mkpath
     (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
     
+    (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
     (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
     (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
