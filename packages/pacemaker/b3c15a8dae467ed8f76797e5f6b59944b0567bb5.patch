@@ -1,0 +1,29 @@
+From b3c15a8dae467ed8f76797e5f6b59944b0567bb5 Mon Sep 17 00:00:00 2001
+From: David Vossel <dvossel@redhat.com>
+Date: Wed, 16 May 2012 15:26:21 -0500
+Subject: [PATCH] Low: crmd: cl#5063 - Properly remove recurring status from
+ cib when cancelled.
+
+---
+ crmd/lrm.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/crmd/lrm.c b/crmd/lrm.c
+index d269882..a15fded 100644
+--- a/crmd/lrm.c
++++ b/crmd/lrm.c
+@@ -966,8 +966,10 @@ void send_direct_ack(const char *to_host, const char *to_sys,
+         crm_xml_add(xml_top, XML_ATTR_TRANSITION_KEY, op->user_data);
+ 
+         if(op->interval > 0) {
++            char *op_id = generate_op_key(op->rsc_id, op->op_type, op->interval);
+             /* Avoid deleting last_failure too (if it was a result of this recurring op failing) */
+-            crm_xml_add(xml_top, XML_ATTR_ID, op->user_data);
++            crm_xml_add(xml_top, XML_ATTR_ID, op_id);
++            crm_free(op_id);
+         }
+ 
+         crm_debug("async: Sending delete op for %s_%s_%d (call=%d)",
+-- 
+1.8.1.5
+
