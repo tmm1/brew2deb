@@ -1,7 +1,7 @@
 class Pacemaker < DebianSourceFormula
   url 'http://archive.ubuntu.com/ubuntu/pool/main/p/pacemaker/pacemaker_1.1.7-1ubuntu2.dsc'
   md5 'a37eb07651fa7c7fc20cdd97b98df63c'
-  version '1.1.7-2github1'
+  version '1.1.7-2github2'
   replaces 'crmsh, libqb, libqb-dev'
   conflicts 'crmsh, libqb, libqb-dev'
 
@@ -16,7 +16,11 @@ class Pacemaker < DebianSourceFormula
   end
 
   def patches
-    #http://bugs.clusterlabs.org/show_bug.cgi?id=5072
-    'fc03be02bf3a045babfe8233cbc99227da71d024.patch'
+    [
+      #http://bugs.clusterlabs.org/show_bug.cgi?id=5072
+      'fc03be02bf3a045babfe8233cbc99227da71d024.patch',
+      #http://bugs.clusterlabs.org/show_bug.cgi?id=5063
+      '54266cb5095c68a3afac0be9be93718435352d47.patch'
+    ]
   end
 end
