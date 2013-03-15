@@ -1,0 +1,30 @@
+From fc03be02bf3a045babfe8233cbc99227da71d024 Mon Sep 17 00:00:00 2001
+From: David Vossel <dvossel@redhat.com>
+Date: Fri, 29 Jun 2012 11:24:52 -0500
+Subject: [PATCH] High: pengine: cl#5072 - Fixes monitor op stopping after rsc
+ promotion.
+
+---
+ lib/pengine/unpack.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/lib/pengine/unpack.c b/lib/pengine/unpack.c
+index cada7ff..a407f6e 100644
+--- a/lib/pengine/unpack.c
++++ b/lib/pengine/unpack.c
+@@ -1519,7 +1519,11 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListP
+             && safe_str_eq(status, "0")) {
+             *stop_index = counter;
+ 
+-        } else if (safe_str_eq(task, CRMD_ACTION_START) || safe_str_eq(task, CRMD_ACTION_MIGRATED)) {
++        } else if (safe_str_eq(task, CRMD_ACTION_START) ||
++            safe_str_eq(task, CRMD_ACTION_MIGRATED) ||
++            safe_str_eq(task, CRMD_ACTION_PROMOTE) ||
++            safe_str_eq(task, CRMD_ACTION_DEMOTE)) {
++
+             *start_index = counter;
+ 
+         } else if (*start_index <= *stop_index && safe_str_eq(task, CRMD_ACTION_STATUS)) {
+-- 
+1.8.1.5
+
