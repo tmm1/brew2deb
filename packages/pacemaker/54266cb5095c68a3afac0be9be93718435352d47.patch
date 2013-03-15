@@ -1,0 +1,47 @@
+From 54266cb5095c68a3afac0be9be93718435352d47 Mon Sep 17 00:00:00 2001
+From: David Vossel <dvossel@redhat.com>
+Date: Thu, 12 Apr 2012 12:26:30 -0500
+Subject: [PATCH] Medium: pengine: cl#5058 - Fixes issue with on-fail option on
+ operation being ignored.
+
+When the rc-code held in the lrm last failure status field refers to the
+action represented by the operation and operation_key values, not the
+operation and failure id values. When operation_key is present in the
+operation status, use that value over the id for the action key.
+---
+ lib/pengine/unpack.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/lib/pengine/unpack.c b/lib/pengine/unpack.c
+index 31d3ae1..095d465 100644
+--- a/lib/pengine/unpack.c
++++ b/lib/pengine/unpack.c
+@@ -1705,6 +1705,7 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListP
+     const char *id = NULL;
+     const char *key = NULL;
+     const char *task = NULL;
++    const char *task_key = NULL;
+     const char *magic = NULL;
+     const char *actual_rc = NULL;
+ 
+@@ -1733,6 +1734,7 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListP
+ 
+     id = ID(xml_op);
+     task = crm_element_value(xml_op, XML_LRM_ATTR_TASK);
++    task_key = crm_element_value(xml_op, XML_LRM_ATTR_TASK_KEY);
+     task_status = crm_element_value(xml_op, XML_LRM_ATTR_OPSTATUS);
+     op_version = crm_element_value(xml_op, XML_ATTR_CRM_VERSION);
+     magic = crm_element_value(xml_op, XML_ATTR_TRANSITION_MAGIC);
+@@ -1948,7 +1950,8 @@ gboolean unpack_rsc_op(resource_t * rsc, node_t * node, xmlNode * xml_op, GListP
+ 
+     if (task_status_i == LRM_OP_ERROR
+         || task_status_i == LRM_OP_TIMEOUT || task_status_i == LRM_OP_NOTSUPPORTED) {
+-        action = custom_action(rsc, crm_strdup(id), task, NULL, TRUE, FALSE, data_set);
++        const char *action_key = task_key ? task_key : id;
++        action = custom_action(rsc, crm_strdup(action_key), task, NULL, TRUE, FALSE, data_set);
+         if (expired) {
+             crm_notice("Ignoring expired failure (calculated) %s (rc=%d, magic=%s) on %s",
+                        id, actual_rc_i, magic, node->details->uname);
+-- 
+1.8.1.5
+
