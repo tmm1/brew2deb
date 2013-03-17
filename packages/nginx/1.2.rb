@@ -32,6 +32,7 @@ class Nginx < DebianFormula
      :p1 => [
        'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
        workdir/'src/nginx_syslog_patch.git/syslog_1.2.7.patch',
+       'nginx-name-leak.patch',
      ]}
   end
 
