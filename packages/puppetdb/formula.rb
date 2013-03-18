@@ -41,6 +41,7 @@ class PuppetDB < DebianFormula
 
     sh 'rake'
     sh 'lein', 'uberjar'
+
   end
 
   def install
@@ -55,11 +56,13 @@ class PuppetDB < DebianFormula
 
     (prefix/'share/puppetdb').mkpath
     (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
+    (prefix/'sbin').install Dir[builddir/'puppetdb.git/ext/files/puppetdb-*']
 
     (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
     (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
     (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
+
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
-    (prefix/'sbin').install Dir[builddir/'puppetdb.git/ext/files/puppetdb-*']
+    chmod 0755, etc/'init.d/puppetdb'
   end
 end
