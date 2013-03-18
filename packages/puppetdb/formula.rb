@@ -26,7 +26,7 @@ class PuppetDB < DebianFormula
     ]
 
   def build
-    ENV['DESTDIR'] = workdir
+
     inreplace 'Rakefile' do |s|
       # I hate this with the passion of a thousand suns
       s.concat "\n\n"
@@ -38,9 +38,7 @@ class PuppetDB < DebianFormula
           File.open(outfile, 'w') { |f| f.write output }
           puts "Generated: #{outfile}"
         end
-  
       EOC
-      s.gsub! ':default => [ :package ]', ':default => [ :template ]'
     end
     
     sh 'rake'
