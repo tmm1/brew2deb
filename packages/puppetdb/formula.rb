@@ -20,9 +20,7 @@ class PuppetDB < DebianFormula
     :remove => false,
     :chown  => [
       '/etc/puppetdb',
-      '/usr/share/puppetdb',
       '/var/lib/puppetdb',
-      '/var/log/puppetdb'
     ]
 
   def build
@@ -41,7 +39,6 @@ class PuppetDB < DebianFormula
 
     sh 'rake'
     sh 'lein', 'uberjar'
-
   end
 
   def install
@@ -51,6 +48,8 @@ class PuppetDB < DebianFormula
       'lib/puppetdb/mq',
       'log/puppetdb',
     ].each { |p| (var+p).mkpath }
+
+    chmod 0775 var/'log/puppetdb',
 
     [ 'puppetdb', 'puppetdb/conf.d' ].each { |p| (etc+p).mkpath }
 
