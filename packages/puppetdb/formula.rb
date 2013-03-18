@@ -31,12 +31,12 @@ class PuppetDB < DebianFormula
 
       # I hate this with the passion of a thousand suns
       s << "\n\n"
-      s << "def erb(erbfile,  outfile)"
-      s << "  template = File.read(erbfile)"
-      s << "  message = ERB.new(template, nil, '-')"
-      s << "  output = message.result(binding)"
-      s << "  File.open(outfile, 'w') { |f| f.write output }"
-      s << "  puts \Generated: \#{outfile}\""
+      s << "def erb(erbfile,  outfile)\n"
+      s << "  template = File.read(erbfile)\n"
+      s << "  message = ERB.new(template, nil, '-')\n"
+      s << "  output = message.result(binding)\n"
+      s << "  File.open(outfile, 'w') { |f| f.write output }\n"
+      s << "  puts \Generated: \#{outfile}\"\n"
       s << "end"
     end
 
