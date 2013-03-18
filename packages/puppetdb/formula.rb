@@ -31,15 +31,13 @@ class PuppetDB < DebianFormula
 
       # I hate this with the passion of a thousand suns
       s << "\n\n"
-      s <<-EOC.undent
-        def erb(erbfile,  outfile)
-          template = File.read(erbfile)
-          message = ERB.new(template, nil, "-")
-          output = message.result(binding)
-          File.open(outfile, 'w') { |f| f.write output }
-          puts "Generated: \#{outfile}"
-        end
-      EOC
+      s << "def erb(erbfile,  outfile)"
+      s << "  template = File.read(erbfile)"
+      s << "  message = ERB.new(template, nil, '-')"
+      s << "  output = message.result(binding)"
+      s << "  File.open(outfile, 'w') { |f| f.write output }"
+      s << "  puts \Generated: \#{outfile}\""
+      s << "end"
     end
 
     sh 'rake'
