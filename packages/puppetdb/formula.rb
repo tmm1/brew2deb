@@ -49,7 +49,7 @@ class PuppetDB < DebianFormula
       'log/puppetdb',
     ].each { |p| (var+p).mkpath }
 
-    chmod 0775 var/'log/puppetdb',
+    chmod 0775, var/'log/puppetdb',
 
     [ 'puppetdb', 'puppetdb/conf.d' ].each { |p| (etc+p).mkpath }
 
