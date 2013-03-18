@@ -7,11 +7,11 @@ class PuppetDB < DebianFormula
   description 'next-generation open source storage service for Puppet-produced data'
   section 'database'
   arch 'all'
-  
+
   build_depends \
     'leiningen',
     'facter'
-    
+
   depends \
     'oracle-java7-jdk'
 
@@ -26,21 +26,22 @@ class PuppetDB < DebianFormula
     ]
 
   def build
-
     inreplace 'Rakefile' do |s|
+      s.gsub! ':default => [ :package ]', ':default => [ :template ]'
+
       # I hate this with the passion of a thousand suns
-      s.concat "\n\n"
-      s.concat <<-EOC.undent
+      s << "\n\n"
+      s <<-EOC.undent
         def erb(erbfile,  outfile)
           template = File.read(erbfile)
           message = ERB.new(template, nil, "-")
           output = message.result(binding)
           File.open(outfile, 'w') { |f| f.write output }
-          puts "Generated: #{outfile}"
+          puts "Generated: \#{outfile}"
         end
       EOC
     end
-    
+
     sh 'rake'
     sh 'lein', 'uberjar'
   end
