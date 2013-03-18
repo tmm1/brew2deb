@@ -52,11 +52,11 @@ class PuppetDB < DebianFormula
     ].each { |p| (var+p).mkpath }
 
     [ 'puppetdb', 'puppetdb/conf.d' ].each { |p| (etc+p).mkpath }
-    
+
     (prefix/'share/puppetdb').mkpath
     (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
-    
-    (etc/'puppetdb/conf.d').install Dir[workingdir/'puppetdb.git/ext/files/*.ini']
+
+    (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
     (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
     (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
