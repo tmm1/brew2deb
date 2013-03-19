@@ -35,7 +35,7 @@ haproxy_start()
 {
 	start-stop-daemon --start --pidfile "$PIDFILE" \
 		--exec $HAPROXY -- -f "$CONFIG" -D -p "$PIDFILE" \
-		$EXTRAOPTS || return 2
+		$EXTRAOPTS
 	return 0
 }
 
@@ -46,7 +46,7 @@ haproxy_stop()
 		return 0
 	fi
 	for pid in $(cat $PIDFILE) ; do
-		/bin/kill $pid || return 4
+		test -d /proc/$pid && (/bin/kill $pid || return 4)
 	done
 	rm -f $PIDFILE
 	return 0
