@@ -4,7 +4,7 @@ class HAProxy < DebianFormula
   md5 'b8deab9989e6b9925410b0bc44dd4353'
 
   name 'haproxy'
-  version '1.5-dev17+github3'
+  version '1.5-dev17+github4'
   section 'net'
   description 'The Reliable, High Performance TCP/HTTP Load Balancer'
 

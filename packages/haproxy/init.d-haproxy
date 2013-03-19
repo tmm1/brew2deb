@@ -46,7 +46,7 @@ haproxy_stop()
 		return 0
 	fi
 	for pid in $(cat $PIDFILE) ; do
-		test -d /proc/$pid && (/bin/kill $pid || return 4)
+		/bin/kill $pid >/dev/null 2>&1
 	done
 	rm -f $PIDFILE
 	return 0
