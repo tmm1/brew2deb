@@ -58,6 +58,7 @@ class PuppetDB < DebianFormula
     (prefix/'share/puppetdb').install_p builddir/'puppetdb.git/target/puppetdb-nil-standalone.jar', 'puppetdb.jar'
     (prefix/'sbin').install Dir[builddir/'puppetdb.git/ext/files/puppetdb-*']
 
+    (etc/'puppetdb').install builddir/'puppetdb.git/ext/files/log4j.properties'
     (etc/'puppetdb/conf.d').install Dir[builddir/'puppetdb.git/ext/files/*.ini']
     (etc/'logrotate.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.logrotate', 'puppetdb'
     (etc/'default').install_p builddir/'puppetdb.git/ext/files/puppetdb.default', 'puppetdb'
