@@ -21,6 +21,7 @@ class PuppetDB < DebianFormula
     :chown  => [
       '/etc/puppetdb',
       '/var/lib/puppetdb',
+      '/var/log/puppetdb',
     ]
 
   def build
@@ -63,5 +64,13 @@ class PuppetDB < DebianFormula
 
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
     chmod 0755, etc/'init.d/puppetdb'
+    chown 
+
+    ln_s etc/'puppetdb/conf.d', var/'lib/puppetdb/config'
+    ln_s var/'lib/puppetdb/db', prefix/'share/puppetdb/db'
+    ln_s var/'lib/puppetdb/log', prefix/'share/puppetdb/log'
+    ln_s var/'lib/puppetdb/mq', prefix/'share/puppetdb/mq'
+    ln_s var/'lib/puppetdb/state', prefix/'share/puppetdb/state'
+
   end
 end
