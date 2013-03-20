@@ -66,8 +66,8 @@ class PuppetDB < DebianFormula
     chmod 0755, etc/'init.d/puppetdb'
 
     ln_s '../../../etc/puppetdb/conf.d', var/'lib/puppetdb/config'
+    ln_s '../../../var/log/puppetdb', prefix/'share/puppetdb/log'
     ln_s '../../../var/lib/puppetdb/db', prefix/'share/puppetdb/db'
-    ln_s '../../../var/lib/puppetdb/log', prefix/'share/puppetdb/log'
     ln_s '../../../var/lib/puppetdb/mq', prefix/'share/puppetdb/mq'
     ln_s '../../../var/lib/puppetdb/state', prefix/'share/puppetdb/state'
   end
