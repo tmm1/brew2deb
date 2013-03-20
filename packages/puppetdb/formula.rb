@@ -3,7 +3,7 @@ class PuppetDB < DebianFormula
   url 'https://github.com/puppetlabs/puppetdb.git', :sha => '92ceef0907ae2afa2047af34ed8526abd6e9f6ba'
 
   name 'puppetdb'
-  version '1.1.1+github1'
+  version '1.1.1+github2'
   description 'next-generation open source storage service for Puppet-produced data'
   section 'database'
   arch 'all'
@@ -21,6 +21,7 @@ class PuppetDB < DebianFormula
     :chown  => [
       '/etc/puppetdb',
       '/var/lib/puppetdb',
+      '/var/log/puppetdb',
     ]
 
   def build
@@ -63,5 +64,11 @@ class PuppetDB < DebianFormula
 
     (etc/'init.d').install_p builddir/'puppetdb.git/ext/files/puppetdb.debian.init', 'puppetdb'
     chmod 0755, etc/'init.d/puppetdb'
+
+    ln_s '../../../etc/puppetdb/conf.d', var/'lib/puppetdb/config'
+    ln_s '../../../var/log/puppetdb', prefix/'share/puppetdb/log'
+    ln_s '../../../var/lib/puppetdb/db', prefix/'share/puppetdb/db'
+    ln_s '../../../var/lib/puppetdb/mq', prefix/'share/puppetdb/mq'
+    ln_s '../../../var/lib/puppetdb/state', prefix/'share/puppetdb/state'
   end
 end
