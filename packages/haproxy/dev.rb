@@ -4,20 +4,32 @@ class HAProxy < DebianFormula
   md5 'b8deab9989e6b9925410b0bc44dd4353'
 
   name 'haproxy'
-  version '1.5-dev17+github2'
+  version '1.5-dev17+github4'
   section 'net'
   description 'The Reliable, High Performance TCP/HTTP Load Balancer'
 
   build_depends ['libpcre3-dev','libssl-dev','zlib1g-dev']
+
+  depends 'libssl0.9.8'
+
   config_files '/etc/haproxy/haproxy.cfg'
   requires_user 'haproxy', :remove => false
 
   def build
-    make 'TARGET' => 'linux2628', 'CPU' => 'native', 'PREFIX' => '/usr', 'USE_CTTPROXY' => '1', 'USE_PCRE' => '1', 'USE_OPENSSL' => '1', 'USE_ZLIB' => '1'
+    make  'TARGET'       => 'linux2628',
+          'CPU'          => 'native',
+          'PREFIX'       => '/usr',
+          'USE_CTTPROXY' => '1',
+          'USE_PCRE'     => '1',
+          'USE_OPENSSL'  => '1',
+          'USE_ZLIB'     => '1'
   end
 
   def install
-    make :install, 'DESTDIR' => destdir, 'PREFIX' => '/usr', 'DOCDIR' => '/usr/share/doc/haproxy'
+    make :install,
+      'DESTDIR' => destdir,
+      'PREFIX'  => '/usr',
+      'DOCDIR'  => '/usr/share/doc/haproxy'
 
     (etc/'haproxy').install_p 'examples/haproxy.cfg'
     (etc/'haproxy').install_p 'examples/errorfiles/', 'errors'
