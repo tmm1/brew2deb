@@ -3,7 +3,7 @@ class PuppetDB < DebianFormula
   url 'https://github.com/puppetlabs/puppetdb.git', :sha => '92ceef0907ae2afa2047af34ed8526abd6e9f6ba'
 
   name 'puppetdb'
-  version '1.1.1+github1'
+  version '1.1.1+github2'
   description 'next-generation open source storage service for Puppet-produced data'
   section 'database'
   arch 'all'
