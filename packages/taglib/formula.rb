@@ -9,7 +9,6 @@ class Taglib < DebianFormula
   build_depends 'cmake'
 
   def build
-    ENV.append 'CXXFLAGS', "-DNDEBUG=1"
     system "cmake", "-DWITH_MP4=ON", "-DWITH_ASF=ON", *std_cmake_args
     system "make"
   end
