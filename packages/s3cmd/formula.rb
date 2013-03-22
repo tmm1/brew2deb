@@ -3,7 +3,7 @@ class S3cmd < DebianFormula
 
   name 's3cmd'
   section 'utils'
-  version '1.5.0-alpha1+github3'
+  version '1.5.0-alpha1+github5'
   description 'command-line Amazon S3 client'
 
   build_depends 'python'
@@ -14,6 +14,6 @@ class S3cmd < DebianFormula
   end
 
   def install
-    sh 'python', 'setup.py', 'install', "--prefix=#{prefix}"
+    sh 'python', 'setup.py', 'install', "--prefix=#{prefix}", '--install-layout=deb'
   end
 end
