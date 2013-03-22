@@ -9,12 +9,8 @@ class Taglib < DebianFormula
   build_depends 'cmake'
 
   def build
-    system "cmake", "-DWITH_MP4=ON", "-DWITH_ASF=ON", *std_cmake_args
+    system "cmake", "-DWITH_MP4=ON", "-DWITH_ASF=ON", "-DCMAKE_INSTALL_PREFIX=#{prefix}"
     system "make"
-  end
-
-  def install
-    system "make install"
   end
 
 end
