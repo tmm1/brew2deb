@@ -3,7 +3,7 @@ class S3cmd < DebianFormula
 
   name 's3cmd'
   section 'utils'
-  version '1.5.0-alpha1+github5'
+  version '1.5.0-alpha1+github6'
   description 'command-line Amazon S3 client'
 
   build_depends 'python'
