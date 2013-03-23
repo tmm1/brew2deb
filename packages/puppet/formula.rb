@@ -6,4 +6,10 @@ class Puppet < DebianFormula
   description "Empty dummy package for Puppet"
 
   provides "puppet"
+
+  def build
+  end
+
+  def install
+  end
 end
