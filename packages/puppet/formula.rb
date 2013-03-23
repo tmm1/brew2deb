@@ -5,7 +5,7 @@ class Puppet < DebianFormula
   version '2.7.21'
   description "Empty dummy package for Puppet"
 
-  provides "puppet"
+  provides! "puppet"
 
   def build
   end
