@@ -272,7 +272,7 @@ index f0a68d8..eeee49d 100644
  	    setsockopt(sock_in, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
  		error("setsockopt SO_KEEPALIVE: %.100s", strerror(errno));
  
-+	if (options.use_proxy_protocol)
++	if (options.use_proxy_protocol == 1)
 +		read_proxy_header(sock_in);
 +
  	if ((remote_port = get_remote_port()) < 0) {

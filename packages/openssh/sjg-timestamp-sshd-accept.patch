@@ -1,21 +1,50 @@
-diff --git a/sshd.c b/sshd.c
-index 9e03cf3..b51c642 100644
 --- a/sshd.c
 +++ b/sshd.c
-@@ -1209,6 +1209,13 @@ server_accept_loop(int *sock_in, int *sock_out, int *newsock, int *config_s)
- 				 * We break out of the loop to handle
- 				 * the connection.
- 				 */
-+				struct timespec tv;
-+				char t[32];
-+				clock_gettime(CLOCK_MONOTONIC, &tv);
-+				snprintf(t, 32, "%ld%ld", tv.tv_sec, tv.tv_nsec/1000000);
-+				t[31] = '\0';
-+				setenv("GIT_SOCKSTAT_VAR_SSHD_ACCEPT_TIME", t, 1);
+@@ -259,6 +259,9 @@
+ /* Unprivileged user */
+ struct passwd *privsep_pw = NULL;
+ 
++/* Timestamp string when client request started */
++char *accept_timestamp;
 +
- 				platform_post_fork_child();
- 				startup_pipe = startup_p[1];
- 				close_startup_pipes();
+ /* Prototypes for various functions defined later in this file. */
+ void destroy_sensitive_data(void);
+ void demote_sensitive_data(void);
+@@ -1806,6 +1916,15 @@
+ 	/* This is the child processing a new connection. */
+ 	setproctitle("%s", "[accepted]");
+
++	{
++		struct timespec tv;
++		clock_gettime(CLOCK_MONOTONIC, &tv);
++		accept_timestamp = xmalloc(32);
++		snprintf(accept_timestamp, 32,
++			"%ld%ld", tv.tv_sec, tv.tv_nsec/1000000);
++	}
++
++
+ 	/*
+ 	 * Create a new session and process group since the 4.4BSD
+ 	 * setlogin() affects the entire process group.  We don't
+--- a/session.c
++++ b/session.c
+@@ -134,6 +134,7 @@
+ extern void destroy_sensitive_data(void);
+ extern Buffer loginmsg;
+ extern char *last_fingerprint;
++extern char *accept_timestamp;
+ 
+ /* original command from peer. */
+ const char *original_command = NULL;
+@@ -1235,6 +1236,8 @@
+ 	if (original_command)
+ 		child_set_env(&env, &envsize, "SSH_ORIGINAL_COMMAND",
+ 		    original_command);
++	child_set_env(&env, &envsize, "GIT_SOCKSTAT_VAR_SSHD_ACCEPT_TIME",
++		accept_timestamp);
+ 
+ #ifdef _UNICOS
+ 	if (cray_tmpdir[0] != '\0')
 --- a/Makefile.in
 +++ b/Makefile.in
 @@ -48,7 +48,7 @@
