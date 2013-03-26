@@ -41,4 +41,46 @@ class Nginx < DebianFormula
       (var/dir).mkpath
     end
   end
+
+  def build
+    flags = [].push \
+      '--with-http_stub_status_module',
+      '--with-http_ssl_module',
+      '--with-http_gzip_static_module',
+      '--with-pcre',
+      '--with-debug'
+
+    self.class.modules.each do |mod|
+      flags << "--add-module=#{builddir / mod}.git"
+    end
+
+    options = {}.merge \
+      :prefix => prefix,
+
+      :user => 'www-data',
+      :group => 'www-data',
+
+      :pid_path => '/var/run/nginx.pid',
+      :lock_path => '/var/lock/nginx.lock',
+      :conf_path => '/etc/nginx/nginx.conf',
+      :http_log_path => '/var/log/nginx/access.log',
+      :error_log_path => '/var/log/nginx/error.log',
+      :http_proxy_temp_path => '/var/lib/nginx/proxy',
+      :http_fastcgi_temp_path => '/var/lib/nginx/fastcgi',
+      :http_client_body_temp_path => '/var/lib/nginx/body'
+
+    configure *flags.push(options)
+    make
+  end
+
+  def self.nginx_module(repo, options = {})
+    name = repo.split('/').last
+    modules << name
+
+    source "https://github.com/#{repo}.git", options
+  end
+
+  def self.modules
+    @modules ||= []
+  end
 end
