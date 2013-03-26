@@ -10,4 +10,9 @@ class OpenSSH < DebianSourceFormula
       'sjg-send-proxy.patch',
     ]
   end
+
+  def build
+    ENV['DEB_BUILD_OPTIONS'] = 'nostrip'
+    super
+  end
 end
