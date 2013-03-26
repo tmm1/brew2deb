@@ -1,0 +1,280 @@
+diff --git a/canohost.c b/canohost.c
+index ef94d91..cb63ec9 100644
+--- a/canohost.c
++++ b/canohost.c
+@@ -56,22 +56,35 @@
+ 	/* Get IP address of client. */
+ 	fromlen = sizeof(from);
+ 	memset(&from, 0, sizeof(from));
+-	if (getpeername(sock, (struct sockaddr *)&from, &fromlen) < 0) {
+-		debug("getpeername failed: %.100s", strerror(errno));
+-		cleanup_exit(255);
+-	}
++	if (canonical_host_ip) {
++		struct sockaddr_in *addr = (struct sockaddr_in *)&from;
++		//if we got an ip from a PROXY header, use it.
++		strncpy(ntop, canonical_host_ip, NI_MAXHOST - 1);
++		ntop[NI_MAXHOST - 1] = 0;
++
++		addr->sin_family = AF_INET;
++		if (inet_pton(AF_INET, ntop, &(addr->sin_addr)) < 0) {
++			debug("getpeername failed: %.100s", strerror(errno));
++			cleanup_exit(255);
++		}
++	} else {
++		if (getpeername(sock, (struct sockaddr *)&from, &fromlen) < 0) {
++			debug("getpeername failed: %.100s", strerror(errno));
++			cleanup_exit(255);
++		}
+ 
+-	if (from.ss_family == AF_INET)
+-		check_ip_options(sock, ntop);
++		if (from.ss_family == AF_INET)
++			check_ip_options(sock, ntop);
+ 
+-	ipv64_normalise_mapped(&from, &fromlen);
++		ipv64_normalise_mapped(&from, &fromlen);
+ 
+-	if (from.ss_family == AF_INET6)
+-		fromlen = sizeof(struct sockaddr_in6);
++		if (from.ss_family == AF_INET6)
++			fromlen = sizeof(struct sockaddr_in6);
+ 
+-	if (getnameinfo((struct sockaddr *)&from, fromlen, ntop, sizeof(ntop),
+-	    NULL, 0, NI_NUMERICHOST) != 0)
+-		fatal("get_remote_hostname: getnameinfo NI_NUMERICHOST failed");
++		if (getnameinfo((struct sockaddr *)&from, fromlen, ntop, sizeof(ntop),
++				NULL, 0, NI_NUMERICHOST) != 0)
++			fatal("get_remote_hostname: getnameinfo NI_NUMERICHOST failed");
++	}
+ 
+ 	if (!use_dns)
+ 		return xstrdup(ntop);
+@@ -330,6 +343,14 @@
+ 	cached_port = -1;
+ }
+ 
++void set_remote_ipaddr(char *ip)
++{
++	if (canonical_host_ip != NULL)
++                xfree(canonical_host_ip);
++
++	canonical_host_ip = xstrdup(ip);
++}
++
+ /*
+  * Returns the IP-address of the remote host as a string.  The returned
+  * string must not be freed.
+@@ -423,6 +444,13 @@
+ 	return get_sock_port(sock, 0);
+ }
+ 
++
++void
++set_remote_port(int port)
++{
++	cached_port = port;
++}
++
+ int
+ get_remote_port(void)
+ {
+diff --git a/canohost.h b/canohost.h
+index 4c8636f..3991167 100644
+--- a/canohost.h
++++ b/canohost.h
+@@ -13,6 +13,7 @@
+  */
+ 
+ const char	*get_canonical_hostname(int);
++void		 set_remote_ipaddr(char *ip);
+ const char	*get_remote_ipaddr(void);
+ const char	*get_remote_name_or_ip(u_int, int);
+ 
+@@ -21,6 +22,7 @@
+ char		*get_local_ipaddr(int);
+ char		*get_local_name(int);
+ 
++void		 set_remote_port(int port);
+ int		 get_remote_port(void);
+ int		 get_local_port(void);
+ int		 get_sock_port(int, int);
+diff --git a/servconf.c b/servconf.c
+index 73dcad5..8a7ad86 100644
+--- a/servconf.c
++++ b/servconf.c
+@@ -59,6 +59,7 @@
+ 	/* Portable-specific options */
+ 	options->use_pam = -1;
+ 	options->key_verification_plugin = NULL;
++	options->use_proxy_protocol = -1;
+ 
+ 	/* Standard Options */
+ 	options->num_ports = 0;
+@@ -303,6 +304,7 @@
+ 	/* Portable-specific options */
+ 	sUsePAM,
+ 	sKeyVerificationPlugin,
++	sUseProxyProtocol,
+ 	/* Standard Options */
+ 	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
+ 	sPermitRootLogin, sLogFacility, sLogLevel,
+@@ -352,6 +354,7 @@
+ #endif
+ 	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
+ 	{ "keyverificationplugin", sKeyVerificationPlugin, SSHCFG_GLOBAL },
++	{ "useproxyprotocol", sUseProxyProtocol, SSHCFG_GLOBAL },
+ 	/* Standard Options */
+ 	{ "port", sPort, SSHCFG_GLOBAL },
+ 	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
+@@ -1386,6 +1389,10 @@
+ 			*charptr = xstrdup(arg);
+ 		break;
+ 
++	case sUseProxyProtocol:
++		intptr = &options->use_proxy_protocol;
++		goto parse_flag;
++
+ 	case sKeyVerificationPlugin:
+ 		charptr = &options->key_verification_plugin;
+ 
+diff --git a/servconf.h b/servconf.h
+index 73576b1..3efa1f0 100644
+--- a/servconf.h
++++ b/servconf.h
+@@ -155,6 +155,8 @@
+ 
+ 	char   *key_verification_plugin;
+ 
++	int     use_proxy_protocol;
++
+ 	int	permit_tun;
+ 
+ 	int	num_permitted_opens;
+diff --git a/sshd.c b/sshd.c
+index f0a68d8..eeee49d 100644
+--- a/sshd.c
++++ b/sshd.c
+@@ -1291,6 +1291,112 @@ struct {
+ 	}
+ }
+ 
++int
++read_proxy_header(int fd)
++{
++	char buf[108];
++	int size, ret;
++	
++	do {
++		ret = recv(fd, &buf, sizeof(buf), MSG_PEEK);
++	} while (ret == -1 && errno == EINTR);
++	
++	if (ret == -1)
++		return (errno == EAGAIN) ? 0 : -1;
++	
++	if (ret >= 8 && memcmp(buf, "PROXY", 5) == 0) {
++		char *proto, *srcip, *dstip, *srcport, *dstport;
++		char *end = memchr(buf, '\r', ret - 1);
++		if (!end || end[1] != '\n') {
++			errno = EPROTO;
++			return -1; /* partial or invalid header */
++		}
++		*end = '\0'; /* terminate the string to ease parsing */
++		size = end + 2 - buf; /* skip header + CRLF */
++
++		if ((buf + 6) >= end) {
++			errno = EPROTO;
++			return -1;
++		}
++		proto = buf + 6;
++		if ((proto + 7)  > end) {
++			errno = EPROTO;
++			return -1;
++		}
++
++		//in this case, ignore proxy header
++		if (memcmp(proto, "UNKNOWN", 7) == 0)
++			goto done;
++
++		srcip = memchr(proto, ' ', end - proto);
++		if (!srcip) {
++			errno = EPROTO;
++			return -1; /* partial or invalid header */
++		}
++
++		srcip[0] = '\0';
++		srcip++;
++		if (srcip >= end) {
++			errno = EPROTO;
++			return -1;
++		}
++
++		dstip = memchr(srcip, ' ', end - srcip);
++		if (!dstip) {
++			errno = EPROTO;
++			return -1; /* partial or invalid header */
++		}
++
++		dstip[0] = '\0';
++		dstip++;
++		if (dstip >= end) {
++			errno = EPROTO;
++			return 1;
++		}
++
++		srcport = memchr(dstip, ' ', end - dstip);
++		if (!srcport) {
++			errno = EPROTO;
++			return -1; /* partial or invalid header */
++		}
++
++		srcport[0] = '\0';
++		srcport++;
++		if (srcport >= end) {
++			errno = EPROTO;
++			return 1;
++		}
++
++		dstport = memchr(srcport, ' ', end - srcport);
++		if (!dstport) {
++			errno = EPROTO;
++			return -1; /* partial or invalid header */
++		}
++
++		dstport[0] = '\0';
++		dstport++;
++		if (dstport >= end) {
++			errno = EPROTO;
++			return 1;
++		}
++
++		set_remote_ipaddr(srcip);
++		set_remote_port(strtol(srcport, NULL, 10));
++	}
++	else {
++		/* Wrong protocol */
++		errno = EPROTO;
++		return -1;
++	}
++	
++done:
++	/* we need to consume the appropriate amount of data from the socket */
++	do {
++			ret = recv(fd, buf, size, 0);
++	} while (ret == -1 && errno == EINTR);
++
++	return (ret >= 0) ? 1 : -1;
++}
+ 
+ /*
+  * Main program for the daemon.
+@@ -1897,6 +2003,9 @@ struct {
+ 	    setsockopt(sock_in, SOL_SOCKET, SO_KEEPALIVE, &on, sizeof(on)) < 0)
+ 		error("setsockopt SO_KEEPALIVE: %.100s", strerror(errno));
+ 
++	if (options.use_proxy_protocol)
++		read_proxy_header(sock_in);
++
+ 	if ((remote_port = get_remote_port()) < 0) {
+ 		debug("get_remote_port failed");
+ 		cleanup_exit(255);

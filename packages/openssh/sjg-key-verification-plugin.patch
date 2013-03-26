@@ -1,7 +1,6 @@
-diff --git a/auth2-pubkey.c b/auth2-pubkey.c
-index 4014444..cbec09d 100644
---- a/auth2-pubkey.c
-+++ b/auth2-pubkey.c
+diff -ru openssh_5.1p1-5-orig/auth2-pubkey.c openssh_5.1p1-5/auth2-pubkey.c
+--- openssh_5.1p1-5-orig/auth2-pubkey.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/auth2-pubkey.c	2013-02-12 16:38:20.000000000 -0800
 @@ -33,7 +33,10 @@
  #include <stdio.h>
  #include <stdarg.h>
@@ -23,10 +22,15 @@ index 4014444..cbec09d 100644
  
  static int
  userauth_pubkey(Authctxt *authctxt)
-@@ -191,6 +197,91 @@
- 	/* Temporarily use the user's uid. */
- 	temporarily_use_uid(pw);
- 
+@@ -243,9 +249,91 @@
+ 			break;
+ 		}
+ 	}
+-	restore_uid();
++
+ 	fclose(f);
+ 	key_free(found);
++
 +	if (options.key_verification_plugin) {
 +		char key_options[16384], *key_str = NULL;
 +		u_int auth_ok = 0;
@@ -83,12 +87,12 @@ index 4014444..cbec09d 100644
 +
 +		strlcpy(last_fingerprint, fp, sizeof(last_fingerprint));
 +		if (key_str == NULL) {
-+		  error("[sjg] failed to generate pubkey string for %s with fingerprint %s",
-+			get_remote_ipaddr(), fp);
++			error("[sjg] failed to generate pubkey string for %s with fingerprint %s",
++			      get_remote_ipaddr(), fp);
 +		} else if (verify_key(pw->pw_name, fp, key_str, key_options, get_remote_ipaddr(),
 +		                      options.login_grace_time - (time(NULL) - login_start_time)) == 0) {
 +			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
-+				auth_ok = 1;
++				found_key = 1;
 +			} else {
 +				error("[sjg] failed to parse options for %s : %s",
 +				      get_remote_ipaddr(), key_options);
@@ -103,22 +107,18 @@ index 4014444..cbec09d 100644
 +			xfree(key_str);
 +		if (dl)
 +			dlclose(dl);
-+		
-+		if (auth_ok) {
-+			restore_uid();
-+			return 1;
-+		}
 +	}
 +
 +
 + skip_plugin:
- 	debug("trying public key file %s", file);
- 	f = auth_openkeyfile(file, pw, options.strict_modes);
- 
-diff --git a/servconf.c b/servconf.c
-index 66ce390..44e8464 100644
---- a/servconf.c
-+++ b/servconf.c
++	restore_uid();
+ 	if (!found_key)
+ 		debug2("key not found");
+ 	return found_key;
+Only in openssh_5.1p1-5: auth2-pubkey.c~
+diff -ru openssh_5.1p1-5-orig/servconf.c openssh_5.1p1-5/servconf.c
+--- openssh_5.1p1-5-orig/servconf.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/servconf.c	2013-02-12 16:20:29.000000000 -0800
 @@ -58,6 +58,7 @@
  
  	/* Portable-specific options */
@@ -143,28 +143,27 @@ index 66ce390..44e8464 100644
  	/* Standard Options */
  	{ "port", sPort, SSHCFG_GLOBAL },
  	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
-@@ -1313,6 +1316,17 @@
- 			*charptr = xstrdup(arg);
- 		break;
+@@ -1307,6 +1310,17 @@
  
-+	case sKeyVerificationPlugin:
-+		charptr = &options->key_verification_plugin;
-+
-+		arg = strdelim(&cp);
-+		if (!arg || *arg == '\0')
+ 		arg = strdelim(&cp);
+ 		if (!arg || *arg == '\0')
 +			fatal("%s line %d: missing file name.",
 +			    filename, linenum);
 +		if (*activep && *charptr == NULL)
 +			*charptr = xstrdup(arg);
 +		break;
 +
- 	case sDeprecated:
- 		logit("%s line %d: Deprecated option %s",
- 		    filename, linenum, arg);
-diff --git a/servconf.h b/servconf.h
-index cb91b76..358c46b 100644
---- a/servconf.h
-+++ b/servconf.h
++	case sKeyVerificationPlugin:
++		charptr = &options->key_verification_plugin;
++
++		arg = strdelim(&cp);
++		if (!arg || *arg == '\0')
+ 			fatal("%s line %d: missing file name.",
+ 			    filename, linenum);
+ 		if (*activep && *charptr == NULL)
+diff -ru openssh_5.1p1-5-orig/servconf.h openssh_5.1p1-5/servconf.h
+--- openssh_5.1p1-5-orig/servconf.h	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/servconf.h	2013-02-12 16:20:29.000000000 -0800
 @@ -147,6 +147,8 @@
  
  	int	use_pam;		/* Enable auth via PAM */
@@ -174,10 +173,9 @@ index cb91b76..358c46b 100644
  	int	permit_tun;
  
  	int	num_permitted_opens;
-diff --git a/session.c b/session.c
-index 93babf9..1e29926 100644
---- a/session.c
-+++ b/session.c
+diff -ru openssh_5.1p1-5-orig/session.c openssh_5.1p1-5/session.c
+--- openssh_5.1p1-5-orig/session.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/session.c	2013-02-12 16:20:29.000000000 -0800
 @@ -127,6 +127,7 @@
  extern int startup_pipe;
  extern void destroy_sensitive_data(void);
@@ -196,10 +194,9 @@ index 93babf9..1e29926 100644
  		return 0;
  	}
  	s->authctxt = authctxt;
-diff --git a/sshd.c b/sshd.c
-index 9e03cf3..0aa8de4 100644
---- a/sshd.c
-+++ b/sshd.c
+diff -ru openssh_5.1p1-5-orig/sshd.c openssh_5.1p1-5/sshd.c
+--- openssh_5.1p1-5-orig/sshd.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/sshd.c	2013-02-12 17:53:04.000000000 -0800
 @@ -142,6 +142,7 @@
  #define REEXEC_MIN_FREE_FD		(STDERR_FILENO + 4)
  
@@ -208,17 +205,17 @@ index 9e03cf3..0aa8de4 100644
  
  /* Server configuration options. */
  ServerOptions options;
-@@ -254,6 +255,9 @@ struct {
- /* Unprivileged user */
- struct passwd *privsep_pw = NULL;
- 
+@@ -251,6 +252,9 @@
+ /* message to be displayed after login */
+ Buffer loginmsg;
+
 +/* Login start time */
 +time_t login_start_time;
 +
- #ifdef OOM_ADJUST
- /* Linux out-of-memory killer adjustment */
- static char oom_adj_save[8];
-@@ -365,7 +369,11 @@ struct {
+ /* Unprivileged user */
+ struct passwd *privsep_pw = NULL;
+
+@@ -365,7 +369,11 @@
  		kill(pmonitor->m_pid, SIGALRM);
  
  	/* Log error and exit. */
@@ -231,7 +228,7 @@ index 9e03cf3..0aa8de4 100644
  }
  
  /*
-@@ -1140,7 +1148,9 @@ struct {
+@@ -1140,7 +1148,9 @@
  				continue;
  			}
  			if (drop_connection(startups) == 1) {
@@ -242,7 +239,7 @@ index 9e03cf3..0aa8de4 100644
  				close(*newsock);
  				continue;
  			}
-@@ -1937,6 +1947,7 @@ struct {
+@@ -1937,6 +1947,7 @@
  	 * are about to discover the bug.
  	 */
  	signal(SIGALRM, grace_alarm_handler);
@@ -250,3 +247,4 @@ index 9e03cf3..0aa8de4 100644
  	if (!debug_flag)
  		alarm(options.login_grace_time);
  
+Only in openssh_5.1p1-5: sshd.c~
