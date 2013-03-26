@@ -6,13 +6,24 @@ index 9e03cf3..b51c642 100644
  				 * We break out of the loop to handle
  				 * the connection.
  				 */
-+				struct timeval tv;
++				struct timespec tv;
 +				char t[32];
-+				gettimeofday(&tv, NULL);
-+				snprintf(t, 32, "%ld%ld", tv.tv_sec, tv.tv_usec/1000);
++				clock_gettime(CLOCK_MONOTONIC, &tv);
++				snprintf(t, 32, "%ld%ld", tv.tv_sec, tv.tv_nsec/1000000);
 +				t[31] = '\0';
-+				setenv("SSHD_ACCEPT_TIME", t, 1);
++				setenv("GIT_SOCKSTAT_VAR_SSHD_ACCEPT_TIME", t, 1);
 +
  				platform_post_fork_child();
  				startup_pipe = startup_p[1];
  				close_startup_pipes();
+--- a/Makefile.in
++++ b/Makefile.in
+@@ -48,7 +48,7 @@
+ CFLAGS=@CFLAGS@
+ CPPFLAGS=-I. -I$(srcdir) @CPPFLAGS@ $(PATHS) @DEFS@
+ LIBS=@LIBS@
+-SSHDLIBS=@SSHDLIBS@
++SSHDLIBS=@SSHDLIBS@ -lrt
+ LIBEDIT=@LIBEDIT@
+ AR=@AR@
+ AWK=@AWK@
