@@ -22,6 +22,26 @@ diff -ru openssh_5.1p1-5-orig/auth2-pubkey.c openssh_5.1p1-5/auth2-pubkey.c
  
  static int
  userauth_pubkey(Authctxt *authctxt)
+@@ -200,16 +200,12 @@
+ 	debug("trying public key file %s", file);
+ 	f = auth_openkeyfile(file, pw, options.strict_modes);
+
+-	if (!f) {
+-		restore_uid();
+-		return 0;
+-	}
++	auth_start_parse_options();
++	if (!f)
++		goto do_plugin;
+
+-	found_key = 0;
+ 	found = key_new(key_is_cert(key) ? KEY_UNSPEC : key->type);
+
+-	auth_start_parse_options();
+-
+ 	while (read_keyfile_line(f, file, line, sizeof(line), &linenum) != -1) {
+ 		char *cp, *key_options = NULL;
+
 @@ -243,9 +249,91 @@
  			break;
  		}
@@ -30,7 +50,7 @@ diff -ru openssh_5.1p1-5-orig/auth2-pubkey.c openssh_5.1p1-5/auth2-pubkey.c
 +
  	fclose(f);
  	key_free(found);
-+
++do_plugin:
 +	if (options.key_verification_plugin) {
 +		char key_options[16384], *key_str = NULL;
 +		u_int auth_ok = 0;
