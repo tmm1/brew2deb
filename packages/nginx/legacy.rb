@@ -1,4 +1,4 @@
-require './formula'
+require './base'
 
 class NginxLegacy < Nginx
   url 'http://nginx.org/download/nginx-1.0.13.tar.gz'

@@ -1,4 +1,4 @@
-require './formula'
+require './base'
 
 class NginxStable < Nginx
   url 'http://nginx.org/download/nginx-1.2.7.tar.gz'

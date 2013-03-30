@@ -1,4 +1,4 @@
-require './formula'
+require './base'
 
 class NginxDevelopment < Nginx
   url 'http://nginx.org/download/nginx-1.3.15.tar.gz'
