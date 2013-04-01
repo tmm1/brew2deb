@@ -5,7 +5,7 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.1.0+github4'
+  version '5.1.0+github5'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
@@ -47,7 +47,7 @@ class Collectd < DebianFormula
   config_files '/etc/collectd/collectd.conf'
 
   def build
-    kernel = `uname -r`.chomp.sub(/-amd64/, '-common')
+    kernel = `uname -r`.chomp.sub(/-amd64/, '').sub(/-xen/, '')
     sh './build.sh'
     configure \
       "KERNEL_DIR=/usr/src/linux-headers-#{kernel}-common",
