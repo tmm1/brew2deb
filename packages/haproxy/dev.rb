@@ -1,7 +1,7 @@
 class HAProxy < DebianFormula
   homepage 'http://haproxy.1wt.eu/'
-  url 'http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev17.tar.gz'
-  md5 'b8deab9989e6b9925410b0bc44dd4353'
+  url 'http://haproxy.1wt.eu/download/1.5/src/devel/haproxy-1.5-dev18.tar.gz'
+  md5 '39c2cc3ccef059794377d557aef2fa43'
 
   name 'haproxy'
   version '1.5-dev17+github4'
