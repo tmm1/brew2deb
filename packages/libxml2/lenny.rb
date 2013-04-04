@@ -7,6 +7,7 @@ class Libxml2 < DebianSourceFormula
       'lennydeps.patch',
       'notests.patch',
       'nodocs.patch',
+      'version.patch',
     ]
   end
 end
