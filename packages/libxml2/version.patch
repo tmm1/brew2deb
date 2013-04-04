@@ -1,8 +1,0 @@
---- libxml2_2.7.8.dfsg-2+squeeze7/debian/changelog.orig	2013-04-04 11:57:34.000000000 -0700
-+++ libxml2_2.7.8.dfsg-2+squeeze7/debian/changelog	2013-04-04 11:57:58.000000000 -0700
-@@ -1,4 +1,4 @@
--libxml2 (2.7.8.dfsg-2+squeeze7) stable-security; urgency=high
-+libxml2 (0:2.7.8.dfsg-2+squeeze7+github1) stable-security; urgency=high
- 
-   * Non-maintainer upload by the Security Team.
-   * Fix cve-2013-0338 and cve-2013-0339: large memory consuption issues when 
