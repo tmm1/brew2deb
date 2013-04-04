@@ -1,0 +1,5 @@
+--- libxml2_2.7.8.dfsg-2+squeeze7/debian/libxml2-doc.install	2013-04-04 01:07:45.000000000 -0700
++++ libxml2_2.7.8.dfsg-2+squeeze7/debian/libxml2-doc.install.orig	2013-04-04 01:09:00.000000000 -0700
+@@ -1,2 +0,0 @@
+-usr/share/doc/libxml2-doc
+-usr/share/gtk-doc

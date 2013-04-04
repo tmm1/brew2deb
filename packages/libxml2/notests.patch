@@ -1,0 +1,12 @@
+--- libxml2_2.7.8.dfsg-2+squeeze7/Makefile.in.orig	2013-04-04 00:56:08.000000000 -0700
++++ libxml2_2.7.8.dfsg-2+squeeze7/Makefile.in	2013-04-04 00:56:50.000000000 -0700
+@@ -1492,9 +1492,6 @@
+ #testOOM_LDADD= $(LDADDS)
+ 
+ runtests:
+-	$(CHECKER) ./runtest$(EXEEXT) && $(CHECKER) ./testrecurse$(EXEEXT) &&$(CHECKER) ./testapi$(EXEEXT) && $(CHECKER) ./testchar$(EXEEXT)&& $(CHECKER) ./testdict$(EXEEXT) && $(CHECKER) ./runxmlconf$(EXEEXT)
+-	@(if [ "@PYTHON_SUBDIR@" != "" ] ; then cd python ; \
+-	    $(MAKE) MAKEFLAGS+=--silent tests ; fi)
+ 
+ check: all runtests
+ 
