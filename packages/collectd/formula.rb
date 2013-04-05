@@ -5,7 +5,7 @@ class Collectd < DebianFormula
 
   name 'collectd'
   section 'utils'
-  version '5.1.0+github5'
+  version '5.1.0+github6'
   description 'statistics collection and monitoring daemon'
 
   build_depends \
@@ -23,7 +23,7 @@ class Collectd < DebianFormula
     'libsnmp-dev',
     'liboping-dev',
     'libpcap0.8-dev',
-    'libltdl3-dev',
+    'libltdl7-dev | libltdl3-dev',
     'librrd-dev',
     'libyajl-dev',
     'iptables-dev',
@@ -42,7 +42,8 @@ class Collectd < DebianFormula
     'liboping0',
     'libpcap0.8',
     'librrd4',
-    'libyajl1'
+    'libyajl1',
+    'libltdl7 | libltdl3'
 
   config_files '/etc/collectd/collectd.conf'
 
