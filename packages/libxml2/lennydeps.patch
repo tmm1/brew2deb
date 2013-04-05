@@ -1,0 +1,11 @@
+--- libxml2_2.7.8.dfsg-2+squeeze7/debian/control.orig	2013-04-04 00:34:52.000000000 -0700
++++ libxml2_2.7.8.dfsg-2+squeeze7/debian/control	2013-04-04 00:35:44.000000000 -0700
+@@ -4,7 +4,7 @@
+ Maintainer: Debian XML/SGML Group <debian-xml-sgml-pkgs@lists.alioth.debian.org>
+ Uploaders: Mike Hommey <glandium@debian.org>
+ Standards-Version: 3.9.0.0
+-Build-Depends: debhelper (>= 7.0.50~), zlib1g-dev | libz-dev, python-all-dev (>= 2.3.5-11), python-all-dbg, python-support (>= 0.3), autotools-dev, libreadline-dev | libreadline5-dev, binutils (>= 2.14.90.0.7), dpkg-dev (>= 1.14.9), perl
++Build-Depends: debhelper (>= 5.0.61), zlib1g-dev | libz-dev, python-all-dev (>= 2.3.5-11), python-support (>= 0.3), autotools-dev, libreadline5-dev | libreadline-dev, binutils (>= 2.14.90.0.7), dpkg-dev (>= 1.14.9)
+ Homepage: http://xmlsoft.org/
+ Vcs-Git: git://git.debian.org/debian-xml-sgml/libxml2.git
+ Vcs-Browser: http://git.debian.org/?p=debian-xml-sgml/libxml2.git
