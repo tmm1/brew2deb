@@ -240,7 +240,7 @@ diff -ru openssh_5.1p1-5-orig/sshd.c openssh_5.1p1-5/sshd.c
  
  	/* Log error and exit. */
 -	sigdie("Timeout before authentication for %s", get_remote_ipaddr());
-+	if (last_fingerprint[0] != '\0') {
++	if (last_fingerprint && last_fingerprint[0] != '\0') {
 +		sigdie("[sjg] Timeout before authentication for %s with last_fingerprint='%s'",
 +		      get_remote_ipaddr(), last_fingerprint);
 +	} else
