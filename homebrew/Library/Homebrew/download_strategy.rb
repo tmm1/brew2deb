@@ -130,7 +130,7 @@ private
   def chdir
     entries=Dir['*'].select{ |dir| File.directory?(dir) }
     case entries.length
-      when 0 then raise "Empty archive"
+      when 0 then raise DownloadError, "Empty archive"
       when 1 then Dir.chdir entries.first
       else
         # Look for directories that match @tarball_path.basename
