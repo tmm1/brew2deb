@@ -14,7 +14,7 @@ class NginxDevelopment < Nginx
     {:p0 => 'request_start_variable.patch',
      :p1 => [
        'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
-       workdir/'src/nginx_syslog_patch.git/syslog_1.3.14.patch',
+       (workdir/'src/nginx_syslog_patch.git/syslog_1.3.14.patch').to_path,
        'nginx-name-leak.patch',
      ]}
   end
