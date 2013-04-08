@@ -7,14 +7,14 @@ class NginxStable < Nginx
 
   nginx_module 'nickh/chunkin-nginx-module', :sha => '225fcbc'
   nginx_module 'agentzh/headers-more-nginx-module', :tag => 'v0.19'
-  nginx_module 'vkholodkov/nginx-upload-module', :sha => '2ec4e4fb' #0.2.0
-  nginx_module 'yaoweibin/nginx_syslog_patch', :sha => 'b2198a2a' #v0.25
+  nginx_module 'vkholodkov/nginx-upload-module', :tag => 'v2.2.0'
+  nginx_module 'yaoweibin/nginx_syslog_patch', :tag => 'v0.25'
 
   def patches
     {:p0 => 'request_start_variable.patch',
      :p1 => [
        'https://github.com/nickh/nginx/commit/2e05240b8d043125379a68957c6d6c657c48bb0a.patch',
-       workdir/'src/nginx_syslog_patch.git/syslog_1.2.7.patch',
+       (workdir/'src/nginx_syslog_patch.git/syslog_1.2.7.patch').to_path,
        'nginx-name-leak.patch',
      ]}
   end
