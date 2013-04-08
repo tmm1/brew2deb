@@ -6,9 +6,9 @@ class NginxLegacy < Nginx
   version '1.0.13+github6'
 
   nginx_module 'nickh/chunkin-nginx-module', :sha => '140d61c3'
-  nginx_module 'agentzh/headers-more-nginx-module', :tag => '137855d'
+  nginx_module 'agentzh/headers-more-nginx-module', :tag => 'v0.15'
   nginx_module 'vkholodkov/nginx-upload-module', :sha => '4a9d8b5353'
-  nginx_module 'yaoweibin/nginx_syslog_patch', :sha => 'afeea6d'
+  nginx_module 'yaoweibin/nginx_syslog_patch', :tag => 'v0.22'
 
   def patches
     {:p0 => 'request_start_variable.patch',

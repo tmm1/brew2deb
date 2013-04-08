@@ -7,8 +7,8 @@ class NginxDevelopment < Nginx
 
   nginx_module 'nickh/chunkin-nginx-module', :sha => '225fcbc'
   nginx_module 'agentzh/headers-more-nginx-module', :tag => 'v0.19'
-  nginx_module 'vkholodkov/nginx-upload-module', :sha => '2ec4e4fb' #0.2.0
-  nginx_module 'yaoweibin/nginx_syslog_patch', :sha => 'b2198a2a' #v0.25
+  nginx_module 'vkholodkov/nginx-upload-module', :tag => 'v0.2.0'
+  nginx_module 'yaoweibin/nginx_syslog_patch', :tag=> 'v0.25'
 
   def patches
     {:p0 => 'request_start_variable.patch',
