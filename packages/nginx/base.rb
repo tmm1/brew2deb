@@ -77,10 +77,20 @@ class Nginx < DebianFormula
     name = repo.split('/').last
     modules << name
 
-    source "https://github.com/#{repo}.git", options
+    url = "https://github.com/#{repo}.git"
+
+    if options[:tag]
+      options = {:sha => sha_for_tag(url, options[:tag])}
+    end
+
+    source url, options
   end
 
   def self.modules
     @modules ||= []
+  end
+
+  def self.sha_for_tag(url, tag)
+    %x(git ls-remote #{url} --tag #{tag}).split.first
   end
 end
