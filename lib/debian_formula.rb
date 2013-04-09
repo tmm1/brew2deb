@@ -295,6 +295,15 @@ CONTROL
 
           File.open('debian/compat','w') { |f| f.puts '8' }
           File.open('debian/control','w'){ |f| f.puts "Source: #{name}\nPackage: #{name}" }
+
+          out = `fakeroot dh_makeshlibs -n -P#{destdir} -p#{name} 2>&1`
+          if $?.exitstatus != 0
+            opoo "Auto-calculation of shared library exports failed\n    #{out.split("\n").join("\n    ")}"
+          elsif File.exists?(destdir/'DEBIAN/shlibs') && !(shlibs = File.read(destdir/'DEBIAN/shlibs')).empty?
+            opts << '--deb-shlibs'
+            opts << shlibs
+          end
+
           out = `dpkg-gensymbols -P#{destdir} -p#{name} -v#{self.class.version} 2>&1 && fakeroot dh_shlibdeps -P#{destdir} -p#{name} 2>&1`
           if $?.exitstatus != 0
             opoo "Auto-calculation of shared library dependencies failed\n    #{out.split("\n").join("\n    ")}"
