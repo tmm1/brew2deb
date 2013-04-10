@@ -12,6 +12,10 @@ class FPM::Target::Deb < FPM::Package
             "For = dependencies, allow iterations on the specified version.  Default is to be specific.") do |x|
       settings.target[:ignore_iteration] = true
     end
+
+    opts.on("--shlibs SHLIBS", "Create shlibs control file") do |x|
+      settings.target[:shlibs] = x
+    end
   end
 
   def needs_md5sums
@@ -84,6 +88,11 @@ class FPM::Target::Deb < FPM::Package
     if self.config_files.any?
       File.open('conffiles', 'w'){ |f| f.puts(config_files.join("\n")) }
       control_files << 'conffiles'
+    end
+
+    if shlibs = self.settings[:shlibs]
+      File.open('shlibs', 'w'){ |f| f.puts shlibs }
+      control_files << 'shlibs'
     end
 
     # Make the control
