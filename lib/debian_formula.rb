@@ -293,7 +293,7 @@ CONTROL
         Dir.chdir tmpdir do
           FileUtils.mkdir_p 'debian'
 
-          File.open('debian/compat','w') { |f| f.puts '8' }
+          File.open('debian/compat','w') { |f| f.puts '7' }
           File.open('debian/control','w'){ |f| f.puts "Source: #{name}\nPackage: #{name}" }
 
           out = `fakeroot dh_makeshlibs -n -P#{destdir} -p#{name} 2>&1`
