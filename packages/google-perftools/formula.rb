@@ -5,7 +5,7 @@ class GooglePerftools < DebianFormula
 
   name 'google-perftools'
   section 'devel'
-  version '1.8.3+github2'
+  version '1.8.3+github3'
   description 'Fast, multi-threaded malloc() and nifty performance analysis tools'
 
   build_depends \

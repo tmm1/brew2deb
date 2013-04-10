@@ -4,7 +4,7 @@ class Jemalloc < DebianFormula
   sha1 'e5204872e74d3ee75eaa51c6dc39731d611883f3'
 
   name 'jemalloc'
-  version '3.2.0'
+  version '3.2.0+github1'
   section 'system'
   description 'general-purpose scalable concurrent malloc(3) implementation'
 
