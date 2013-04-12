@@ -9,10 +9,10 @@ class Solr < DebianFormula
   description 'Enterprise search platform'
 
   build_depends \
-    'sun-java6-jdk | default-jdk'
+    'oracle-java7-jdk | default-jdk'
 
   depends \
-    'sun-java6-jre | default-jre'
+    'oracle-java7-jre | default-jre'
 
   def build
     warfile = File.expand_path('example/webapps/solr.war')
