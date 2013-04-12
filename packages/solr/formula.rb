@@ -1,6 +1,6 @@
 class Solr < DebianFormula
   homepage 'http://lucene.apache.org/solr/'
-  url 'http://www.apache.org/dist/lucene/solr/3.3.0/apache-solr-3.3.0.tgz'
+  url 'http://archive.apache.org/dist/lucene/solr/3.3.0/apache-solr-3.3.0.tgz'
   md5 '048e2aa7e16358600fa5fe3570b90018'
 
   name 'solr'
