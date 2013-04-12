@@ -7,7 +7,7 @@ class OpenSSH
 
   def patches
     [
-      'sjg-key-verification-plugin.patch',
+      'sjg-key-verification-plugin-oneiric.patch',
     ]
   end
 end
