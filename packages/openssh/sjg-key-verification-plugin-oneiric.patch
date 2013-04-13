@@ -1,0 +1,267 @@
+diff -ru openssh_5.1p1-5-orig/auth2-pubkey.c openssh_5.1p1-5/auth2-pubkey.c
+--- openssh_5.1p1-5-orig/auth2-pubkey.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/auth2-pubkey.c	2013-02-12 16:38:20.000000000 -0800
+@@ -33,7 +33,10 @@
+ #include <stdio.h>
+ #include <stdarg.h>
+ #include <unistd.h>
++#include <dlfcn.h>
++#include <string.h>
+ 
++#include "uuencode.h"
+ #include "xmalloc.h"
+ #include "ssh.h"
+ #include "ssh2.h"
+@@ -59,6 +62,9 @@
+ extern ServerOptions options;
+ extern u_char *session_id2;
+ extern u_int session_id2_len;
++extern time_t login_start_time;
++
++char last_fingerprint[64];
+ 
+ static int
+ userauth_pubkey(Authctxt *authctxt)
+@@ -200,14 +200,11 @@
+ 	debug("trying public key file %s", file);
+ 	f = auth_openkeyfile(file, pw, options.strict_modes);
+
+-	if (!f) {
+-		restore_uid();
+-		return 0;
+-	}
++	if (!f)
++		goto do_plugin;
+
+-	found_key = 0;
+ 	found = key_new(key_is_cert(key) ? KEY_UNSPEC : key->type);
+
+ 	while (read_keyfile_line(f, file, line, sizeof(line), &linenum) != -1) {
+ 		char *cp, *key_options = NULL;
+
+@@ -243,9 +249,91 @@
+ 			break;
+ 		}
+ 	}
+-	restore_uid();
++
+ 	fclose(f);
+ 	key_free(found);
++do_plugin:
++	if (options.key_verification_plugin) {
++		char key_options[16384], *key_str = NULL;
++		u_int auth_ok = 0;
++		int (*verify_key)(const char *, const char *, const char *, char *,
++		                  const char *, time_t) = NULL;
++
++		void *dl = dlopen(options.key_verification_plugin, RTLD_NOW | RTLD_LOCAL);
++		if (dl == NULL) {
++			error("[sjg] failed to open plugin '%s' for %s : %s",
++			      options.key_verification_plugin, get_remote_ipaddr(), 
++			      dlerror());
++			goto skip_plugin;
++		}
++
++		verify_key = dlsym(dl, "verify_key_with_timeout");
++		if (verify_key == NULL) {
++			dlclose(dl);
++			error("[sjg] failed to load verify_key() from plugin for %s : %s",
++			      get_remote_ipaddr(), dlerror());
++			goto skip_plugin;
++		} 
++
++		if ((fp = key_fingerprint(key, SSH_FP_MD5, SSH_FP_HEX)) == NULL) {
++			dlclose(dl);
++			error("[sjg] failed to get key fingerprint for %s", get_remote_ipaddr());
++			goto skip_plugin;
++		}
++
++		/* Get string representation of pubkey */
++		if ((key->type == KEY_DSA && key->dsa != NULL) ||
++		    (key->type == KEY_RSA && key->rsa != NULL)) {
++			u_char *blob;
++			u_int len;
++			int n;
++			char *uu;
++			
++			key_to_blob(key, &blob, &len);
++			uu = xmalloc(2*len);
++			n = uuencode(blob, len, uu, 2*len);
++			if (n > 0) {
++				const char *key_type_str = key_ssh_name(key);
++				int key_str_len = strlen(uu) + 1 + strlen(key_type_str);
++				uu[n] = 0;
++				key_str = xmalloc(key_str_len + 1);
++				int m = snprintf(key_str, key_str_len + 1, "%s %s", key_type_str, uu);
++				if (m > key_str_len) {
++					xfree(key_str);
++					key_str = NULL;
++				}
++			}
++			xfree(blob);
++			xfree(uu);
++		}
++
++		strlcpy(last_fingerprint, fp, sizeof(last_fingerprint));
++		if (key_str == NULL) {
++			error("[sjg] failed to generate pubkey string for %s with fingerprint %s",
++			      get_remote_ipaddr(), fp);
++		} else if (verify_key(pw->pw_name, fp, key_str, key_options, get_remote_ipaddr(),
++		                      options.login_grace_time - (time(NULL) - login_start_time)) == 0) {
++			if (auth_parse_options(pw, key_options, file, linenum) == 1) {
++				found_key = 1;
++			} else {
++				error("[sjg] failed to parse options for %s : %s",
++				      get_remote_ipaddr(), key_options);
++			}
++		} else
++			logit("[sjg] no keys found for key fingerprint %s for %s",
++			      fp, get_remote_ipaddr());
++
++		if (fp)
++			xfree(fp);
++		if (key_str)
++			xfree(key_str);
++		if (dl)
++			dlclose(dl);
++	}
++
++
++ skip_plugin:
++	restore_uid();
+ 	if (!found_key)
+ 		debug2("key not found");
+ 	return found_key;
+Only in openssh_5.1p1-5: auth2-pubkey.c~
+diff -ru openssh_5.1p1-5-orig/servconf.c openssh_5.1p1-5/servconf.c
+--- openssh_5.1p1-5-orig/servconf.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/servconf.c	2013-02-12 16:20:29.000000000 -0800
+@@ -58,6 +58,7 @@
+ 
+ 	/* Portable-specific options */
+ 	options->use_pam = -1;
++	options->key_verification_plugin = NULL;
+ 
+ 	/* Standard Options */
+ 	options->num_ports = 0;
+@@ -288,6 +289,7 @@
+ 	sBadOption,		/* == unknown option */
+ 	/* Portable-specific options */
+ 	sUsePAM,
++	sKeyVerificationPlugin,
+ 	/* Standard Options */
+ 	sPort, sHostKeyFile, sServerKeyBits, sLoginGraceTime, sKeyRegenerationTime,
+ 	sPermitRootLogin, sLogFacility, sLogLevel,
+@@ -333,6 +335,7 @@
+ 	{ "usepam", sUnsupported, SSHCFG_GLOBAL },
+ #endif
+ 	{ "pamauthenticationviakbdint", sDeprecated, SSHCFG_GLOBAL },
++	{ "keyverificationplugin", sKeyVerificationPlugin, SSHCFG_GLOBAL },
+ 	/* Standard Options */
+ 	{ "port", sPort, SSHCFG_GLOBAL },
+ 	{ "hostkey", sHostKeyFile, SSHCFG_GLOBAL },
+@@ -1307,6 +1310,17 @@
+ 
+ 		arg = strdelim(&cp);
+ 		if (!arg || *arg == '\0')
++			fatal("%s line %d: missing file name.",
++			    filename, linenum);
++		if (*activep && *charptr == NULL)
++			*charptr = xstrdup(arg);
++		break;
++
++	case sKeyVerificationPlugin:
++		charptr = &options->key_verification_plugin;
++
++		arg = strdelim(&cp);
++		if (!arg || *arg == '\0')
+ 			fatal("%s line %d: missing file name.",
+ 			    filename, linenum);
+ 		if (*activep && *charptr == NULL)
+diff -ru openssh_5.1p1-5-orig/servconf.h openssh_5.1p1-5/servconf.h
+--- openssh_5.1p1-5-orig/servconf.h	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/servconf.h	2013-02-12 16:20:29.000000000 -0800
+@@ -147,6 +147,8 @@
+ 
+ 	int	use_pam;		/* Enable auth via PAM */
+ 
++	char   *key_verification_plugin;
++
+ 	int	permit_tun;
+ 
+ 	int	num_permitted_opens;
+diff -ru openssh_5.1p1-5-orig/session.c openssh_5.1p1-5/session.c
+--- openssh_5.1p1-5-orig/session.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/session.c	2013-02-12 16:20:29.000000000 -0800
+@@ -127,6 +127,7 @@
+ extern int startup_pipe;
+ extern void destroy_sensitive_data(void);
+ extern Buffer loginmsg;
++extern char *last_fingerprint;
+ 
+ /* original command from peer. */
+ const char *original_command = NULL;
+@@ -1936,7 +1937,8 @@
+ 	Session *s = session_new();
+ 	debug("session_open: channel %d", chanid);
+ 	if (s == NULL) {
+-		error("no more sessions");
++		error("[sjg] no more sessions for %s (last_fingerprint='%s')",
++		      get_remote_ipaddr(), last_fingerprint);
+ 		return 0;
+ 	}
+ 	s->authctxt = authctxt;
+diff -ru openssh_5.1p1-5-orig/sshd.c openssh_5.1p1-5/sshd.c
+--- openssh_5.1p1-5-orig/sshd.c	2013-02-12 16:20:02.000000000 -0800
++++ openssh_5.1p1-5/sshd.c	2013-02-12 17:53:04.000000000 -0800
+@@ -142,6 +142,7 @@
+ #define REEXEC_MIN_FREE_FD		(STDERR_FILENO + 4)
+ 
+ extern char *__progname;
++extern char *last_fingerprint;
+ 
+ /* Server configuration options. */
+ ServerOptions options;
+@@ -251,6 +252,9 @@
+ /* message to be displayed after login */
+ Buffer loginmsg;
+
++/* Login start time */
++time_t login_start_time;
++
+ /* Unprivileged user */
+ struct passwd *privsep_pw = NULL;
+
+@@ -365,7 +369,11 @@
+ 		kill(pmonitor->m_pid, SIGALRM);
+ 
+ 	/* Log error and exit. */
+-	sigdie("Timeout before authentication for %s", get_remote_ipaddr());
++	if (last_fingerprint && last_fingerprint[0] != '\0') {
++		sigdie("[sjg] Timeout before authentication for %s with last_fingerprint='%s'",
++		      get_remote_ipaddr(), last_fingerprint);
++	} else
++		sigdie("Timeout before authentication for %s", get_remote_ipaddr());
+ }
+ 
+ /*
+@@ -1140,7 +1148,9 @@
+ 				continue;
+ 			}
+ 			if (drop_connection(startups) == 1) {
+-				debug("drop connection #%d", startups);
++				char *ip = get_peer_ipaddr(*newsock);
++				error("[sjg] drop connection for %s #%d", ip, startups);
++				xfree(ip);
+ 				close(*newsock);
+ 				continue;
+ 			}
+@@ -1937,6 +1947,7 @@
+ 	 * are about to discover the bug.
+ 	 */
+ 	signal(SIGALRM, grace_alarm_handler);
++	login_start_time = time(NULL);
+ 	if (!debug_flag)
+ 		alarm(options.login_grace_time);
+ 
+Only in openssh_5.1p1-5: sshd.c~
