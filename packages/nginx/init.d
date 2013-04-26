@@ -23,6 +23,7 @@ fi
 test -x $DAEMON || exit 0
 
 set -e
+ulimit -c 1048576
 
 . /lib/lsb/init-functions
 
