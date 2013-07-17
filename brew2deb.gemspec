@@ -1,3 +1,5 @@
+require 'date'
+
 Gem::Specification.new do |s|
   s.name    = 'brew2deb'
   s.version = '0.0.0'
