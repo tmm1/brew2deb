@@ -521,6 +521,24 @@ class FossilDownloadStrategy < AbstractDownloadStrategy
   end
 end
 
+class DirectoryStrategy < AbstractDownloadStrategy
+  def initialize url, name, version, specs
+    super
+    @dir = Pathname(url)
+  end
+
+  def fetch ; end
+
+  def stage
+    pwd = Pathname(Dir.getwd)
+    puts pwd
+    pwd.unlink
+    pwd.make_symlink(@dir)
+    Dir.chdir(pwd.to_path)
+    puts @dir
+  end
+end
+
 def detect_download_strategy url
   case url
     # We use a special URL pattern for cvs
@@ -538,6 +556,7 @@ def detect_download_strategy url
   when %r[^https?://(.+?\.)?googlecode\.com/svn] then SubversionDownloadStrategy
   when %r[^https?://(.+?\.)?sourceforge\.net/svnroot/] then SubversionDownloadStrategy
   when %r[^http://svn.apache.org/repos/] then SubversionDownloadStrategy
+  when %r[^/] then DirectoryStrategy
     # Otherwise just try to download
   else CurlDownloadStrategy
   end
