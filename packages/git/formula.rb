@@ -17,7 +17,8 @@ class Git < DebianFormula
     'libsvn-perl | libsvn-core-perl',
     'unzip',
     'gettext',
-    'libssl-dev'
+    'libssl-dev',
+    'libssl0.9.8'
 
   depends \
     'perl-modules',
