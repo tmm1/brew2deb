@@ -5,7 +5,7 @@ class GeoIPCityDB < DebianFormula
   VERSION = "GeoIP-#{EDITION}_#{DATE}"
 
   homepage 'http://www.maxmind.com/app/city'
-  url "http://download.maxmind.com/app/geoip_download?edition_id=#{EDITION}&date=#{DATE}&suffix=tar.gz&license_key=#{LICENSE}"
+  url "https://download.maxmind.com/app/geoip_download?edition_id=#{EDITION}&date=#{DATE}&suffix=tar.gz&license_key=#{LICENSE}"
   md5 '100f82fea1a6a12d5e8494dcb8c13305'
 
   name 'geoip-city'
